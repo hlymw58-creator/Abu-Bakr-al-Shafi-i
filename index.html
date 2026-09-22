@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>منصة الشافعي الصغير التعليمية</title>
+  <title>منصة الشافعي التعليمية</title>
   <style>
     :root {
       --primary-color: #1b5e20;
@@ -155,7 +155,6 @@
       padding: 24px;
       margin-bottom: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-      transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .lecture-card.locked {
@@ -209,12 +208,7 @@
       font-size: 16px;
       font-weight: bold;
       border-radius: 8px;
-      transition: background-color 0.2s;
       text-align: center;
-    }
-
-    .btn-open-lecture:hover {
-      background-color: var(--accent-hover);
     }
 
     .btn-confirm-attendance {
@@ -227,11 +221,6 @@
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .btn-confirm-attendance:hover {
-      background-color: var(--primary-hover);
     }
 
     .btn-confirm-attendance:disabled {
@@ -291,10 +280,6 @@
       outline: none;
     }
 
-    .form-group input:focus, .form-group select:focus {
-      border-color: var(--primary-color);
-    }
-
     .form-row {
       display: flex;
       gap: 10px;
@@ -315,15 +300,6 @@
       font-weight: bold;
       cursor: pointer;
       margin-top: 10px;
-    }
-
-    .btn-submit:hover {
-      background-color: var(--primary-hover);
-    }
-
-    .btn-submit:disabled {
-      background-color: #7d977e;
-      cursor: wait;
     }
 
     .auth-toggle {
@@ -352,7 +328,7 @@
 
   <header>
     <div class="header-container">
-      <div class="brand-title">منصة الشافعي الصغير</div>
+      <div class="brand-title">منصة الشافعي التعليمية</div>
       <div class="user-info" id="userInfo">
         <span id="studentNameDisplay">طالب</span>
         <button class="btn-activate-code" onclick="openCodeModal()">🔑 تفعيل كود</button>
@@ -390,6 +366,7 @@
     </div>
   </div>
 
+  <!-- نافذة التسجيل والدخول -->
   <div class="modal-overlay" id="authModal">
     <div class="modal-content">
       <h3 class="modal-title" id="modalTitle">تسجيل الدخول</h3>
@@ -475,6 +452,7 @@
     </div>
   </div>
 
+  <!-- نافذة التفعيل -->
   <div class="modal-overlay" id="codeModal" style="display: none;">
     <div class="modal-content">
       <h3 class="modal-title">تفعيل كورس الترم كامل</h3>
@@ -491,10 +469,9 @@
   </div>
 
   <script>
-    // 🔗 ضع رابط Google Apps Script الخاص بك هنا
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykHyoJEmZv6Ry_TdeIZSNri9w0KRbhyx9RneMDNLFb4mtZavkH9bTl6t-G8U8PpozS/exec";
+    // 🔗 رابط Apps Script الخاص بك
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3RwVKrxlZgSywsE1I9UrXsFOESR961AgA0wsWgWGVyLTkGszgb8_Ez3lD9RZIKWQ/exec";
 
-    // 1. قسم التوحيد
     const tawheedLectures = [
       { id: "t1", title: "المحاضرة الأولى: التوحيد", link: "https://drive.google.com/file/d/1tRQT8wGl0JBAULtHP8unHgOUvEuMAvfr/view?usp=drive_link" },
       { id: "t2", title: "المحاضرة الثانية: التوحيد", link: "https://drive.google.com/file/d/1g2ERaFdG6cBM3eAfJtzqmFP5UwQcxMt9/view?usp=drive_link" },
@@ -502,7 +479,6 @@
       { id: "t4", title: "المحاضرة الرابعة: التوحيد", link: "https://drive.google.com/file/d/1fxC30t7ObU-JcnYKWfPhQkMgW-f7OHty/view?usp=drive_link" }
     ];
 
-    // 2. قسم التفسير
     const tafseerLectures = [
       { id: "tf1", title: "المحاضرة الأولى: التفسير", link: "https://drive.google.com/file/d/139CDLmXSSNs4GUrw26upbtCqq6byiDgn/view?usp=drive_link" },
       { id: "tf2", title: "المحاضرة الثانية: التفسير", link: "https://drive.google.com/file/d/11ZAKMszdb9ElNIjMsllSBPBNaqpP68aM/view?usp=drive_link" },
@@ -514,7 +490,6 @@
       { id: "tf8", title: "المحاضرة الثامنة: التفسير", link: "https://hlymw58-creator.github.io/9/" }
     ];
 
-    // 3. قسم الفقه الشافعي
     const fiqhLectures = [
       { id: "f1", title: "المحاضرة الأولى: الفقه الشافعي", link: "https://drive.google.com/file/d/1DnbbyVdf-DPYRegAVp14fu8NOAdWeYkl/view?usp=drive_link" },
       { id: "f2", title: "المحاضرة الثانية: الفقه الشافعي", link: "https://drive.google.com/file/d/1QCbV_Cmxq1z9uslRzVr93pI46EmOiCAe/view?usp=drive_link" },
@@ -527,7 +502,6 @@
       { id: "f9", title: "المحاضرة التاسعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ApGtlqrh5-XRCj7YtxzusZleuT99SKiP/view?usp=drive_link" }
     ];
 
-    // 4. قسم الحديث
     const osoolLectures = [
       { id: "o1", title: "المحاضرة الأولى: الحديث", link: "https://hlymw58-creator.github.io/86/" },
       { id: "o2", title: "المحاضرة الثانية: الحديث", link: "" }
@@ -541,7 +515,7 @@
       const savedStudent = localStorage.getItem("shafeei_student");
       if (savedStudent) {
         currentStudent = JSON.parse(savedStudent);
-        document.getElementById("studentNameDisplay").innerText = currentStudent.fullName || currentStudent.name || "طالب";
+        document.getElementById("studentNameDisplay").innerText = currentStudent.name || "طالب";
         document.getElementById("authModal").style.display = "none";
         loadAttendance();
       } else {
@@ -564,20 +538,12 @@
         modalTitle.innerText = "إنشاء حساب جديد";
         registerFields.style.display = "block";
         confirmPassGroup.style.display = "block";
-        document.getElementById("regFullName").required = true;
-        document.getElementById("regParentPhone").required = true;
-        document.getElementById("regGovernorate").required = true;
-        document.getElementById("confirmPassword").required = true;
         submitBtn.innerText = "إنشاء الحساب";
         toggleText.innerText = "لديك حساب بالفعل؟ تسجيل الدخول";
       } else {
         modalTitle.innerText = "تسجيل الدخول";
         registerFields.style.display = "none";
         confirmPassGroup.style.display = "none";
-        document.getElementById("regFullName").required = false;
-        document.getElementById("regParentPhone").required = false;
-        document.getElementById("regGovernorate").required = false;
-        document.getElementById("confirmPassword").required = false;
         submitBtn.innerText = "دخول المنصة";
         toggleText.innerText = "ليس لديك حساب؟ إنشاء حساب جديد";
       }
@@ -592,74 +558,68 @@
 
       errorDiv.style.display = "none";
 
-      const formData = new URLSearchParams();
+      let payload = {};
 
       if (isRegisterMode) {
-        const fullName = document.getElementById("regFullName").value.trim();
+        const name = document.getElementById("regFullName").value.trim();
         const parentPhone = document.getElementById("regParentPhone").value.trim();
         const governorate = document.getElementById("regGovernorate").value;
         const nationality = document.getElementById("regNationality").value;
-        const confirmPassword = document.getElementById("confirmPassword").value.trim();
+        const confirmPass = document.getElementById("confirmPassword").value.trim();
 
-        if (password !== confirmPassword) {
+        if (password !== confirmPass) {
           errorDiv.innerText = "كلمتا السر غير متطابقتين!";
           errorDiv.style.display = "block";
           return;
         }
 
-        submitBtn.disabled = true;
-        submitBtn.innerText = "جاري الحفظ والتحقق...";
-
-        formData.append("action", "register");
-        formData.append("fullName", fullName);
-        formData.append("phone", phone);
-        formData.append("parentPhone", parentPhone);
-        formData.append("governorate", governorate);
-        formData.append("nationality", nationality);
-        formData.append("password", password);
-
-        // إنشاء الحساب محلياً فورياً لتأمين فتح المنصة وسرعة التجاوب
-        currentStudent = {
-          fullName: fullName,
-          phone: phone,
+        payload = {
+          action: "register",
+          studentName: name,
+          studentPhone: phone,
           parentPhone: parentPhone,
           governorate: governorate,
           nationality: nationality,
-          activationCode: "غير مفعل"
+          studentPassword: password
         };
-
       } else {
-        submitBtn.disabled = true;
-        submitBtn.innerText = "جاري التحقق من الحساب...";
-
-        formData.append("action", "login");
-        formData.append("phone", phone);
-        formData.append("password", password);
-
-        currentStudent = {
-          fullName: "طالب",
-          phone: phone,
-          activationCode: "غير مفعل"
+        payload = {
+          action: "login",
+          studentPhone: phone,
+          studentPassword: password
         };
       }
 
-      // الإرسال الخلفي لعدم تعليق الصفحة
-      fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString()
-      }).then(() => {
-        console.log("تمت العملية بنجاح في الخلفية");
-      }).catch(err => console.error(err));
+      submitBtn.disabled = true;
+      submitBtn.innerText = "جاري التحقق مع Google Sheet...";
 
-      // فتح المنصة فوراً وتأكيد التسجيل
-      localStorage.setItem("shafeei_student", JSON.stringify(currentStudent));
-      document.getElementById("studentNameDisplay").innerText = currentStudent.fullName || "طالب";
-      document.getElementById("authModal").style.display = "none";
-      submitBtn.disabled = false;
-      submitBtn.innerText = isRegisterMode ? "إنشاء الحساب" : "دخول المنصة";
-      loadAttendance();
+      try {
+        const res = await fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.status === "success") {
+          currentStudent = data.user;
+          localStorage.setItem("shafeei_student", JSON.stringify(currentStudent));
+          document.getElementById("studentNameDisplay").innerText = currentStudent.name;
+          document.getElementById("authModal").style.display = "none";
+          loadAttendance();
+        } else {
+          errorDiv.innerText = data.message || "حدث خطأ في البيانات";
+          errorDiv.style.display = "block";
+        }
+      } catch (err) {
+        console.error(err);
+        errorDiv.innerText = "حدث خطأ في الاتصال بالسيرفر. تأكد من نشر السكربت كـ Anyone.";
+        errorDiv.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = isRegisterMode ? "إنشاء الحساب" : "دخول المنصة";
+      }
     }
 
     function openCodeModal() {
@@ -678,31 +638,38 @@
 
       errorDiv.style.display = "none";
       submitBtn.disabled = true;
-      submitBtn.innerText = "جاري التفعيل...";
+      submitBtn.innerText = "جاري الحفظ في الشيت...";
 
-      const formData = new URLSearchParams();
-      formData.append("action", "activateCode");
-      formData.append("phone", currentStudent ? currentStudent.phone : "");
-      formData.append("code", code);
+      try {
+        const res = await fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "activateCode",
+            studentPhone: currentStudent.phone,
+            code: code
+          })
+        });
 
-      fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString()
-      }).then(() => {
-        alert(`تم تفعيل الكود بنجاح!`);
-        currentStudent.activationCode = code;
-        localStorage.setItem("shafeei_student", JSON.stringify(currentStudent));
-        closeCodeModal();
-        renderAll();
-      }).catch(err => {
-        errorDiv.innerText = "حدث خطأ في التفعيل، يرجى إعادة المحاولة";
+        const data = await res.json();
+
+        if (data.status === "success") {
+          alert("تم تفعيل الكورس بنجاح وتوثيقه في Google Sheet!");
+          currentStudent.code = data.code;
+          localStorage.setItem("shafeei_student", JSON.stringify(currentStudent));
+          closeCodeModal();
+          renderAll();
+        } else {
+          errorDiv.innerText = data.message || "الكود غير صحيح أو تم استخدامه مسبقاً";
+          errorDiv.style.display = "block";
+        }
+      } catch (err) {
+        errorDiv.innerText = "حدث خطأ أثناء التفعيل";
         errorDiv.style.display = "block";
-      }).finally(() => {
+      } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = "تفعيل الكورس";
-      });
+      }
     }
 
     function logout() {
@@ -725,7 +692,7 @@
       if (!container) return;
 
       let html = "";
-      const isCourseActivated = currentStudent && currentStudent.activationCode && currentStudent.activationCode !== "غير مفعل";
+      const isCourseActivated = currentStudent && currentStudent.code && currentStudent.code !== "غير مفعل";
 
       lecturesList.forEach(lecture => {
         const hasLink = lecture.link && lecture.link.trim() !== "";
@@ -787,10 +754,7 @@
     }
 
     function markAttendance(lectureId, lectureTitle) {
-      if (!currentStudent) {
-        alert("يرجى تسجيل الدخول أولاً!");
-        return;
-      }
+      if (!currentStudent) return;
 
       attendanceRecords[lectureId] = true;
       localStorage.setItem(`attendance_${currentStudent.phone}`, JSON.stringify(attendanceRecords));
@@ -807,20 +771,16 @@
         btn.disabled = true;
       }
 
-      if (GOOGLE_SCRIPT_URL) {
-        const formData = new URLSearchParams();
-        formData.append("action", "markAttendance");
-        formData.append("studentName", currentStudent.fullName || "طالب");
-        formData.append("studentPhone", currentStudent.phone);
-        formData.append("lectureTitle", lectureTitle);
-
-        fetch(GOOGLE_SCRIPT_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData.toString()
-        }).catch(err => console.error(err));
-      }
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "markAttendance",
+          studentName: currentStudent.name,
+          studentPhone: currentStudent.phone,
+          lectureTitle: lectureTitle
+        })
+      }).catch(err => console.error(err));
 
       alert(`تم تسجيل حضورك بنجاح في: ${lectureTitle}`);
     }
