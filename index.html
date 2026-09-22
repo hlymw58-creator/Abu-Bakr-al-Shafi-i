@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>منصة الشافعي الصغير التعليمية</title>
+  <style>
+    :root {
+      --primary-color: #1b5e20;
+      --primary-hover: #2e7d32;
+      --accent-color: #1a73e8;
+      --accent-hover: #1557b0;
+      --bg-color: #f4f6f8;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --border-color: #e0e0e0;
+      --danger-color: #d32f2f;
+      --danger-bg: #ffebee;
+      --success-color: #2e7d32;
+      --success-bg: #e8f5e9;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding-bottom: 40px;
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 20px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .brand-title {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .btn-activate-code {
+      background-color: #ffb300;
+      color: #333;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .btn-logout {
+      background-color: transparent;
+      border: 1px solid white;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s;
+    }
+
+    .btn-logout:hover {
+      background-color: white;
+      color: var(--primary-color);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .tabs-container {
+      display: flex;
+      gap: 10px;
+      border-bottom: 2px solid var(--border-color);
+      margin-bottom: 25px;
+      overflow-x: auto;
+      padding-bottom: 5px;
+    }
+
+    .tab-btn {
+      padding: 12px 24px;
+      background-color: transparent;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+      color: #666;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--primary-color);
+    }
+
+    .tab-btn.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .section-title {
+      font-size: 20px;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      border-right: 4px solid var(--primary-color);
+      padding-right: 10px;
+    }
+
+    .lecture-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .lecture-card.locked {
+      opacity: 0.75;
+      background-color: #fafafa;
+    }
+
+    .lecture-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .lecture-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .attendance-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      background-color: var(--danger-bg);
+      color: var(--danger-color);
+    }
+
+    .attendance-badge.attended {
+      background-color: var(--success-bg);
+      color: var(--success-color);
+    }
+
+    .actions-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-open-lecture {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      background-color: var(--accent-color);
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      transition: background-color 0.2s;
+      text-align: center;
+    }
+
+    .btn-open-lecture:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-confirm-attendance {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-confirm-attendance:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-confirm-attendance:disabled {
+      background-color: #a5d6a7;
+      cursor: not-allowed;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-title {
+      font-size: 22px;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--primary-color);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-submit:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-submit:disabled {
+      background-color: #7d977e;
+      cursor: wait;
+    }
+
+    .auth-toggle {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .auth-toggle span {
+      color: var(--accent-color);
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+
+    .error-msg {
+      color: var(--danger-color);
+      font-size: 14px;
+      margin-top: 10px;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-container">
+      <div class="brand-title">منصة الشافعي الصغير</div>
+      <div class="user-info" id="userInfo">
+        <span id="studentNameDisplay">طالب</span>
+        <button class="btn-activate-code" onclick="openCodeModal()">🔑 تفعيل كود</button>
+        <button class="btn-logout" onclick="logout()">تغيير الحساب</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="tabs-container">
+      <button class="tab-btn active" onclick="switchTab('tawheedTab', this)">قسم التوحيد</button>
+      <button class="tab-btn" onclick="switchTab('tafseerTab', this)">قسم التفسير</button>
+      <button class="tab-btn" onclick="switchTab('fiqhTab', this)">قسم الفقه الشافعي</button>
+      <button class="tab-btn" onclick="switchTab('osoolTab', this)">قسم الحديث</button>
+    </div>
+
+    <div id="tawheedTab" class="tab-content active">
+      <h2 class="section-title">محاضرات التوحيد</h2>
+      <div id="tawheedContainer"></div>
+    </div>
+
+    <div id="tafseerTab" class="tab-content">
+      <h2 class="section-title">محاضرات التفسير</h2>
+      <div id="tafseerContainer"></div>
+    </div>
+
+    <div id="fiqhTab" class="tab-content">
+      <h2 class="section-title">محاضرات الفقه الشافعي</h2>
+      <div id="fiqhContainer"></div>
+    </div>
+
+    <div id="osoolTab" class="tab-content">
+      <h2 class="section-title">محاضرات الحديث</h2>
+      <div id="osoolContainer"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-content">
+      <h3 class="modal-title" id="modalTitle">تسجيل الدخول</h3>
+      <form id="authForm" onsubmit="handleAuthSubmit(event)">
+        
+        <div id="registerFields" style="display: none;">
+          <div class="form-group">
+            <label for="regFullName">اسم الطالب الثلاثي/الرباعي:</label>
+            <input type="text" id="regFullName" placeholder="أدخل اسمك الكامل">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="regParentPhone">رقم ولي الأمر:</label>
+              <input type="tel" id="regParentPhone" placeholder="أدخل رقم ولي الأمر">
+            </div>
+            <div class="form-group">
+              <label for="regGovernorate">المحافظة:</label>
+              <select id="regGovernorate">
+                <option value="">اختر المحافظة</option>
+                <option value="القاهرة">القاهرة</option>
+                <option value="الجيزة">الجيزة</option>
+                <option value="الأسكندرية">الأسكندرية</option>
+                <option value="الدقهلية">الدقهلية</option>
+                <option value="البحر الأحمر">البحر الأحمر</option>
+                <option value="البحيرة">البحيرة</option>
+                <option value="الفيوم">الفيوم</option>
+                <option value="الغربية">الغربية</option>
+                <option value="الإسماعيلية">الإسماعيلية</option>
+                <option value="المنوفية">المنوفية</option>
+                <option value="المنيا">المنيا</option>
+                <option value="القليوبية">القليوبية</option>
+                <option value="الوادي الجديد">الوادي الجديد</option>
+                <option value="السويس">السويس</option>
+                <option value="أسوان">أسوان</option>
+                <option value="أسيوط">أسيوط</option>
+                <option value="بني سويف">بني سويف</option>
+                <option value="بورسعيد">بورسعيد</option>
+                <option value="دمياط">دمياط</option>
+                <option value="الشرقية">الشرقية</option>
+                <option value="جنوب سيناء">جنوب سيناء</option>
+                <option value="كفر الشيخ">كفر الشيخ</option>
+                <option value="مطروح">مطروح</option>
+                <option value="قنا">قنا</option>
+                <option value="الأقصر">الأقصر</option>
+                <option value="سوهاج">سوهاج</option>
+                <option value="شمال سيناء">شمال سيناء</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="regNationality">الجنسية:</label>
+            <select id="regNationality">
+              <option value="مصري">مصري</option>
+              <option value="غير مصري">غير مصري</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="studentPhone">رقم هاتف الطالب:</label>
+          <input type="tel" id="studentPhone" required placeholder="أدخل رقم الهاتف">
+        </div>
+
+        <div class="form-group">
+          <label for="studentPassword">كلمة السر:</label>
+          <input type="password" id="studentPassword" required placeholder="أدخل كلمة السر">
+        </div>
+
+        <div class="form-group" id="confirmPassGroup" style="display: none;">
+          <label for="confirmPassword">تأكيد كلمة السر:</label>
+          <input type="password" id="confirmPassword" placeholder="أعد أدخل كلمة السر">
+        </div>
+
+        <button type="submit" class="btn-submit" id="authSubmitBtn">دخول المنصة</button>
+        <div class="error-msg" id="authError"></div>
+
+        <div class="auth-toggle">
+          <span id="toggleText" onclick="toggleAuthMode()">ليس لديك حساب؟ إنشاء حساب جديد</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="codeModal" style="display: none;">
+    <div class="modal-content">
+      <h3 class="modal-title">تفعيل كورس الترم كامل</h3>
+      <form id="codeForm" onsubmit="handleCodeSubmit(event)">
+        <div class="form-group">
+          <label for="activationCode">أدخل كود التفعيل الخاص بك:</label>
+          <input type="text" id="activationCode" required placeholder="أدخل كود التفعيل">
+        </div>
+        <button type="submit" class="btn-submit" id="codeSubmitBtn">تفعيل الكورس</button>
+        <button type="button" class="btn-submit" style="background-color: #757575; margin-top: 8px;" onclick="closeCodeModal()">إلغاء</button>
+        <div class="error-msg" id="codeError"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // 🔗 ضع رابط Google Apps Script الخاص بك هنا
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykHyoJEmZv6Ry_TdeIZSNri9w0KRbhyx9RneMDNLFb4mtZavkH9bTl6t-G8U8PpozS/exec";
+
+    // 1. قسم التوحيد
+    const tawheedLectures = [
+      { id: "t1", title: "المحاضرة الأولى: التوحيد", link: "https://drive.google.com/file/d/1tRQT8wGl0JBAULtHP8unHgOUvEuMAvfr/view?usp=drive_link" },
+      { id: "t2", title: "المحاضرة الثانية: التوحيد", link: "https://drive.google.com/file/d/1g2ERaFdG6cBM3eAfJtzqmFP5UwQcxMt9/view?usp=drive_link" },
+      { id: "t3", title: "المحاضرة الثالثة: التوحيد", link: "https://drive.google.com/file/d/1gk4Mexrh9jf5BlmUcaDafT0c3kncq85Y/view?usp=drive_link" },
+      { id: "t4", title: "المحاضرة الرابعة: التوحيد", link: "https://drive.google.com/file/d/1fxC30t7ObU-JcnYKWfPhQkMgW-f7OHty/view?usp=drive_link" }
+    ];
+
+    // 2. قسم التفسير
+    const tafseerLectures = [
+      { id: "tf1", title: "المحاضرة الأولى: التفسير", link: "https://drive.google.com/file/d/139CDLmXSSNs4GUrw26upbtCqq6byiDgn/view?usp=drive_link" },
+      { id: "tf2", title: "المحاضرة الثانية: التفسير", link: "https://drive.google.com/file/d/11ZAKMszdb9ElNIjMsllSBPBNaqpP68aM/view?usp=drive_link" },
+      { id: "tf3", title: "المحاضرة الثالثة: التفسير", link: "https://drive.google.com/file/d/17ga9UaEakhtKJI6KUg_Ife0Dy4D4DFN7/view?usp=drive_link" },
+      { id: "tf4", title: "المحاضرة الرابعة: التفسير", link: "https://drive.google.com/file/d/1ybVBfpGwWhA5LbLtcptzduZwuipxECEl/view?usp=drive_link" },
+      { id: "tf5", title: "المحاضرة الخامسة: التفسير", link: "https://drive.google.com/file/d/1OOIoWtn-K1oIcI6I36jJS90EoRH1Aa82/view?usp=drive_link" },
+      { id: "tf6", title: "المحاضرة السادسة: التفسير", link: "https://drive.google.com/file/d/1tBOW4BSmxEGvgSCbEmcvWOF40ENRmxBV/view?usp=drive_link" },
+      { id: "tf7", title: "المحاضرة السابعة: التفسير", link: "https://hlymw58-creator.github.io/8/" },
+      { id: "tf8", title: "المحاضرة الثامنة: التفسير", link: "https://hlymw58-creator.github.io/9/" }
+    ];
+
+    // 3. قسم الفقه الشافعي
+    const fiqhLectures = [
+      { id: "f1", title: "المحاضرة الأولى: الفقه الشافعي", link: "https://drive.google.com/file/d/1DnbbyVdf-DPYRegAVp14fu8NOAdWeYkl/view?usp=drive_link" },
+      { id: "f2", title: "المحاضرة الثانية: الفقه الشافعي", link: "https://drive.google.com/file/d/1QCbV_Cmxq1z9uslRzVr93pI46EmOiCAe/view?usp=drive_link" },
+      { id: "f3", title: "المحاضرة الثالثة: الفقه الشافعي", link: "https://drive.google.com/file/d/1XEqiFjjcD7AmPxXBm8f5ktMFYOIrDhW2/view?usp=drive_link" },
+      { id: "f4", title: "المحاضرة الرابعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1vGMqN_XRKk0v-jkOQBHdQVZV-bZC3qeL/view?usp=drive_link" },
+      { id: "f5", title: "المحاضرة الخامسة: الفقه الشافعي", link: "https://drive.google.com/file/d/1sVj16wJql5FYl0P6hSJMJ9ngWWyOJEC5/view?usp=drive_link" },
+      { id: "f6", title: "المحاضرة السادسة: الفقه الشافعي", link: "https://drive.google.com/file/d/1p3GzDReKov8p7w1oZwBuW7E6dFD-l6aR/view?usp=drive_link" },
+      { id: "f7", title: "المحاضرة السابعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ZcRLp1vRYycezeu40Rl-NmmTBJawMOCg/view?usp=drive_link" },
+      { id: "f8", title: "المحاضرة الثامنة: الفقه الشافعي", link: "https://drive.google.com/file/d/1xLErlwikAKjdOmWHIODlsdVhpiubOI1w/view?usp=drive_link" },
+      { id: "f9", title: "المحاضرة التاسعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ApGtlqrh5-XRCj7YtxzusZleuT99SKiP/view?usp=drive_link" }
+    ];
+
+    // 4. قسم الحديث
+    const osoolLectures = [
+      { id: "o1", title: "المحاضرة الأولى: الحديث", link: "https://hlymw58-creator.github.io/86/" },
+      { id: "o2", title: "المحاضرة الثانية: الحديث", link: "" }
+    ];
+
+    let currentStudent = null;
+    let attendanceRecords = {};
+    let isRegisterMode = false;
+
+    function checkAuth() {
+      const savedStudent = localStorage.getItem("shafeei_student");
+      if (savedStudent) {
+        currentStudent = JSON.parse(savedStudent);
+        document.getElementById("studentNameDisplay").innerText = currentStudent.fullName || currentStudent.name || "طالب";
+        document.getElementById("authModal").style.display = "none";
+        loadAttendance();
+      } else {
+        document.getElementById("authModal").style.display = "flex";
+      }
+    }
+
+    function toggleAuthMode() {
+      isRegisterMode = !isRegisterMode;
+      const modalTitle = document.getElementById("modalTitle");
+      const registerFields = document.getElementById("registerFields");
+      const confirmPassGroup = document.getElementById("confirmPassGroup");
+      const submitBtn = document.getElementById("authSubmitBtn");
+      const toggleText = document.getElementById("toggleText");
+      const errorDiv = document.getElementById("authError");
+
+      errorDiv.style.display = "none";
+
+      if (isRegisterMode) {
+        modalTitle.innerText = "إنشاء حساب جديد";
+        registerFields.style.display = "block";
+        confirmPassGroup.style.display = "block";
+        document.getElementById("regFullName").required = true;
+        document.getElementById("regParentPhone").required = true;
+        document.getElementById("regGovernorate").required = true;
+        document.getElementById("confirmPassword").required = true;
+        submitBtn.innerText = "إنشاء الحساب";
+        toggleText.innerText = "لديك حساب بالفعل؟ تسجيل الدخول";
+      } else {
+        modalTitle.innerText = "تسجيل الدخول";
+        registerFields.style.display = "none";
+        confirmPassGroup.style.display = "none";
+        document.getElementById("regFullName").required = false;
+        document.getElementById("regParentPhone").required = false;
+        document.getElementById("regGovernorate").required = false;
+        document.getElementById("confirmPassword").required = false;
+        submitBtn.innerText = "دخول المنصة";
+        toggleText.innerText = "ليس لديك حساب؟ إنشاء حساب جديد";
+      }
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const phone = document.getElementById("studentPhone").value.trim();
+      const password = document.getElementById("studentPassword").value.trim();
+      const errorDiv = document.getElementById("authError");
+      const submitBtn = document.getElementById("authSubmitBtn");
+
+      errorDiv.style.display = "none";
+
+      const formData = new URLSearchParams();
+
+      if (isRegisterMode) {
+        const fullName = document.getElementById("regFullName").value.trim();
+        const parentPhone = document.getElementById("regParentPhone").value.trim();
+        const governorate = document.getElementById("regGovernorate").value;
+        const nationality = document.getElementById("regNationality").value;
+        const confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+        if (password !== confirmPassword) {
+          errorDiv.innerText = "كلمتا السر غير متطابقتين!";
+          errorDiv.style.display = "block";
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = "جاري الحفظ والتحقق...";
+
+        formData.append("action", "register");
+        formData.append("fullName", fullName);
+        formData.append("phone", phone);
+        formData.append("parentPhone", parentPhone);
+        formData.append("governorate", governorate);
+        formData.append("nationality", nationality);
+        formData.append("password", password);
+
+        // إنشاء الحساب محلياً فورياً لتأمين فتح المنصة وسرعة التجاوب
+        currentStudent = {
+          fullName: fullName,
+          phone: phone,
+          parentPhone: parentPhone,
+          governorate: governorate,
+          nationality: nationality,
+          activationCode: "غير مفعل"
+        };
+
+      } else {
+        submitBtn.disabled = true;
+        submitBtn.innerText = "جاري التحقق من الحساب...";
+
+        formData.append("action", "login");
+        formData.append("phone", phone);
+        formData.append("password", password);
+
+        currentStudent = {
+          fullName: "طالب",
+          phone: phone,
+          activationCode: "غير مفعل"
+        };
+      }
+
+      // الإرسال الخلفي لعدم تعليق الصفحة
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString()
+      }).then(() => {
+        console.log("تمت العملية بنجاح في الخلفية");
+      }).catch(err => console.error(err));
+
+      // فتح المنصة فوراً وتأكيد التسجيل
+      localStorage.setItem("shafeei_student", JSON.stringify(currentStudent));
+      document.getElementById("studentNameDisplay").innerText = currentStudent.fullName || "طالب";
+      document.getElementById("authModal").style.display = "none";
+      submitBtn.disabled = false;
+      submitBtn.innerText = isRegisterMode ? "إنشاء الحساب" : "دخول المنصة";
+      loadAttendance();
+    }
+
+    function openCodeModal() {
+      document.getElementById("codeModal").style.display = "flex";
+    }
+
+    function closeCodeModal() {
+      document.getElementById("codeModal").style.display = "none";
+    }
+
+    async function handleCodeSubmit(e) {
+      e.preventDefault();
+      const code = document.getElementById("activationCode").value.trim();
+      const errorDiv = document.getElementById("codeError");
+      const submitBtn = document.getElementById("codeSubmitBtn");
+
+      errorDiv.style.display = "none";
+      submitBtn.disabled = true;
+      submitBtn.innerText = "جاري التفعيل...";
+
+      const formData = new URLSearchParams();
+      formData.append("action", "activateCode");
+      formData.append("phone", currentStudent ? currentStudent.phone : "");
+      formData.append("code", code);
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString()
+      }).then(() => {
+        alert(`تم تفعيل الكود بنجاح!`);
+        currentStudent.activationCode = code;
+        localStorage.setItem("shafeei_student", JSON.stringify(currentStudent));
+        closeCodeModal();
+        renderAll();
+      }).catch(err => {
+        errorDiv.innerText = "حدث خطأ في التفعيل، يرجى إعادة المحاولة";
+        errorDiv.style.display = "block";
+      }).finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "تفعيل الكورس";
+      });
+    }
+
+    function logout() {
+      if (confirm("هل تريد تسجيل الخروج؟")) {
+        localStorage.removeItem("shafeei_student");
+        location.reload();
+      }
+    }
+
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      
+      document.getElementById(tabId).classList.add("active");
+      btnElement.classList.add("active");
+    }
+
+    function renderLectures(lecturesList, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      let html = "";
+      const isCourseActivated = currentStudent && currentStudent.activationCode && currentStudent.activationCode !== "غير مفعل";
+
+      lecturesList.forEach(lecture => {
+        const hasLink = lecture.link && lecture.link.trim() !== "";
+        const isAttended = attendanceRecords[lecture.id] || false;
+
+        let actionButtonHTML = "";
+        if (!isCourseActivated) {
+          actionButtonHTML = `
+            <button type="button" class="btn-open-lecture" style="background-color: #757575;" onclick="openCodeModal()">
+              🔒 المحاضرة مغلقة (اضغط هنا لتفعيل الكود)
+            </button>
+          `;
+        } else {
+          const linkHref = hasLink ? lecture.link : "#";
+          const targetAttr = hasLink ? 'target="_blank" rel="noopener noreferrer"' : 'onclick="alert(\'لم يتم إدراج رابط المحاضرة حتى الآن\'); return false;"';
+
+          actionButtonHTML = `
+            <a href="${linkHref}" ${targetAttr} class="btn-open-lecture">
+              🔗 دخول المحاضرة
+            </a>
+            <button type="button" 
+                    class="btn-confirm-attendance" 
+                    id="btn-att-${lecture.id}" 
+                    ${isAttended ? 'disabled' : ''} 
+                    onclick="markAttendance('${lecture.id}', '${lecture.title}')">
+              ${isAttended ? 'تم الحضور بنجاح' : 'تأكيد مشاهدة المحاضرة وتسجيل الحضور'}
+            </button>
+          `;
+        }
+
+        html += `
+          <div class="lecture-card ${!isCourseActivated ? 'locked' : ''}" id="card-${lecture.id}">
+            <div class="lecture-header">
+              <h3 class="lecture-title">${lecture.title}</h3>
+              <span class="attendance-badge ${isAttended ? 'attended' : ''}" id="badge-${lecture.id}">
+                ${isAttended ? 'تم تسجيل الحضور' : 'لم يتم الحضور'}
+              </span>
+            </div>
+
+            <div class="actions-group">
+              ${actionButtonHTML}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function loadAttendance() {
+      if (!currentStudent) return;
+      const savedAttendance = localStorage.getItem(`attendance_${currentStudent.phone}`);
+      if (savedAttendance) {
+        attendanceRecords = JSON.parse(savedAttendance);
+      } else {
+        attendanceRecords = {};
+      }
+      renderAll();
+    }
+
+    function markAttendance(lectureId, lectureTitle) {
+      if (!currentStudent) {
+        alert("يرجى تسجيل الدخول أولاً!");
+        return;
+      }
+
+      attendanceRecords[lectureId] = true;
+      localStorage.setItem(`attendance_${currentStudent.phone}`, JSON.stringify(attendanceRecords));
+
+      const badge = document.getElementById(`badge-${lectureId}`);
+      const btn = document.getElementById(`btn-att-${lectureId}`);
+
+      if (badge) {
+        badge.innerText = "تم تسجيل الحضور";
+        badge.classList.add("attended");
+      }
+      if (btn) {
+        btn.innerText = "تم الحضور بنجاح";
+        btn.disabled = true;
+      }
+
+      if (GOOGLE_SCRIPT_URL) {
+        const formData = new URLSearchParams();
+        formData.append("action", "markAttendance");
+        formData.append("studentName", currentStudent.fullName || "طالب");
+        formData.append("studentPhone", currentStudent.phone);
+        formData.append("lectureTitle", lectureTitle);
+
+        fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: formData.toString()
+        }).catch(err => console.error(err));
+      }
+
+      alert(`تم تسجيل حضورك بنجاح في: ${lectureTitle}`);
+    }
+
+    function renderAll() {
+      renderLectures(tawheedLectures, "tawheedContainer");
+      renderLectures(tafseerLectures, "tafseerContainer");
+      renderLectures(fiqhLectures, "fiqhContainer");
+      renderLectures(osoolLectures, "osoolContainer");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      checkAuth();
+    });
+  </script>
+</body>
+</html>
