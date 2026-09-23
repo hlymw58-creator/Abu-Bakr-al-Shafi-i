@@ -322,6 +322,114 @@
       text-align: center;
       display: none;
     }
+
+    /* --- تنسيقات زر الدعم العائم والقائمة المنبثقة --- */
+    .support-widget {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: flex-end;
+      gap: 12px;
+    }
+
+    .support-main-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      border: 2px solid #ffb300;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+    .support-main-btn:hover {
+      transform: scale(1.08);
+      background-color: var(--primary-hover);
+    }
+
+    .support-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(15px);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .support-widget.active .support-options {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .support-view {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .support-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background-color: #0b2b1a;
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 30px;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
+      transition: transform 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .support-item:hover {
+      transform: translateX(-5px);
+    }
+
+    .support-item.tech {
+      border: 1.5px solid #ffb300;
+    }
+
+    .support-item.academic {
+      border: 1.5px solid #25d366;
+    }
+
+    .support-item.activation {
+      border: 1.5px solid #00bcd4;
+    }
+
+    .support-item.back-btn {
+      background-color: #333333;
+      border: 1.5px solid #777777;
+      justify-content: center;
+    }
+
+    .support-item .info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1.2;
+    }
+
+    .support-item .phone {
+      font-size: 11px;
+      color: #cccccc;
+      direction: ltr;
+    }
   </style>
 </head>
 <body>
@@ -465,6 +573,71 @@
         <button type="button" class="btn-submit" style="background-color: #757575; margin-top: 8px;" onclick="closeCodeModal()">إلغاء</button>
         <div class="error-msg" id="codeError"></div>
       </form>
+    </div>
+  </div>
+
+  <!-- عناصر الدعم العائم (الدعم الفني، العلمي، وتفعيل الأكواد) -->
+  <div class="support-widget" id="supportWidget">
+    <button class="support-main-btn" onclick="toggleSupportMenu()" title="الدعم والمساعدة">
+      🎧
+    </button>
+    
+    <div class="support-options">
+      <!-- القائمة الرئيسية للدعم -->
+      <div class="support-view" id="mainSupportView">
+        <!-- خيار تفعيل الأكواد -->
+        <button type="button" class="support-item activation" onclick="showActivationSubMenu()">
+          <span>🔑</span>
+          <div class="info">
+            <span>تفعيل الأكواد</span>
+            <span class="phone">اضغط للتواصل</span>
+          </div>
+        </button>
+
+        <!-- الدعم الفني -حليم -->
+        <a href="https://wa.me/201099442329" target="_blank" class="support-item tech">
+          <span>🎧</span>
+          <div class="info">
+            <span>الدعم الفني-حليم </span>
+            <span class="phone">01099442329</span>
+          </div>
+        </a>
+
+        <!--  الدعم العلمي-مستر ابو بكر-->
+        <a href="https://wa.me/201101662590" target="_blank" class="support-item academic">
+          <span>💬</span>
+          <div class="info">
+            <span>الدعم العلمي -مستر ابو بكر</span>
+            <span class="phone">01101662590</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- قائمة أرقام تفعيل الأكواد الفرعية -->
+      <div class="support-view" id="activationSupportView" style="display: none;">
+        <!-- مس منه -->
+        <a href="https://wa.me/201130913147" target="_blank" class="support-item activation">
+          <span>📱</span>
+          <div class="info">
+            <span> مس منه</span>
+            <span class="phone">01130913147</span>
+          </div>
+        </a>
+
+        <!-- مس رحمه -->
+        <a href="https://wa.me/RahmaShawky1" target="_blank" class="support-item activation">
+          <span>💬</span>
+          <div class="info">
+            <span> مس رحمه </span>
+            <span class="phone">@RahmaShawky1</span>
+          </div>
+        </a>
+
+        <!-- زر العودة القائمة الرئيسية -->
+        <button type="button" class="support-item back-btn" onclick="showMainSupportMenu()">
+          <span>↩ العودة للخلف</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -791,6 +964,34 @@
       renderLectures(fiqhLectures, "fiqhContainer");
       renderLectures(osoolLectures, "osoolContainer");
     }
+
+    /* --- وظائف قائمة الدعم العائمة القابلة للتنقل --- */
+    function toggleSupportMenu() {
+      const widget = document.getElementById("supportWidget");
+      widget.classList.toggle("active");
+      if (!widget.classList.contains("active")) {
+        showMainSupportMenu();
+      }
+    }
+
+    function showActivationSubMenu() {
+      document.getElementById("mainSupportView").style.display = "none";
+      document.getElementById("activationSupportView").style.display = "flex";
+    }
+
+    function showMainSupportMenu() {
+      document.getElementById("activationSupportView").style.display = "none";
+      document.getElementById("mainSupportView").style.display = "flex";
+    }
+
+    // إغلاق القائمة تلقائياً عند النقر خارجها
+    document.addEventListener("click", function(event) {
+      const widget = document.getElementById("supportWidget");
+      if (widget && !widget.contains(event.target)) {
+        widget.classList.remove("active");
+        showMainSupportMenu();
+      }
+    });
 
     window.addEventListener("DOMContentLoaded", () => {
       checkAuth();
