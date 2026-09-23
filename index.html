@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>منصة الشافعي الصغير </title>
+  <title>منصة الشافعي الصغير</title>
   <style>
     :root {
       --primary-color: #1b5e20;
@@ -11,8 +11,8 @@
       --accent-color: #1a73e8;
       --accent-hover: #1557b0;
       --bg-color: #f4f6f8;
-      --card-bg: #ffffff;
-      --text-color: #333333;
+      --card-bg: rgba(255, 255, 255, 0.96);
+      --text-color: #222222;
       --border-color: #e0e0e0;
       --danger-color: #d32f2f;
       --danger-bg: #ffebee;
@@ -29,6 +29,11 @@
 
     body {
       background-color: var(--bg-color);
+      background-image: linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)), url('https://lh3.googleusercontent.com/d/11cx_kG09s3PtT70TFoBZ2S8yw_WvIOkD');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      filter: contrast(125%) saturate(130%) brightness(102%);
       color: var(--text-color);
       padding-bottom: 40px;
     }
@@ -36,8 +41,8 @@
     header {
       background-color: var(--primary-color);
       color: white;
-      padding: 20px 0;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 15px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -55,8 +60,20 @@
     }
 
     .brand-title {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ffb300;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
     .user-info {
@@ -108,6 +125,10 @@
       margin-bottom: 25px;
       overflow-x: auto;
       padding-bottom: 5px;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     }
 
     .tab-btn {
@@ -116,7 +137,7 @@
       border: none;
       font-size: 16px;
       font-weight: bold;
-      color: #666;
+      color: #555;
       cursor: pointer;
       border-bottom: 3px solid transparent;
       transition: all 0.3s;
@@ -146,6 +167,11 @@
       margin-bottom: 20px;
       border-right: 4px solid var(--primary-color);
       padding-right: 10px;
+      background: rgba(255, 255, 255, 0.96);
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
 
     .lecture-card {
@@ -154,12 +180,12 @@
       border-radius: 12px;
       padding: 24px;
       margin-bottom: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
     }
 
     .lecture-card.locked {
-      opacity: 0.75;
-      background-color: #fafafa;
+      opacity: 0.92;
+      background-color: rgba(250, 250, 250, 0.96);
     }
 
     .lecture-header {
@@ -172,7 +198,7 @@
     .lecture-title {
       font-size: 18px;
       font-weight: bold;
-      color: #2c3e50;
+      color: #1a252f;
     }
 
     .attendance-badge {
@@ -228,13 +254,94 @@
       cursor: not-allowed;
     }
 
+    /* --- تنسيقات منتدى الطلاب --- */
+    .forum-form-card, .forum-post-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    .forum-textarea {
+      width: 100%;
+      min-height: 90px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 15px;
+      resize: vertical;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f0f0f0;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .author-name {
+      font-weight: bold;
+      color: var(--primary-color);
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .post-date {
+      font-size: 12px;
+      color: #777;
+    }
+
+    .post-content {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #222;
+      white-space: pre-line;
+    }
+
+    .teacher-reply-box {
+      margin-top: 15px;
+      background-color: #f0f7f0;
+      border-right: 4px solid var(--primary-color);
+      padding: 12px 15px;
+      border-radius: 6px;
+    }
+
+    .teacher-reply-title {
+      font-weight: bold;
+      color: var(--primary-color);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .teacher-input-group {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .teacher-input-group input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
     .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: rgba(0,0,0,0.6);
+      background-color: rgba(0,0,0,0.65);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -248,7 +355,7 @@
       border-radius: 12px;
       width: 100%;
       max-width: 500px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
       max-height: 90vh;
       overflow-y: auto;
     }
@@ -323,21 +430,21 @@
       display: none;
     }
 
-    /* --- تنسيقات زر الدعم العائم والقائمة المنبثقة --- */
+    /* --- تنسيقات زر الدعم العائم الثابت تماماً على الشاشة --- */
     .support-widget {
       position: fixed;
       bottom: 25px;
-      right: 25px;
-      z-index: 999;
+      left: 25px;
+      z-index: 9999;
       display: flex;
       flex-direction: column-reverse;
-      align-items: flex-end;
+      align-items: flex-start;
       gap: 12px;
     }
 
     .support-main-btn {
-      width: 56px;
-      height: 56px;
+      width: 58px;
+      height: 58px;
       border-radius: 50%;
       background-color: var(--primary-color);
       color: white;
@@ -345,15 +452,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 24px;
+      font-size: 26px;
       cursor: pointer;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.35);
       transition: transform 0.3s ease, background-color 0.3s ease;
-    }
-
-    .support-main-btn:hover {
-      transform: scale(1.08);
-      background-color: var(--primary-hover);
     }
 
     .support-options {
@@ -397,7 +499,7 @@
     }
 
     .support-item:hover {
-      transform: translateX(-5px);
+      transform: translateX(5px);
     }
 
     .support-item.tech {
@@ -436,7 +538,10 @@
 
   <header>
     <div class="header-container">
-      <div class="brand-title">منصة الشافعي الصغير </div>
+      <div class="brand-title">
+        <img src="https://lh3.googleusercontent.com/d/11cx_kG09s3PtT70TFoBZ2S8yw_WvIOkD" alt="شعار منصة الشافعي الصغير" class="brand-logo">
+        <span>منصة الشافعي الصغير</span>
+      </div>
       <div class="user-info" id="userInfo">
         <span id="studentNameDisplay">طالب</span>
         <button class="btn-activate-code" onclick="openCodeModal()">🔑 تفعيل كود</button>
@@ -451,6 +556,7 @@
       <button class="tab-btn" onclick="switchTab('tafseerTab', this)">قسم التفسير</button>
       <button class="tab-btn" onclick="switchTab('fiqhTab', this)">قسم الفقه الشافعي</button>
       <button class="tab-btn" onclick="switchTab('osoolTab', this)">قسم الحديث</button>
+      <button class="tab-btn" onclick="switchTab('forumTab', this)">💬 منتدى الطلاب</button>
     </div>
 
     <div id="tawheedTab" class="tab-content active">
@@ -471,6 +577,11 @@
     <div id="osoolTab" class="tab-content">
       <h2 class="section-title">محاضرات الحديث</h2>
       <div id="osoolContainer"></div>
+    </div>
+
+    <div id="forumTab" class="tab-content">
+      <h2 class="section-title">منتدى الطلاب والأستاذ</h2>
+      <div id="forumContainer"></div>
     </div>
   </div>
 
@@ -576,16 +687,14 @@
     </div>
   </div>
 
-  <!-- عناصر الدعم العائم (الدعم الفني، العلمي، وتفعيل الأكواد) -->
+  <!-- عناصر الدعم العائم -->
   <div class="support-widget" id="supportWidget">
     <button class="support-main-btn" onclick="toggleSupportMenu()" title="الدعم والمساعدة">
       🎧
     </button>
     
     <div class="support-options">
-      <!-- القائمة الرئيسية للدعم -->
       <div class="support-view" id="mainSupportView">
-        <!-- خيار تفعيل الأكواد -->
         <button type="button" class="support-item activation" onclick="showActivationSubMenu()">
           <span>🔑</span>
           <div class="info">
@@ -594,46 +703,48 @@
           </div>
         </button>
 
-        <!-- الدعم الفني -حليم -->
         <a href="https://wa.me/201099442329" target="_blank" class="support-item tech">
           <span>🎧</span>
           <div class="info">
-            <span>الدعم الفني-حليم </span>
+            <span>الدعم الفني</span>
             <span class="phone">01099442329</span>
           </div>
         </a>
 
-        <!--  الدعم العلمي-مستر ابو بكر-->
         <a href="https://wa.me/201101662590" target="_blank" class="support-item academic">
           <span>💬</span>
           <div class="info">
-            <span>الدعم العلمي -مستر ابو بكر</span>
+            <span>الدعم العلمي</span>
             <span class="phone">01101662590</span>
           </div>
         </a>
       </div>
 
-      <!-- قائمة أرقام تفعيل الأكواد الفرعية -->
       <div class="support-view" id="activationSupportView" style="display: none;">
-        <!-- مس منه -->
         <a href="https://wa.me/201130913147" target="_blank" class="support-item activation">
           <span>📱</span>
           <div class="info">
-            <span> مس منه</span>
+            <span>مس منة</span>
             <span class="phone">01130913147</span>
           </div>
         </a>
 
-        <!-- مس رحمه -->
-        <a href="https://wa.me/RahmaShawky1" target="_blank" class="support-item activation">
+        <a href="https://wa.me/201093619854" target="_blank" class="support-item activation">
           <span>💬</span>
           <div class="info">
-            <span> مس رحمه </span>
-            <span class="phone">@RahmaShawky1</span>
+            <span>مس رحمة</span>
+            <span class="phone">01093619854</span>
           </div>
         </a>
 
-        <!-- زر العودة القائمة الرئيسية -->
+        <a href="https://wa.me/201157948016" target="_blank" class="support-item activation">
+          <span>💬</span>
+          <div class="info">
+            <span>مس ملاك</span>
+            <span class="phone">01157948016</span>
+          </div>
+        </a>
+
         <button type="button" class="support-item back-btn" onclick="showMainSupportMenu()">
           <span>↩ العودة للخلف</span>
         </button>
@@ -642,8 +753,17 @@
   </div>
 
   <script>
-    // 🔗 رابط Apps Script الخاص بك
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOxTAIi0vg-ljJYn95vaox2qRSC7fBdgvlIGebURXTGK6YPEP1CWRO9LwDwTspKTb6/exec";
+    const FORUM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbweDp9aFadfcGln2fprx1OGOg9ap1wWaDWJXfmb8JUwHRqMrL8GucM3sM_pRiAfkuKI/exec";
+    
+    // قائمة الحسابات الإدارية وفريق الدعم المسموح لها بالرد في المنتدى
+    const SUPPORT_ADMIN_PHONES = [
+      "01101662590", // الدعم العلمي / الأستاذ
+      "01099442329", // الدعم الفني
+      "01130913147", // مس منة
+      "01093619854", // مس رحمة
+      "01157948016"  // مس ملاك
+    ];
 
     const tawheedLectures = [
       { id: "t1", title: "المحاضرة الأولى: التوحيد", link: "https://drive.google.com/file/d/1tRQT8wGl0JBAULtHP8unHgOUvEuMAvfr/view?usp=drive_link" },
@@ -683,6 +803,7 @@
     let currentStudent = null;
     let attendanceRecords = {};
     let isRegisterMode = false;
+    let forumPosts = [];
 
     function checkAuth() {
       const savedStudent = localStorage.getItem("shafeei_student");
@@ -691,9 +812,11 @@
         document.getElementById("studentNameDisplay").innerText = currentStudent.name || "طالب";
         document.getElementById("authModal").style.display = "none";
         loadAttendance();
+        loadForumPosts();
       } else {
         document.getElementById("authModal").style.display = "flex";
       }
+      renderAll();
     }
 
     function toggleAuthMode() {
@@ -730,7 +853,6 @@
       const submitBtn = document.getElementById("authSubmitBtn");
 
       errorDiv.style.display = "none";
-
       let payload = {};
 
       if (isRegisterMode) {
@@ -781,13 +903,15 @@
           document.getElementById("studentNameDisplay").innerText = currentStudent.name;
           document.getElementById("authModal").style.display = "none";
           loadAttendance();
+          loadForumPosts();
+          renderAll();
         } else {
           errorDiv.innerText = data.message || "حدث خطأ في البيانات";
           errorDiv.style.display = "block";
         }
       } catch (err) {
         console.error(err);
-        errorDiv.innerText = "حدث خطأ في الاتصال بالسيرفر. تأكد من نشر السكربت كـ Anyone.";
+        errorDiv.innerText = "حدث خطأ في الاتصال بالسيرفر.";
         errorDiv.style.display = "block";
       } finally {
         submitBtn.disabled = false;
@@ -858,6 +982,10 @@
       
       document.getElementById(tabId).classList.add("active");
       btnElement.classList.add("active");
+
+      if (tabId === 'forumTab') {
+        loadForumPosts();
+      }
     }
 
     function renderLectures(lecturesList, containerId) {
@@ -911,51 +1039,201 @@
           </div>
         `;
       });
-
       container.innerHTML = html;
     }
 
-    function loadAttendance() {
-      if (!currentStudent) return;
-      const savedAttendance = localStorage.getItem(`attendance_${currentStudent.phone}`);
-      if (savedAttendance) {
-        attendanceRecords = JSON.parse(savedAttendance);
-      } else {
-        attendanceRecords = {};
-      }
-      renderAll();
-    }
-
     function markAttendance(lectureId, lectureTitle) {
-      if (!currentStudent) return;
-
       attendanceRecords[lectureId] = true;
-      localStorage.setItem(`attendance_${currentStudent.phone}`, JSON.stringify(attendanceRecords));
-
+      localStorage.setItem("attendance_" + (currentStudent ? currentStudent.phone : "guest"), JSON.stringify(attendanceRecords));
+      
       const badge = document.getElementById(`badge-${lectureId}`);
-      const btn = document.getElementById(`btn-att-${lectureId}`);
-
       if (badge) {
         badge.innerText = "تم تسجيل الحضور";
         badge.classList.add("attended");
       }
+      const btn = document.getElementById(`btn-att-${lectureId}`);
       if (btn) {
         btn.innerText = "تم الحضور بنجاح";
         btn.disabled = true;
       }
+      alert(`تم تسجيل حضورك في محاضرة: ${lectureTitle} بنجاح!`);
+    }
 
-      fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action: "markAttendance",
-          studentName: currentStudent.name,
-          studentPhone: currentStudent.phone,
-          lectureTitle: lectureTitle
-        })
-      }).catch(err => console.error(err));
+    function loadAttendance() {
+      if (!currentStudent) return;
+      const saved = localStorage.getItem("attendance_" + currentStudent.phone);
+      if (saved) {
+        attendanceRecords = JSON.parse(saved);
+      }
+    }
 
-      alert(`تم تسجيل حضورك بنجاح في: ${lectureTitle}`);
+    async function loadForumPosts() {
+      const container = document.getElementById("forumContainer");
+      if (!container) return;
+
+      const isCourseActivated = currentStudent && currentStudent.code && currentStudent.code !== "غير مفعل";
+
+      if (!isCourseActivated) {
+        container.innerHTML = `
+          <div class="lecture-card locked" style="text-align: center; padding: 30px;">
+            <h3>🔒 منتدى الطلاب مغلق</h3>
+            <p style="margin: 15px 0; color: #555;">يجب عليك تفعيل كود الكورس أولاً لكي تتمكن من المشاركة في المنتدى والتواصل مع الأستاذ والزملاء.</p>
+            <button class="btn-activate-code" style="padding: 10px 20px; font-size: 15px;" onclick="openCodeModal()">🔑 تفعيل كود الآن</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `<p style="text-align: center; color: #666; padding: 20px;">جاري تحميل المنشورات من الشيت...</p>`;
+
+      try {
+        const res = await fetch(FORUM_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "getPosts" })
+        });
+        const data = await res.json();
+
+        if (data.status === "success") {
+          forumPosts = data.posts || [];
+          renderForumUI();
+        } else {
+          container.innerHTML = `<p style="text-align: center; color: red; padding: 20px;">فشل في تحميل المنشورات.</p>`;
+        }
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p style="text-align: center; color: red; padding: 20px;">خطأ في الاتصال بسيرفر المنتدى.</p>`;
+      }
+    }
+
+    function renderForumUI() {
+      const container = document.getElementById("forumContainer");
+      if (!container) return;
+
+      let postsHTML = `
+        <div class="forum-form-card">
+          <h3 style="margin-bottom: 12px; color: var(--primary-color);">إضافة منشور أو سؤال جديد</h3>
+          <textarea id="forumInputContent" class="forum-textarea" placeholder="اكتب سؤالك أو استفسارك هنا ليراه الأستاذ وزملاؤك..."></textarea>
+          <button type="button" class="btn-submit" id="submitPostBtn" onclick="submitForumPost()">نشر في المنتدى</button>
+        </div>
+        <div id="postsListContainer">
+      `;
+
+      if (forumPosts.length === 0) {
+        postsHTML += `<p style="text-align: center; color: #666; padding: 20px;">لا توجد منشورات حالياً. كن أول المشاركين!</p>`;
+      } else {
+        forumPosts.forEach((post) => {
+          let teacherReplyHTML = "";
+          if (post.teacherReply && post.teacherReply.trim() !== "") {
+            teacherReplyHTML = `
+              <div class="teacher-reply-box">
+                <div class="teacher-reply-title">رد الأستاذ / فريق الدعم:</div>
+                <div class="post-content">${post.teacherReply}</div>
+              </div>
+            `;
+          }
+
+          let teacherInputBox = "";
+          // السماح للحسابات الإدارية المحددة فقط بظهور صندوق وكتابة الرد
+          if (currentStudent && SUPPORT_ADMIN_PHONES.includes(currentStudent.phone)) {
+            teacherInputBox = `
+              <div class="teacher-input-group">
+                <input type="text" id="reply-input-${post.rowIndex}" placeholder="اكتب رد الدعم أو الأستاذ هنا...">
+                <button type="button" class="btn-activate-code" onclick="submitTeacherReply(${post.rowIndex})">إرسال الرد</button>
+              </div>
+            `;
+          }
+
+          postsHTML += `
+            <div class="forum-post-card">
+              <div class="post-header">
+                <span class="author-name">👤 ${post.author}</span>
+                <span class="post-date">${post.date}</span>
+              </div>
+              <div class="post-content">${post.content}</div>
+              ${teacherReplyHTML}
+              ${teacherInputBox}
+            </div>
+          `;
+        });
+      }
+
+      postsHTML += `</div>`;
+      container.innerHTML = postsHTML;
+    }
+
+    async function submitForumPost() {
+      const content = document.getElementById("forumInputContent").value.trim();
+      const submitBtn = document.getElementById("submitPostBtn");
+
+      if (!content) {
+        alert("يرجى كتابة محتوى للمنشور قبل النشر.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "جاري النشر وإرساله للشيت...";
+
+      try {
+        const res = await fetch(FORUM_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "addPost",
+            author: currentStudent ? currentStudent.name : "طالب",
+            phone: currentStudent ? currentStudent.phone : "",
+            content: content
+          })
+        });
+
+        const data = await res.json();
+        if (data.status === "success") {
+          document.getElementById("forumInputContent").value = "";
+          loadForumPosts();
+        } else {
+          alert(data.message || "حدث خطأ أثناء النشر");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("حدث خطأ في الاتصال بالخادم.");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "نشر في المنتدى";
+      }
+    }
+
+    async function submitTeacherReply(rowIndex) {
+      const input = document.getElementById(`reply-input-${rowIndex}`);
+      if (!input) return;
+      const replyText = input.value.trim();
+
+      if (!replyText) {
+        alert("يرجى كتابة نص الرد.");
+        return;
+      }
+
+      try {
+        const res = await fetch(FORUM_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "teacherReply",
+            rowIndex: rowIndex,
+            replyText: replyText
+          })
+        });
+
+        const data = await res.json();
+        if (data.status === "success") {
+          alert("تم إرسال رد الأستاذ/فريق الدعم بنجاح وتحديث الشيت!");
+          loadForumPosts();
+        } else {
+          alert(data.message || "حدث خطأ أثناء إرسال الرد");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("خطأ في الاتصال بالخادم.");
+      }
     }
 
     function renderAll() {
@@ -965,13 +1243,9 @@
       renderLectures(osoolLectures, "osoolContainer");
     }
 
-    /* --- وظائف قائمة الدعم العائمة القابلة للتنقل --- */
     function toggleSupportMenu() {
       const widget = document.getElementById("supportWidget");
       widget.classList.toggle("active");
-      if (!widget.classList.contains("active")) {
-        showMainSupportMenu();
-      }
     }
 
     function showActivationSubMenu() {
@@ -984,18 +1258,9 @@
       document.getElementById("mainSupportView").style.display = "flex";
     }
 
-    // إغلاق القائمة تلقائياً عند النقر خارجها
-    document.addEventListener("click", function(event) {
-      const widget = document.getElementById("supportWidget");
-      if (widget && !widget.contains(event.target)) {
-        widget.classList.remove("active");
-        showMainSupportMenu();
-      }
-    });
-
-    window.addEventListener("DOMContentLoaded", () => {
+    window.onload = function() {
       checkAuth();
-    });
+    };
   </script>
 </body>
 </html>
