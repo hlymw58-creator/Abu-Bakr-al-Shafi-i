@@ -237,6 +237,22 @@
       text-align: center;
     }
 
+    .btn-homework {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      background-color: #ef6c00;
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      text-align: center;
+    }
+
     .btn-confirm-attendance {
       width: 100%;
       padding: 14px;
@@ -765,39 +781,248 @@
       "01157948016"  // مس ملاك
     ];
 
-    const tawheedLectures = [
-      { id: "t1", title: "المحاضرة الأولى: التوحيد", link: "https://drive.google.com/file/d/1tRQT8wGl0JBAULtHP8unHgOUvEuMAvfr/view?usp=drive_link" },
-      { id: "t2", title: "المحاضرة الثانية: التوحيد", link: "https://drive.google.com/file/d/1g2ERaFdG6cBM3eAfJtzqmFP5UwQcxMt9/view?usp=drive_link" },
-      { id: "t3", title: "المحاضرة الثالثة: التوحيد", link: "https://drive.google.com/file/d/1gk4Mexrh9jf5BlmUcaDafT0c3kncq85Y/view?usp=drive_link" },
-      { id: "t4", title: "المحاضرة الرابعة: التوحيد", link: "https://drive.google.com/file/d/1fxC30t7ObU-JcnYKWfPhQkMgW-f7OHty/view?usp=drive_link" }
+    // ======================= طبقة الاتصال والتحقق =======================
+    const REQUEST_TIMEOUT_MS = 15000;
+    const RETRY_DELAYS = [400, 900, 1600];
+    const GENERIC_ERROR = "لم نتمكن من إتمام العملية الآن. برجاء المحاولة مرة أخرى بعد لحظات.";
+    // أخطاء مؤقتة من السيرفر (ضغط/انتهاء مهلة) - لا تُعرض للعميل وتُعاد محاولتها
+    const TRANSIENT_RE = /timeout|timed out|too many|quota|busy|service invoked|lock|exception|internal error|مشغول|انتهت المهلة|تجاوز/i;
+    // رسائل تدل أن الكود مستخدم
+    const USED_RE = /مستخدم|استخدم|مسبق|used|already/i;
+    // أي رسالة قادمة من السيرفر تكشف مكان التخزين لا تُعرض للعميل
+    const LEAK_RE = /sheet|spreadsheet|google|script|شيت|جوجل|جوجول|سكريبت|exception|typeerror|referenceerror|undefined|cannot read/i;
+
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    let sessionCreds = null; // بيانات الدخول في الذاكرة فقط ولا تُحفظ في أي مكان
+
+    function safeMsg(msg, fallback) {
+      const m = (msg == null ? "" : String(msg)).trim();
+      if (!m || LEAK_RE.test(m)) return fallback;
+      return m;
+    }
+
+    function toLatinDigits(str) {
+      return String(str == null ? "" : str)
+        .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+        .replace(/[\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) - 0x06F0));
+    }
+
+    function cleanText(str) {
+      return toLatinDigits(str).replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF\u00A0]/g, "").trim();
+    }
+
+    function normalizePhone(v) {
+      let p = cleanText(v).replace(/[^\d]/g, "");
+      if (p.length === 14 && p.startsWith("0020")) p = p.slice(4);
+      else if (p.length === 12 && p.startsWith("20")) p = p.slice(2);
+      if (p.length === 10 && p.startsWith("1")) p = "0" + p;
+      return p;
+    }
+
+    // صيغ الرقم المحتمل تخزينها (مع الصفر / بدون الصفر / كما كتبه المستخدم)
+    function phoneVariants(input) {
+      const n = normalizePhone(input);
+      const list = [n];
+      if (n.startsWith("0")) list.push(n.slice(1));
+      list.push(cleanText(input));
+      return [...new Set(list.filter(Boolean))];
+    }
+
+    function codeVariants(input) {
+      const c = cleanText(input);
+      const list = [c, c.replace(/\s+/g, ""), c.toUpperCase(), c.toLowerCase()];
+      return [...new Set(list.filter(Boolean))];
+    }
+
+    function sameCode(a, b) {
+      const f = (x) => cleanText(x).replace(/\s+/g, "").toLowerCase();
+      return f(a) !== "" && f(a) === f(b);
+    }
+
+    function isActivatedValue(code) {
+      const c = cleanText(code);
+      return c !== "" && c !== "غير مفعل";
+    }
+
+    function saveStudentLocal() {
+      try { localStorage.setItem("shafeei_student", JSON.stringify(currentStudent)); } catch (_) {}
+    }
+
+    // محاولة واحدة: ok (نجاح مؤكد) | fail (رد قاطع من السيرفر) | transient (لا نتيجة موثوقة)
+    async function callScript(url, payload) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload),
+          signal: ctrl.signal
+        });
+        if (!res.ok) return { type: "transient" };
+        let data;
+        try { data = JSON.parse(await res.text()); } catch (_) { return { type: "transient" }; }
+        if (!data || typeof data !== "object") return { type: "transient" };
+        if (data.status === "success") return { type: "ok", data };
+        const msg = String(data.message || "");
+        if (TRANSIENT_RE.test(msg)) return { type: "transient" };
+        return { type: "fail", data, message: msg };
+      } catch (_) {
+        return { type: "transient" };
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    // للطلبات القرائية فقط (آمنة للإعادة)
+    async function callWithRetry(url, payload, tries) {
+      for (let i = 0; i < tries; i++) {
+        const r = await callScript(url, payload);
+        if (r.type !== "transient") return r;
+        if (i < tries - 1) await sleep(RETRY_DELAYS[Math.min(i, RETRY_DELAYS.length - 1)]);
+      }
+      return { type: "transient" };
+    }
+
+    // ---- تسجيل الدخول: لا يُعلن الفشل إلا بعد تأكيد متكرر ----
+    async function robustLogin(phoneInput, password) {
+      const variants = phoneVariants(phoneInput);
+      const attempt = (phone) => callWithRetry(
+        GOOGLE_SCRIPT_URL,
+        { action: "login", studentPhone: phone, studentPassword: password },
+        3
+      );
+
+      const first = await attempt(variants[0]);
+      if (first.type === "ok") return first;
+      if (first.type === "transient") return { type: "uncertain" };
+
+      // فحص تأكيدي بالتوازي (باقي صيغ الرقم + إعادة الأساسية) حتى لا يحدث تأخير
+      const extra = await Promise.all(variants.slice(1).concat(variants[0]).map(attempt));
+      const win = extra.find((r) => r.type === "ok");
+      if (win) return win;
+
+      const repeat = extra[extra.length - 1];
+      if (repeat.type === "fail") return first; // فشل مؤكد
+      return { type: "uncertain" };
+    }
+
+    // ---- إنشاء الحساب: تجنّب الازدواج لو ضاع الرد ----
+    async function robustRegister(payload, password) {
+      let ambiguous = false;
+      for (let i = 0; i < 3; i++) {
+        const r = await callScript(GOOGLE_SCRIPT_URL, payload);
+        if (r.type === "ok") return r;
+        if (r.type === "fail") {
+          if (ambiguous) {
+            const lg = await robustLogin(payload.studentPhone, password);
+            if (lg.type === "ok") return lg;
+          }
+          return r;
+        }
+        ambiguous = true;
+        const lg = await callScript(GOOGLE_SCRIPT_URL, {
+          action: "login", studentPhone: payload.studentPhone, studentPassword: password
+        });
+        if (lg.type === "ok") return lg;
+        await sleep(RETRY_DELAYS[Math.min(i, RETRY_DELAYS.length - 1)]);
+      }
+      return { type: "uncertain" };
+    }
+
+    // ---- هل الكود مسجّل فعلاً على حساب هذا الطالب؟ ----
+    async function verifyActivation(code) {
+      if (!sessionCreds) return { state: "unknown" };
+      const lg = await robustLogin(sessionCreds.phone, sessionCreds.password);
+      if (lg.type !== "ok" || !lg.data.user) return { state: "unknown" };
+      const u = lg.data.user;
+      if (isActivatedValue(u.code) && sameCode(u.code, code)) return { state: "yes", user: u };
+      return { state: "no" };
+    }
+
+    // ---- تفعيل الكود: لا يُعلن أنه مستخدم إلا بعد تأكيد ----
+    async function robustActivate(codeInput) {
+      const variants = codeVariants(codeInput);
+      const primary = variants[0];
+      const requestId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      const mk = (c) => ({ action: "activateCode", studentPhone: currentStudent.phone, code: c, requestId });
+      const okResult = (data) => ({ type: "ok", data });
+
+      let ambiguous = false;
+      let r = { type: "transient" };
+      for (let i = 0; i < 3; i++) {
+        r = await callScript(GOOGLE_SCRIPT_URL, mk(primary));
+        if (r.type !== "transient") break;
+        ambiguous = true; // ربما نُفّذ الطلب ولم يصلنا الرد
+        await sleep(RETRY_DELAYS[Math.min(i, RETRY_DELAYS.length - 1)]);
+      }
+
+      if (r.type === "ok") return r;
+
+      if (r.type === "transient") {
+        const v = await verifyActivation(primary);
+        if (v.state === "yes") return okResult({ status: "success", code: primary, user: v.user });
+        return { type: "uncertain" };
+      }
+
+      // رد قاطع بالفشل: نتحقق أولاً هل التفعيل تم فعلاً على نفس الحساب
+      const used = USED_RE.test(r.message);
+      if (used || ambiguous) {
+        const v = await verifyActivation(primary);
+        if (v.state === "yes") return okResult({ status: "success", code: primary, user: v.user });
+        if (ambiguous && used && v.state === "unknown") return { type: "uncertain" };
+      }
+
+      // إعادة فحص (صيغ الحروف + إعادة الأساسي) قبل إعلان الفشل
+      const recheck = await Promise.all(
+        variants.slice(1).concat(primary).map((c) => callWithRetry(GOOGLE_SCRIPT_URL, mk(c), 2))
+      );
+      const win = recheck.find((x) => x.type === "ok");
+      if (win) return win;
+      if (recheck[recheck.length - 1].type === "fail") return r; // فشل مؤكد
+      return { type: "uncertain" };
+    }
+
+    // تسخين الخدمات مسبقاً لإلغاء تأخير أول طلب
+    function warmUpServices() {
+      [GOOGLE_SCRIPT_URL, FORUM_SCRIPT_URL].forEach((u) => {
+        try { fetch(u, { method: "GET", mode: "no-cors", cache: "no-store" }).catch(() => {}); } catch (_) {}
+      });
+    }
+
+   const tawheedLectures = [
+      { id: "t1", title: "المحاضرة الأولى: التوحيد", link: "https://drive.google.com/file/d/1tRQT8wGl0JBAULtHP8unHgOUvEuMAvfr/view?usp=drive_link", homeworkLink: "https://docs.google.com/forms/d/e/1FAIpQLSflltq-w4A3brHYdi7IQb8kqwKdoA24D4feQYECKf3sr8gBvw/viewform?usp=publish-editor" },
+      { id: "t2", title: "المحاضرة الثانية: التوحيد", link: "https://drive.google.com/file/d/1g2ERaFdG6cBM3eAfJtzqmFP5UwQcxMt9/view?usp=drive_link", homeworkLink: "https://docs.google.com/forms/d/16z53vS1Y84g9PAn7SbZXtx1NQOT_HDqxM0vCqRJc8xA/edit?usp=forms_home&ouid=106441308019209743681" },
+      { id: "t3", title: "المحاضرة الثالثة: التوحيد", link: "https://drive.google.com/file/d/1gk4Mexrh9jf5BlmUcaDafT0c3kncq85Y/view?usp=drive_link", homeworkLink: "https://docs.google.com/forms/d/e/1FAIpQLSdwmqzQa7IOzoYYUWisGsJTbTToNh5RQN0x_pmjyqxL1l3VbQ/viewform?usp=publish-editor" },
+      { id: "t4", title: "المحاضرة الرابعة: التوحيد", link: "https://drive.google.com/file/d/1fxC30t7ObU-JcnYKWfPhQkMgW-f7OHty/view?usp=drive_link", homeworkLink: "https://docs.google.com/forms/d/e/1FAIpQLSfmL632YLUQnsIywV_xBQvNIMVhDmd_KKa9ZOrXhOxT8LlQng/viewform?usp=publish-editor" }
     ];
 
     const tafseerLectures = [
-      { id: "tf1", title: "المحاضرة الأولى: التفسير", link: "https://drive.google.com/file/d/139CDLmXSSNs4GUrw26upbtCqq6byiDgn/view?usp=drive_link" },
-      { id: "tf2", title: "المحاضرة الثانية: التفسير", link: "https://drive.google.com/file/d/11ZAKMszdb9ElNIjMsllSBPBNaqpP68aM/view?usp=drive_link" },
-      { id: "tf3", title: "المحاضرة الثالثة: التفسير", link: "https://drive.google.com/file/d/17ga9UaEakhtKJI6KUg_Ife0Dy4D4DFN7/view?usp=drive_link" },
-      { id: "tf4", title: "المحاضرة الرابعة: التفسير", link: "https://drive.google.com/file/d/1ybVBfpGwWhA5LbLtcptzduZwuipxECEl/view?usp=drive_link" },
-      { id: "tf5", title: "المحاضرة الخامسة: التفسير", link: "https://drive.google.com/file/d/1OOIoWtn-K1oIcI6I36jJS90EoRH1Aa82/view?usp=drive_link" },
-      { id: "tf6", title: "المحاضرة السادسة: التفسير", link: "https://drive.google.com/file/d/1tBOW4BSmxEGvgSCbEmcvWOF40ENRmxBV/view?usp=drive_link" },
-      { id: "tf7", title: "المحاضرة السابعة: التفسير", link: "https://hlymw58-creator.github.io/8/" },
-      { id: "tf8", title: "المحاضرة الثامنة: التفسير", link: "https://hlymw58-creator.github.io/9/" }
+      { id: "tf1", title: "المحاضرة الأولى: التفسير", link: "https://drive.google.com/file/d/139CDLmXSSNs4GUrw26upbtCqq6byiDgn/view?usp=drive_link", homeworkLink: "https://forms.gle/38sL2my4QT7NoH7r7" },
+      { id: "tf2", title: "المحاضرة الثانية: التفسير", link: "https://drive.google.com/file/d/11ZAKMszdb9ElNIjMsllSBPBNaqpP68aM/view?usp=drive_link", homeworkLink: "https://docs.google.com/forms/d/1I40mwymBtTsKgtEUheOx2Cqn2NaYJ1t5XkuUN8FGkTw/edit?usp=forms_home&ouid=106441308019209743681" },
+      { id: "tf3", title: "المحاضرة الثالثة: التفسير", link: "https://drive.google.com/file/d/17ga9UaEakhtKJI6KUg_Ife0Dy4D4DFN7/view?usp=drive_link", homeworkLink: "https://forms.gle/XtFe2kFHJjLNgYy3A" },
+      { id: "tf4", title: "المحاضرة الرابعة: التفسير", link: "https://drive.google.com/file/d/1ybVBfpGwWhA5LbLtcptzduZwuipxECEl/view?usp=drive_link", homeworkLink: "https://forms.gle/thWPjEB9Geg3fhD99" },
+      { id: "tf5", title: "المحاضرة الخامسة: التفسير", link: "https://drive.google.com/file/d/1OOIoWtn-K1oIcI6I36jJS90EoRH1Aa82/view?usp=drive_link", homeworkLink: "https://forms.gle/YAQCB8V9FEMeE5BT6" },
+      { id: "tf6", title: "المحاضرة السادسة: التفسير", link: "https://drive.google.com/file/d/1tBOW4BSmxEGvgSCbEmcvWOF40ENRmxBV/view?usp=drive_link", homeworkLink: "" },
+      { id: "tf7", title: "المحاضرة السابعة: التفسير", link: "https://hlymw58-creator.github.io/8/", homeworkLink: "" },
+      { id: "tf8", title: "المحاضرة الثامنة: التفسير", link: "https://hlymw58-creator.github.io/9/", homeworkLink: "" }
     ];
 
     const fiqhLectures = [
-      { id: "f1", title: "المحاضرة الأولى: الفقه الشافعي", link: "https://drive.google.com/file/d/1DnbbyVdf-DPYRegAVp14fu8NOAdWeYkl/view?usp=drive_link" },
-      { id: "f2", title: "المحاضرة الثانية: الفقه الشافعي", link: "https://drive.google.com/file/d/1QCbV_Cmxq1z9uslRzVr93pI46EmOiCAe/view?usp=drive_link" },
-      { id: "f3", title: "المحاضرة الثالثة: الفقه الشافعي", link: "https://drive.google.com/file/d/1XEqiFjjcD7AmPxXBm8f5ktMFYOIrDhW2/view?usp=drive_link" },
-      { id: "f4", title: "المحاضرة الرابعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1vGMqN_XRKk0v-jkOQBHdQVZV-bZC3qeL/view?usp=drive_link" },
-      { id: "f5", title: "المحاضرة الخامسة: الفقه الشافعي", link: "https://drive.google.com/file/d/1sVj16wJql5FYl0P6hSJMJ9ngWWyOJEC5/view?usp=drive_link" },
-      { id: "f6", title: "المحاضرة السادسة: الفقه الشافعي", link: "https://drive.google.com/file/d/1p3GzDReKov8p7w1oZwBuW7E6dFD-l6aR/view?usp=drive_link" },
-      { id: "f7", title: "المحاضرة السابعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ZcRLp1vRYycezeu40Rl-NmmTBJawMOCg/view?usp=drive_link" },
-      { id: "f8", title: "المحاضرة الثامنة: الفقه الشافعي", link: "https://drive.google.com/file/d/1xLErlwikAKjdOmWHIODlsdVhpiubOI1w/view?usp=drive_link" },
-      { id: "f9", title: "المحاضرة التاسعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ApGtlqrh5-XRCj7YtxzusZleuT99SKiP/view?usp=drive_link" }
+      { id: "f1", title: "المحاضرة الأولى: الفقه الشافعي", link: "https://drive.google.com/file/d/1DnbbyVdf-DPYRegAVp14fu8NOAdWeYkl/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f2", title: "المحاضرة الثانية: الفقه الشافعي", link: "https://drive.google.com/file/d/1QCbV_Cmxq1z9uslRzVr93pI46EmOiCAe/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f3", title: "المحاضرة الثالثة: الفقه الشافعي", link: "https://drive.google.com/file/d/1XEqiFjjcD7AmPxXBm8f5ktMFYOIrDhW2/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f4", title: "المحاضرة الرابعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1vGMqN_XRKk0v-jkOQBHdQVZV-bZC3qeL/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f5", title: "المحاضرة الخامسة: الفقه الشافعي", link: "https://drive.google.com/file/d/1sVj16wJql5FYl0P6hSJMJ9ngWWyOJEC5/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f6", title: "المحاضرة السادسة: الفقه الشافعي", link: "https://drive.google.com/file/d/1p3GzDReKov8p7w1oZwBuW7E6dFD-l6aR/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f7", title: "المحاضرة السابعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ZcRLp1vRYycezeu40Rl-NmmTBJawMOCg/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f8", title: "المحاضرة الثامنة: الفقه الشافعي", link: "https://drive.google.com/file/d/1xLErlwikAKjdOmWHIODlsdVhpiubOI1w/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f9", title: "المحاضرة التاسعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ApGtlqrh5-XRCj7YtxzusZleuT99SKiP/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" }
     ];
 
     const osoolLectures = [
-      { id: "o1", title: "المحاضرة الأولى: الحديث", link: "https://hlymw58-creator.github.io/86/" },
-      { id: "o2", title: "المحاضرة الثانية: الحديث", link: "https://hlymw58-creator.github.io/23-9-2026/" }
+      { id: "o1", title: "المحاضرة الأولى: الحديث", link: "https://hlymw58-creator.github.io/86/", homeworkLink: "" },
+      { id: "o2", title: "المحاضرة الثانية: الحديث", link: "https://hlymw58-creator.github.io/23-9-2026/", homeworkLink: "" }
     ];
 
     let currentStudent = null;
@@ -806,9 +1031,10 @@
     let forumPosts = [];
 
     function checkAuth() {
-      const savedStudent = localStorage.getItem("shafeei_student");
-      if (savedStudent) {
-        currentStudent = JSON.parse(savedStudent);
+      let savedStudent = null;
+      try { savedStudent = JSON.parse(localStorage.getItem("shafeei_student") || "null"); } catch (_) { savedStudent = null; }
+      if (savedStudent && typeof savedStudent === "object") {
+        currentStudent = savedStudent;
         document.getElementById("studentNameDisplay").innerText = currentStudent.name || "طالب";
         document.getElementById("authModal").style.display = "none";
         loadAttendance();
@@ -845,75 +1071,73 @@
       }
     }
 
+    let authInFlight = false;
+
     async function handleAuthSubmit(e) {
       e.preventDefault();
-      const phone = document.getElementById("studentPhone").value.trim();
+      if (authInFlight) return;
+
+      const rawPhone = document.getElementById("studentPhone").value;
+      const phone = normalizePhone(rawPhone);
       const password = document.getElementById("studentPassword").value.trim();
       const errorDiv = document.getElementById("authError");
       const submitBtn = document.getElementById("authSubmitBtn");
 
+      const showError = (msg) => { errorDiv.innerText = msg; errorDiv.style.display = "block"; };
       errorDiv.style.display = "none";
-      let payload = {};
 
+      if (!phone) { showError("يرجى إدخال رقم الهاتف."); return; }
+
+      let registerPayload = null;
       if (isRegisterMode) {
         const name = document.getElementById("regFullName").value.trim();
-        const parentPhone = document.getElementById("regParentPhone").value.trim();
+        const parentPhoneRaw = document.getElementById("regParentPhone").value;
         const governorate = document.getElementById("regGovernorate").value;
         const nationality = document.getElementById("regNationality").value;
         const confirmPass = document.getElementById("confirmPassword").value.trim();
 
-        if (password !== confirmPass) {
-          errorDiv.innerText = "كلمتا السر غير متطابقتين!";
-          errorDiv.style.display = "block";
-          return;
-        }
+        if (password !== confirmPass) { showError("كلمتا السر غير متطابقتين!"); return; }
 
-        payload = {
+        registerPayload = {
           action: "register",
           studentName: name,
           studentPhone: phone,
-          parentPhone: parentPhone,
+          parentPhone: normalizePhone(parentPhoneRaw) || parentPhoneRaw.trim(),
           governorate: governorate,
           nationality: nationality,
           studentPassword: password
         };
-      } else {
-        payload = {
-          action: "login",
-          studentPhone: phone,
-          studentPassword: password
-        };
       }
 
+      authInFlight = true;
       submitBtn.disabled = true;
-      submitBtn.innerText = "جاري التحقق مع Google Sheet...";
+      submitBtn.innerText = isRegisterMode ? "جاري إنشاء الحساب..." : "جاري التحقق...";
 
       try {
-        const res = await fetch(GOOGLE_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
-        });
+        const result = isRegisterMode
+          ? await robustRegister(registerPayload, password)
+          : await robustLogin(rawPhone, password);
 
-        const data = await res.json();
-
-        if (data.status === "success") {
-          currentStudent = data.user;
-          localStorage.setItem("shafeei_student", JSON.stringify(currentStudent));
-          document.getElementById("studentNameDisplay").innerText = currentStudent.name;
+        if (result.type === "ok" && result.data && result.data.user) {
+          currentStudent = result.data.user;
+          if (!currentStudent.phone) currentStudent.phone = phone;
+          sessionCreds = { phone: currentStudent.phone, password: password };
+          saveStudentLocal();
+          document.getElementById("studentNameDisplay").innerText = currentStudent.name || "طالب";
           document.getElementById("authModal").style.display = "none";
           loadAttendance();
           loadForumPosts();
           renderAll();
+        } else if (result.type === "fail") {
+          showError(safeMsg(result.message, "بيانات الدخول غير صحيحة."));
         } else {
-          errorDiv.innerText = data.message || "حدث خطأ في البيانات";
-          errorDiv.style.display = "block";
+          showError(GENERIC_ERROR);
         }
       } catch (err) {
         console.error(err);
-        errorDiv.innerText = "حدث خطأ في الاتصال بالسيرفر.";
-        errorDiv.style.display = "block";
+        showError(GENERIC_ERROR);
       } finally {
+        authInFlight = false;
         submitBtn.disabled = false;
         submitBtn.innerText = isRegisterMode ? "إنشاء الحساب" : "دخول المنصة";
       }
@@ -927,43 +1151,48 @@
       document.getElementById("codeModal").style.display = "none";
     }
 
+    let activationInFlight = false;
+
     async function handleCodeSubmit(e) {
       e.preventDefault();
-      const code = document.getElementById("activationCode").value.trim();
+      if (activationInFlight) return;
+
+      const codeInput = document.getElementById("activationCode").value;
       const errorDiv = document.getElementById("codeError");
       const submitBtn = document.getElementById("codeSubmitBtn");
+      const showError = (msg) => { errorDiv.innerText = msg; errorDiv.style.display = "block"; };
 
       errorDiv.style.display = "none";
+
+      if (!cleanText(codeInput)) { showError("يرجى إدخال كود التفعيل."); return; }
+      if (!currentStudent || !currentStudent.phone) { showError("يرجى تسجيل الدخول أولاً."); return; }
+
+      activationInFlight = true;
       submitBtn.disabled = true;
-      submitBtn.innerText = "جاري الحفظ في الشيت...";
+      submitBtn.innerText = "جاري حفظ البيانات...";
 
       try {
-        const res = await fetch(GOOGLE_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            action: "activateCode",
-            studentPhone: currentStudent.phone,
-            code: code
-          })
-        });
+        const result = await robustActivate(codeInput);
 
-        const data = await res.json();
-
-        if (data.status === "success") {
-          alert("تم تفعيل الكورس بنجاح وتوثيقه في Google Sheet!");
-          currentStudent.code = data.code;
-          localStorage.setItem("shafeei_student", JSON.stringify(currentStudent));
+        if (result.type === "ok") {
+          const d = result.data || {};
+          currentStudent.code = d.code || (d.user && d.user.code) || cleanText(codeInput);
+          saveStudentLocal();
+          document.getElementById("activationCode").value = "";
           closeCodeModal();
           renderAll();
+          loadForumPosts();
+          alert("تم تفعيل الكورس بنجاح!");
+        } else if (result.type === "fail") {
+          showError(safeMsg(result.message, "الكود غير صحيح أو تم استخدامه مسبقاً."));
         } else {
-          errorDiv.innerText = data.message || "الكود غير صحيح أو تم استخدامه مسبقاً";
-          errorDiv.style.display = "block";
+          showError(GENERIC_ERROR);
         }
       } catch (err) {
-        errorDiv.innerText = "حدث خطأ أثناء التفعيل";
-        errorDiv.style.display = "block";
+        console.error(err);
+        showError(GENERIC_ERROR);
       } finally {
+        activationInFlight = false;
         submitBtn.disabled = false;
         submitBtn.innerText = "تفعيل الكورس";
       }
@@ -996,7 +1225,11 @@
       const isCourseActivated = currentStudent && currentStudent.code && currentStudent.code !== "غير مفعل";
 
       lecturesList.forEach(lecture => {
-        const hasLink = lecture.link && lecture.link.trim() !== "";
+        // الروابط تُكتب مباشرة في الكود (في مصفوفات المحاضرات بالأعلى)
+        const effectiveLink = lecture.link;
+        const homeworkLink = lecture.homeworkLink || "";
+
+        const hasLink = effectiveLink && effectiveLink.trim() !== "";
         const isAttended = attendanceRecords[lecture.id] || false;
 
         let actionButtonHTML = "";
@@ -1007,13 +1240,23 @@
             </button>
           `;
         } else {
-          const linkHref = hasLink ? lecture.link : "#";
+          const linkHref = hasLink ? effectiveLink : "#";
           const targetAttr = hasLink ? 'target="_blank" rel="noopener noreferrer"' : 'onclick="alert(\'لم يتم إدراج رابط المحاضرة حتى الآن\'); return false;"';
+
+          let homeworkButtonHTML = "";
+          if (homeworkLink && homeworkLink.trim() !== "") {
+            homeworkButtonHTML = `
+              <a href="${homeworkLink}" target="_blank" rel="noopener noreferrer" class="btn-homework">
+                📝 الواجب 
+              </a>
+            `;
+          }
 
           actionButtonHTML = `
             <a href="${linkHref}" ${targetAttr} class="btn-open-lecture">
               🔗 دخول المحاضرة
             </a>
+            ${homeworkButtonHTML}
             <button type="button" 
                     class="btn-confirm-attendance" 
                     id="btn-att-${lecture.id}" 
@@ -1067,6 +1310,14 @@
       }
     }
 
+    let forumLoadSeq = 0;
+
+    async function fetchForumPosts() {
+      const r = await callWithRetry(FORUM_SCRIPT_URL, { action: "getPosts" }, 3);
+      if (r.type === "ok") return r.data.posts || [];
+      return null;
+    }
+
     async function loadForumPosts() {
       const container = document.getElementById("forumContainer");
       if (!container) return;
@@ -1084,25 +1335,22 @@
         return;
       }
 
-      container.innerHTML = `<p style="text-align: center; color: #666; padding: 20px;">جاري تحميل المنشورات من الشيت...</p>`;
+      const seq = ++forumLoadSeq;
+      container.innerHTML = `<p style="text-align: center; color: #666; padding: 20px;">جاري تحميل المنشورات...</p>`;
 
-      try {
-        const res = await fetch(FORUM_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "getPosts" })
-        });
-        const data = await res.json();
+      const posts = await fetchForumPosts();
+      if (seq !== forumLoadSeq) return; // طلب أحدث حلّ محلّه
 
-        if (data.status === "success") {
-          forumPosts = data.posts || [];
-          renderForumUI();
-        } else {
-          container.innerHTML = `<p style="text-align: center; color: red; padding: 20px;">فشل في تحميل المنشورات.</p>`;
-        }
-      } catch (err) {
-        console.error(err);
-        container.innerHTML = `<p style="text-align: center; color: red; padding: 20px;">خطأ في الاتصال بسيرفر المنتدى.</p>`;
+      if (posts) {
+        forumPosts = posts;
+        renderForumUI();
+      } else {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 20px;">
+            <p style="color: red; margin-bottom: 12px;">تعذر تحميل المنشورات الآن.</p>
+            <button type="button" class="btn-activate-code" style="padding: 10px 20px; font-size: 15px;" onclick="loadForumPosts()">إعادة المحاولة</button>
+          </div>
+        `;
       }
     }
 
@@ -1135,7 +1383,7 @@
 
           let teacherInputBox = "";
           // السماح للحسابات الإدارية المحددة فقط بظهور صندوق وكتابة الرد
-          if (currentStudent && SUPPORT_ADMIN_PHONES.includes(currentStudent.phone)) {
+          if (currentStudent && SUPPORT_ADMIN_PHONES.includes(normalizePhone(currentStudent.phone))) {
             teacherInputBox = `
               <div class="teacher-input-group">
                 <input type="text" id="reply-input-${post.rowIndex}" placeholder="اكتب رد الدعم أو الأستاذ هنا...">
@@ -1172,30 +1420,34 @@
       }
 
       submitBtn.disabled = true;
-      submitBtn.innerText = "جاري النشر وإرساله للشيت...";
+      submitBtn.innerText = "جاري النشر...";
 
       try {
-        const res = await fetch(FORUM_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            action: "addPost",
-            author: currentStudent ? currentStudent.name : "طالب",
-            phone: currentStudent ? currentStudent.phone : "",
-            content: content
-          })
+        const r = await callScript(FORUM_SCRIPT_URL, {
+          action: "addPost",
+          author: currentStudent ? currentStudent.name : "طالب",
+          phone: currentStudent ? currentStudent.phone : "",
+          content: content
         });
 
-        const data = await res.json();
-        if (data.status === "success") {
+        let posted = r.type === "ok";
+        if (r.type === "transient") {
+          // ربما نُشر المنشور ولم يصلنا الرد: نتحقق قبل إعلان أي نتيجة (لتجنب التكرار)
+          const posts = await fetchForumPosts();
+          posted = !!(posts && posts.some((p) => String(p.content || "").trim() === content));
+        }
+
+        if (posted) {
           document.getElementById("forumInputContent").value = "";
           loadForumPosts();
+        } else if (r.type === "fail") {
+          alert(safeMsg(r.message, "حدث خطأ أثناء النشر."));
         } else {
-          alert(data.message || "حدث خطأ أثناء النشر");
+          alert(GENERIC_ERROR);
         }
       } catch (err) {
         console.error(err);
-        alert("حدث خطأ في الاتصال بالخادم.");
+        alert(GENERIC_ERROR);
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = "نشر في المنتدى";
@@ -1213,26 +1465,30 @@
       }
 
       try {
-        const res = await fetch(FORUM_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            action: "teacherReply",
-            rowIndex: rowIndex,
-            replyText: replyText
-          })
+        const r = await callScript(FORUM_SCRIPT_URL, {
+          action: "teacherReply",
+          rowIndex: rowIndex,
+          replyText: replyText
         });
 
-        const data = await res.json();
-        if (data.status === "success") {
-          alert("تم إرسال رد الأستاذ/فريق الدعم بنجاح وتحديث الشيت!");
+        let done = r.type === "ok";
+        if (r.type === "transient") {
+          const posts = await fetchForumPosts();
+          const post = posts && posts.find((p) => p.rowIndex === rowIndex);
+          done = !!(post && String(post.teacherReply || "").trim() === replyText);
+        }
+
+        if (done) {
+          alert("تم إرسال الرد بنجاح!");
           loadForumPosts();
+        } else if (r.type === "fail") {
+          alert(safeMsg(r.message, "حدث خطأ أثناء إرسال الرد."));
         } else {
-          alert(data.message || "حدث خطأ أثناء إرسال الرد");
+          alert(GENERIC_ERROR);
         }
       } catch (err) {
         console.error(err);
-        alert("خطأ في الاتصال بالخادم.");
+        alert(GENERIC_ERROR);
       }
     }
 
@@ -1259,7 +1515,9 @@
     }
 
     window.onload = function() {
+      warmUpServices();
       checkAuth();
+      setInterval(() => { if (!document.hidden) warmUpServices(); }, 240000);
     };
   </script>
 </body>
