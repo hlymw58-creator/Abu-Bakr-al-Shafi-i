@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>منصة الشافعي الصغير</title>
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
   <style>
     :root {
       --primary-color: #1b5e20;
@@ -28,14 +29,25 @@
     }
 
     body {
+      position: relative;
       background-color: var(--bg-color);
+      color: var(--text-color);
+      padding-bottom: 40px;
+    }
+
+    /* الخلفية بقت في عنصر مستقل بدل ما تتحط "filter" على body مباشرة،
+       لأن filter على body كان بيخلي أي عنصر position:fixed جواه (زي زر الدعم العائم)
+       يتثبت بالنسبة لصفحة الـ body نفسها مش بالنسبة للشاشة، فكان بينزل معاك وانت بتعمل سكرول */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
       background-image: linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)), url('https://lh3.googleusercontent.com/d/11cx_kG09s3PtT70TFoBZ2S8yw_WvIOkD');
       background-size: cover;
       background-position: center;
-      background-attachment: fixed;
       filter: contrast(125%) saturate(130%) brightness(102%);
-      color: var(--text-color);
-      padding-bottom: 40px;
+      pointer-events: none;
     }
 
     header {
@@ -548,6 +560,302 @@
       color: #cccccc;
       direction: ltr;
     }
+
+    /* ============================================================ */
+    /* ============  مشغل الفيديو المحمي (داخل المنصة)  ============ */
+    /* تصميم خفيف قصداً: بدون تأثيرات blur/shadow تقيلة فوق الفيديو،   */
+    /* وبدون تحميل الفيديو الفعلي (iframe) غير لحظة ما الطالب يدوس تشغيل */
+    /* ============================================================ */
+    .pv-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(5, 19, 14, 0.97);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .pv-overlay.active { display: flex; }
+
+    .pv-card {
+      width: 100%;
+      max-width: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
+      margin: 0;
+      background: linear-gradient(160deg, #04150d 0%, #0b2b1a 55%, #0e3a22 100%);
+      border: 2px solid #d4af37;
+      border-radius: 0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+      padding-top: calc(10px + env(safe-area-inset-top, 0px));
+      box-shadow: 0 10px 26px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* من مقاس التابلت/الكمبيوتر فوق: عرض كامل ومريح للشاشة بدل الشكل الضيق بتاع الموبايل */
+    @media (min-width: 700px) {
+      .pv-card {
+        width: min(94vw, 1100px);
+        height: min(94dvh, 720px);
+        margin: auto;
+        border-radius: 16px;
+      }
+    }
+
+    .pv-close-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #d32f2f;
+      color: #fff;
+      border: 2px solid #fff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .pv-brand {
+      text-align: center;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .pv-brand-title {
+      color: #d4af37;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .pv-brand-sub {
+      color: #f4e285;
+      font-size: 0.72rem;
+      font-weight: 600;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .pv-title {
+      text-align: center;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pv-video-wrap {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .pv-video-container {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      user-select: none;
+      -webkit-user-select: none;
+      /* الأبعاد الفعلية بتتحدد بالجافاسكريبت (pvFitLayout) عشان الفيديو يتلائم مع أي مقاس شاشة بالظبط بدون ما يزيد عن حجم الصندوق */
+      width: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 16 / 9;
+    }
+
+    .pv-video-container .plyr__video-embed iframe {
+      pointer-events: none !important;
+    }
+
+    /* واجهة "فاساد" خفيفة: صورة مصغّرة وزرار تشغيل، والفيديو الحقيقي (iframe) ما بيتحملش في الصفحة
+       إلا بعد ما الطالب يدوس عليها فعلياً — ده اللي بيمنع تهنيج الموبايل عند فتح المحاضرة */
+    .pv-facade {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #000;
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+    }
+    .pv-facade-play {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.55);
+      border: 2px solid #d4af37;
+      color: #fff;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pv-support-row {
+      flex-shrink: 0;
+      display: flex;
+      gap: 8px;
+      padding-top: 2px;
+    }
+
+    .pv-support-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background-color: #0b2b1a;
+      color: #fff;
+      text-decoration: none;
+      border: 1.5px solid #ffb300;
+      border-radius: 30px;
+      padding: 8px 6px;
+      font-size: 11px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .pv-support-btn.academic { border-color: #25d366; }
+
+    .pv-support-btn .pv-phone {
+      display: block;
+      font-size: 10px;
+      color: #cccccc;
+      direction: ltr;
+      font-weight: normal;
+    }
+
+    .pv-touch-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: calc(100% - 50px);
+      z-index: 25;
+      display: none;
+    }
+    .pv-touch-zone {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+    }
+    .pv-touch-zone.pv-seek-right { width: 15%; }
+    .pv-touch-zone.pv-play-center { width: 70%; }
+    .pv-touch-zone.pv-seek-left { width: 15%; }
+
+    .pv-seek-feedback {
+      position: absolute;
+      background: rgba(0,0,0,0.8);
+      color: #d4af37;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      transform: scale(0.7);
+      border: 1px solid #d4af37;
+      white-space: nowrap;
+    }
+    .pv-seek-feedback.show { opacity: 1; transform: scale(1); }
+
+    #pv-watermark {
+      position: absolute;
+      top: 8px; right: 12px;
+      z-index: 99 !important;
+      color: rgba(255,255,255,0.4);
+      font-size: 0.55rem !important;
+      font-weight: 500;
+      pointer-events: none;
+      background: rgba(0,0,0,0.25);
+      padding: 2px 6px;
+      border-radius: 8px;
+      letter-spacing: 0.2px;
+      transition: top 1.5s linear, right 1.5s linear;
+      border: 1px solid rgba(212,175,55,0.12);
+      white-space: nowrap;
+    }
+
+    .pv-attention-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(3, 10, 7, 0.94);
+      z-index: 2100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .pv-attention-overlay.active { display: flex; }
+
+    .pv-attention-card {
+      background: rgba(10, 25, 18, 0.96);
+      border: 2px solid #d4af37;
+      border-radius: 20px;
+      padding: 25px 20px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      color: #fff;
+    }
+    .pv-attention-card h3 { color: #d4af37; margin: 8px 0; font-size: 1.3rem; }
+    .pv-attention-card p { color: #f4e285; font-size: 0.9rem; margin-bottom: 14px; }
+    .pv-attention-card input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #d4af37;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .pv-attention-card button {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(45deg, #d4af37, #f4e285);
+      color: #05130e;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .pv-attention-error {
+      color: #ff4d4d;
+      font-size: 0.85rem;
+      display: none;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -703,6 +1011,57 @@
     </div>
   </div>
 
+  <!-- نافذة مشغل الفيديو المحمي (يفتح داخل المنصة عند الدخول للمحاضرة) -->
+  <div class="pv-overlay" id="pvOverlay">
+    <div class="pv-card">
+      <button type="button" class="pv-close-btn" onclick="closeProtectedPlayer()" title="إغلاق">✕</button>
+      <div class="pv-brand">
+        <div class="pv-brand-title">منصة الشافعي الصغير</div>
+        <div class="pv-brand-sub">إعداد أ. أبو بكر الشافعي</div>
+      </div>
+      <div class="pv-title" id="pvLectureTitle">المحاضرة</div>
+      <div class="pv-video-wrap" id="pvVideoWrap">
+        <div class="pv-video-container" id="pvVideoBox">
+          <div class="pv-facade" id="pvFacade" onclick="pvStartPlayback()">
+            <div class="pv-facade-play">▶</div>
+          </div>
+          <div class="pv-touch-overlay" id="pvTouchOverlay">
+            <div class="pv-touch-zone pv-seek-right" id="pvZoneRight" title="تقديم 10 ثوانٍ">
+              <div class="pv-seek-feedback" id="pvFeedbackRight">+10s</div>
+            </div>
+            <div class="pv-touch-zone pv-play-center" id="pvZoneCenter" title="تشغيل / إيقاف"></div>
+            <div class="pv-touch-zone pv-seek-left" id="pvZoneLeft" title="تأخير 10 ثوانٍ">
+              <div class="pv-seek-feedback" id="pvFeedbackLeft">-10s</div>
+            </div>
+          </div>
+          <div id="pvPlayer"></div>
+        </div>
+      </div>
+      <div class="pv-support-row">
+        <a href="https://wa.me/201099442329" target="_blank" class="pv-support-btn tech">
+          🎧 <span>الدعم الفني<span class="pv-phone">01099442329</span></span>
+        </a>
+        <a href="https://wa.me/201101662590" target="_blank" class="pv-support-btn academic">
+          💬 <span>واتساب المستر<span class="pv-phone">01101662590</span></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة فحص التركيز والانتباه أثناء مشاهدة المحاضرة المحمية -->
+  <div class="pv-attention-overlay" id="pvAttentionModal">
+    <div class="pv-attention-card">
+      <h3>اختبار التركيز! 🧠</h3>
+      <p>هل ما زلت تتابع المحاضرة بتركيز؟ أجب عن السؤال لمتابعة الشرح:</p>
+      <form id="pvAttentionForm" onsubmit="pvVerifyAttention(event)">
+        <label id="pvCaptchaQuestion" style="display:block; font-weight:bold; color:#f4e285; margin-bottom:8px;"></label>
+        <input type="number" id="pvCaptchaAnswer" required placeholder="اكتب الناتج..." autocomplete="off">
+        <p class="pv-attention-error" id="pvErrorMsg">الإجابة غير صحيحة، حاول مجدداً!</p>
+        <button type="submit">متابعة الشرح ✅</button>
+      </form>
+    </div>
+  </div>
+
   <!-- عناصر الدعم العائم -->
   <div class="support-widget" id="supportWidget">
     <button class="support-main-btn" onclick="toggleSupportMenu()" title="الدعم والمساعدة">
@@ -767,6 +1126,9 @@
       </div>
     </div>
   </div>
+
+  <!-- مكتبة المشغل الاحترافي للفيديو المحمي -->
+  <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
 
   <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOxTAIi0vg-ljJYn95vaox2qRSC7fBdgvlIGebURXTGK6YPEP1CWRO9LwDwTspKTb6/exec";
@@ -1017,7 +1379,8 @@
       { id: "f6", title: "المحاضرة السادسة: الفقه الشافعي", link: "https://drive.google.com/file/d/1p3GzDReKov8p7w1oZwBuW7E6dFD-l6aR/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
       { id: "f7", title: "المحاضرة السابعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ZcRLp1vRYycezeu40Rl-NmmTBJawMOCg/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
       { id: "f8", title: "المحاضرة الثامنة: الفقه الشافعي", link: "https://drive.google.com/file/d/1xLErlwikAKjdOmWHIODlsdVhpiubOI1w/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
-      { id: "f9", title: "المحاضرة التاسعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ApGtlqrh5-XRCj7YtxzusZleuT99SKiP/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" }
+      { id: "f9", title: "المحاضرة التاسعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ApGtlqrh5-XRCj7YtxzusZleuT99SKiP/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f10", title: "المحاضرة العاشرة: الفقه الشافعي", link: "", homeworkLink: "" }
     ];
 
     const osoolLectures = [
@@ -1241,7 +1604,7 @@
           `;
         } else {
           const linkHref = hasLink ? effectiveLink : "#";
-          const targetAttr = hasLink ? 'target="_blank" rel="noopener noreferrer"' : 'onclick="alert(\'لم يتم إدراج رابط المحاضرة حتى الآن\'); return false;"';
+          const isYouTubeLink = hasLink && isYouTubeUrl(effectiveLink);
 
           let homeworkButtonHTML = "";
           if (homeworkLink && homeworkLink.trim() !== "") {
@@ -1252,10 +1615,31 @@
             `;
           }
 
+          let openLectureButtonHTML;
+          if (!hasLink) {
+            openLectureButtonHTML = `
+              <a href="#" onclick="alert('لم يتم إدراج رابط المحاضرة حتى الآن'); return false;" class="btn-open-lecture">
+                🔗 دخول المحاضرة
+              </a>
+            `;
+          } else if (isYouTubeLink) {
+            // رابط يوتيوب: يفتح داخل المشغل المحمي في نفس المنصة
+            openLectureButtonHTML = `
+              <button type="button" class="btn-open-lecture" onclick="openProtectedPlayer('${effectiveLink}', '${lecture.title.replace(/'/g, "\\'")}')">
+                🔗 دخول المحاضرة
+              </button>
+            `;
+          } else {
+            // أي رابط آخر (درايف مثلاً) يفتح في تبويب جديد كالمعتاد
+            openLectureButtonHTML = `
+              <a href="${linkHref}" target="_blank" rel="noopener noreferrer" class="btn-open-lecture">
+                🔗 دخول المحاضرة
+              </a>
+            `;
+          }
+
           actionButtonHTML = `
-            <a href="${linkHref}" ${targetAttr} class="btn-open-lecture">
-              🔗 دخول المحاضرة
-            </a>
+            ${openLectureButtonHTML}
             ${homeworkButtonHTML}
             <button type="button" 
                     class="btn-confirm-attendance" 
@@ -1308,6 +1692,276 @@
       if (saved) {
         attendanceRecords = JSON.parse(saved);
       }
+    }
+
+    // ============================================================
+    // ============  مشغل الفيديو المحمي (داخل المنصة)  ============
+    // ============================================================
+
+    // يتعرف هل الرابط رابط يوتيوب أم لا (المحاضرات اللي رابطها يوتيوب هتفتح
+    // بالمشغل المحمي جوه المنصة، وأي رابط تاني زي الدرايف هيفتح بتاب جديد كالمعتاد)
+    function isYouTubeUrl(url) {
+      return /(?:youtube\.com|youtu\.be)/i.test(url || "");
+    }
+
+    // يستخرج ID فيديو اليوتيوب من أي شكل رابط (watch, youtu.be, embed, shorts)
+    function extractYouTubeId(url) {
+      if (!url) return "";
+      const patterns = [
+        /(?:youtube\.com\/watch\?v=)([^&\s]+)/,
+        /(?:youtu\.be\/)([^?&\s]+)/,
+        /(?:youtube\.com\/embed\/)([^?&\s]+)/,
+        /(?:youtube\.com\/shorts\/)([^?&\s]+)/
+      ];
+      for (const p of patterns) {
+        const m = url.match(p);
+        if (m && m[1]) return m[1];
+      }
+      return "";
+    }
+
+    let pvPlayerInstance = null;
+    let pvCheckPoints = [];
+    let pvCheckedPoints = new Set();
+    let pvCorrectAnswer = 0;
+    let pvWatermarkInterval = null;
+    let pvPendingVideoId = null;
+    let pvPendingTitle = "";
+    let pvResizeScheduled = false;
+
+    // بيحسب المساحة المتاحة فعلياً حوالين الفيديو (بعد العنوان والأزرار) ويظبط مقاس صندوق
+    // الفيديو بالبكسل بحيث يفضل بنسبة 16:9 ومتلائم تماماً مع أي شاشة من غير ما يزيد عنها أو يعمل سكرول
+    function pvFitLayout() {
+      const wrap = document.getElementById("pvVideoWrap");
+      const box = document.getElementById("pvVideoBox");
+      if (!wrap || !box) return;
+      const availW = wrap.clientWidth;
+      const availH = wrap.clientHeight;
+      if (availW <= 0 || availH <= 0) return;
+
+      let w = availW;
+      let h = (w * 9) / 16;
+      if (h > availH) {
+        h = availH;
+        w = (h * 16) / 9;
+      }
+      box.style.width = Math.floor(w) + "px";
+      box.style.height = Math.floor(h) + "px";
+    }
+
+    // نأجّل إعادة الحساب لأول فريم متاح فقط، حتى لو الشاشة بتطلق أحداث resize كتير ورا بعض
+    // (زي إخفاء/إظهار شريط عنوان الموبايل)، بدل ما نعيد الحساب في كل مرة وتحصل إعادة رسم مستمرة
+    function pvScheduleFit() {
+      if (pvResizeScheduled) return;
+      pvResizeScheduled = true;
+      requestAnimationFrame(() => {
+        pvResizeScheduled = false;
+        pvFitLayout();
+      });
+    }
+
+    window.addEventListener("resize", () => {
+      if (document.getElementById("pvOverlay").classList.contains("active")) pvScheduleFit();
+    }, { passive: true });
+    window.addEventListener("orientationchange", () => {
+      if (document.getElementById("pvOverlay").classList.contains("active")) setTimeout(pvFitLayout, 200);
+    });
+
+    // بيوقف أي تشغيل حالي وينظّف الفيديو الثقيل من الصفحة (iframe + مؤقتات العلامة المائية)
+    // بدون ما يقفل نافذة المشغل نفسها
+    function pvResetPlayer() {
+      if (pvPlayerInstance) {
+        try { pvPlayerInstance.pause(); } catch (_) {}
+        try { pvPlayerInstance.destroy(); } catch (_) {}
+        pvPlayerInstance = null;
+      }
+      if (pvWatermarkInterval) {
+        clearInterval(pvWatermarkInterval);
+        pvWatermarkInterval = null;
+      }
+      pvCheckPoints = [];
+      pvCheckedPoints = new Set();
+      const oldPlayerDiv = document.getElementById("pvPlayer");
+      if (oldPlayerDiv) {
+        const freshDiv = document.createElement("div");
+        freshDiv.id = "pvPlayer";
+        oldPlayerDiv.replaceWith(freshDiv);
+      }
+    }
+
+    // فتح نافذة المحاضرة: بيعرض بس واجهة خفيفة (صورة مصغّرة + زرار تشغيل)،
+    // من غير ما يحمّل الفيديو المحمي (Plyr/iframe) الثقيل إلا لما الطالب يدوس "تشغيل" فعلياً
+    function openProtectedPlayer(youtubeUrl, lectureTitle) {
+      const videoId = extractYouTubeId(youtubeUrl);
+      if (!videoId) {
+        alert("تعذر تشغيل رابط المحاضرة، تأكد أن الرابط رابط يوتيوب صحيح.");
+        return;
+      }
+
+      pvResetPlayer();
+      pvPendingVideoId = videoId;
+      pvPendingTitle = lectureTitle || "المحاضرة";
+
+      document.getElementById("pvLectureTitle").innerText = pvPendingTitle;
+      document.getElementById("pvOverlay").classList.add("active");
+
+      const facade = document.getElementById("pvFacade");
+      facade.style.backgroundImage = `url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg')`;
+      facade.style.display = "flex";
+      document.getElementById("pvTouchOverlay").style.display = "none";
+
+      requestAnimationFrame(pvFitLayout);
+    }
+
+    // اللحظة الوحيدة اللي فعلاً بيتحمّل فيها المشغل الثقيل (Plyr + iframe يوتيوب)
+    function pvStartPlayback() {
+      if (!pvPendingVideoId) return;
+      const videoId = pvPendingVideoId;
+      const playerHost = document.getElementById("pvVideoBox");
+      const playerDiv = document.getElementById("pvPlayer");
+
+      playerDiv.setAttribute("data-plyr-provider", "youtube");
+      playerDiv.setAttribute("data-plyr-embed-id", videoId);
+
+      pvPlayerInstance = new Plyr(playerDiv, {
+        controls: [
+          "play-large", "rewind", "play", "fast-forward",
+          "progress", "current-time", "mute", "volume",
+          "settings", "fullscreen"
+        ],
+        seekTime: 10,
+        settings: ["speed"],
+        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
+        youtube: {
+          noCookie: true,
+          rel: 0,
+          showinfo: 0,
+          iv_load_policy: 3,
+          modestbranding: 1,
+          controls: 0,
+          disablekb: 1,
+          autoplay: 1,
+          playsinline: 1
+        }
+      });
+
+      document.getElementById("pvFacade").style.display = "none";
+      document.getElementById("pvTouchOverlay").style.display = "flex";
+
+      // العلامة المائية باسم ورقم الطالب الحالي
+      const watermarkDiv = document.createElement("div");
+      watermarkDiv.id = "pv-watermark";
+      const studentName = currentStudent ? (currentStudent.name || "طالب") : "طالب";
+      const studentPhone = currentStudent ? (currentStudent.phone || "") : "";
+      watermarkDiv.innerText = `${studentName} | ${studentPhone}`;
+
+      pvPlayerInstance.on("ready", () => {
+        const plyrContainer = playerHost.querySelector(".plyr");
+        if (plyrContainer) plyrContainer.appendChild(watermarkDiv);
+        pvFitLayout();
+      });
+
+      const cornerPositions = [
+        { top: "8%", right: "5%" },
+        { top: "8%", right: "70%" },
+        { top: "75%", right: "5%" },
+        { top: "75%", right: "70%" }
+      ];
+      let currentCorner = 0;
+      pvWatermarkInterval = setInterval(() => {
+        currentCorner = (currentCorner + 1) % cornerPositions.length;
+        watermarkDiv.style.top = cornerPositions[currentCorner].top;
+        watermarkDiv.style.right = cornerPositions[currentCorner].right;
+      }, 6000);
+
+      pvPlayerInstance.on("loadedmetadata", () => {
+        const duration = pvPlayerInstance.duration;
+        if (duration && duration > 60) {
+          pvCheckPoints = [
+            Math.floor(duration * 0.4),
+            Math.floor(duration * 0.7)
+          ];
+        }
+      });
+
+      pvPlayerInstance.on("timeupdate", () => {
+        const currentTime = Math.floor(pvPlayerInstance.currentTime);
+        pvCheckPoints.forEach(point => {
+          if (currentTime === point && !pvCheckedPoints.has(point)) {
+            pvCheckedPoints.add(point);
+            pvTriggerAttentionCheck();
+          }
+        });
+      });
+
+      pvSetupTouchZones();
+    }
+
+    function closeProtectedPlayer() {
+      pvResetPlayer();
+      pvPendingVideoId = null;
+      document.getElementById("pvOverlay").classList.remove("active");
+      document.getElementById("pvAttentionModal").classList.remove("active");
+    }
+
+    function pvTriggerAttentionCheck() {
+      if (pvPlayerInstance) pvPlayerInstance.pause();
+      pvGenerateQuestion();
+      document.getElementById("pvAttentionModal").classList.add("active");
+    }
+
+    function pvGenerateQuestion() {
+      const num1 = Math.floor(Math.random() * 8) + 2;
+      const num2 = Math.floor(Math.random() * 8) + 1;
+      pvCorrectAnswer = num1 + num2;
+      document.getElementById("pvCaptchaQuestion").innerText = `كم يساوي: ${num1} + ${num2} ؟`;
+      document.getElementById("pvCaptchaAnswer").value = "";
+      document.getElementById("pvErrorMsg").style.display = "none";
+    }
+
+    function pvVerifyAttention(event) {
+      event.preventDefault();
+      const userAnswer = parseInt(document.getElementById("pvCaptchaAnswer").value);
+      if (userAnswer === pvCorrectAnswer) {
+        document.getElementById("pvAttentionModal").classList.remove("active");
+        if (pvPlayerInstance) pvPlayerInstance.play();
+      } else {
+        document.getElementById("pvErrorMsg").style.display = "block";
+        pvGenerateQuestion();
+      }
+    }
+
+    function pvTriggerFeedback(elem) {
+      elem.classList.add("show");
+      setTimeout(() => { elem.classList.remove("show"); }, 400);
+    }
+
+    function pvSetupTouchZones() {
+      const zoneRight = document.getElementById("pvZoneRight");
+      const zoneLeft = document.getElementById("pvZoneLeft");
+      const zoneCenter = document.getElementById("pvZoneCenter");
+      const feedbackRight = document.getElementById("pvFeedbackRight");
+      const feedbackLeft = document.getElementById("pvFeedbackLeft");
+
+      // نستبدل العناصر بنسخة جديدة لتفادي تكرار ربط الأحداث عند فتح المشغل أكثر من مرة
+      const newRight = zoneRight.cloneNode(true);
+      zoneRight.replaceWith(newRight);
+      const newLeft = zoneLeft.cloneNode(true);
+      zoneLeft.replaceWith(newLeft);
+      const newCenter = zoneCenter.cloneNode(true);
+      zoneCenter.replaceWith(newCenter);
+
+      newRight.addEventListener("click", () => {
+        if (pvPlayerInstance) pvPlayerInstance.forward(10);
+        pvTriggerFeedback(document.getElementById("pvFeedbackRight"));
+      });
+      newLeft.addEventListener("click", () => {
+        if (pvPlayerInstance) pvPlayerInstance.rewind(10);
+        pvTriggerFeedback(document.getElementById("pvFeedbackLeft"));
+      });
+      newCenter.addEventListener("click", () => {
+        if (pvPlayerInstance) pvPlayerInstance.togglePlay();
+      });
     }
 
     let forumLoadSeq = 0;
