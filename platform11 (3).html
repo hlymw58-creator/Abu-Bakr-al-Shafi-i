@@ -1,0 +1,3042 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- كود إثبات ملكية جوجل الخاص بك -->
+  <meta name="google-site-verification" content="P6w0eE5r-E6qtThUBP6ESmQifa7jndXKVhY5QRpQVNU" />
+
+  <!-- عنوان الصفحة المباشر الذي يظهر في نتائج البحث -->
+  <title>منصة الشافعي الصغير | مستر أبو بكر الشافعي</title>
+
+  <!-- وصف الموقع الذي يظهر تحت العنوان في نتائج جوجل -->
+  <meta name="description" content="المنصة التعليمية الرسمية - منصة الشافعي الصغير لمستر أبو بكر الشافعي. دروس ومراجعات واختبارات تفاعلية لجميع الطلاب.">
+
+  <!-- الكلمات المفتاحية الشاملة لجميع طرق البحث -->
+  <meta name="keywords" content="منصة الشافعي الصغير, الشافعي الصغير, أبو بكر الشافعي, ابو بكر الشافعي, مستر أبو بكر الشافعي, مستر ابو بكر الشافعي, منصة الشافعي, طلاب الشافعي الصغير">
+  <title>منصة الشافعي الصغير</title>
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem("shafeei_theme")||"light"}catch(e){}</script>
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <style>
+    :root {
+      --primary-color: #1b5e20;
+      --primary-hover: #2e7d32;
+      --accent-color: #1a73e8;
+      --accent-hover: #1557b0;
+      --bg-color: #f4f6f8;
+      --card-bg: rgba(255, 255, 255, 0.96);
+      --text-color: #222222;
+      --border-color: #e0e0e0;
+      --danger-color: #d32f2f;
+      --danger-bg: #ffebee;
+      --success-color: #2e7d32;
+      --success-bg: #e8f5e9;
+    }
+ 
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+ 
+    body {
+      position: relative;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding-bottom: 40px;
+    }
+ 
+    /* الخلفية بقت في عنصر مستقل بدل ما تتحط "filter" على body مباشرة،
+       لأن filter على body كان بيخلي أي عنصر position:fixed جواه (زي زر الدعم العائم)
+       يتثبت بالنسبة لصفحة الـ body نفسها مش بالنسبة للشاشة، فكان بينزل معاك وانت بتعمل سكرول */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)), url('https://lh3.googleusercontent.com/d/11cx_kG09s3PtT70TFoBZ2S8yw_WvIOkD');
+      background-size: cover;
+      background-position: center;
+      filter: contrast(125%) saturate(130%) brightness(102%);
+      pointer-events: none;
+    }
+ 
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 15px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: sticky;
+      top: var(--alert-h, 0px);
+      z-index: 100;
+    }
+ 
+    .header-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+ 
+    .brand-title {
+      font-size: 22px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+ 
+    .brand-logo {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ffb300;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+ 
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+ 
+    .btn-activate-code {
+      background-color: #ffb300;
+      color: #333;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 13px;
+    }
+ 
+    .btn-logout {
+      background-color: transparent;
+      border: 1px solid white;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s;
+    }
+ 
+    .btn-logout:hover {
+      background-color: white;
+      color: var(--primary-color);
+    }
+ 
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+ 
+    .tabs-container {
+      display: flex;
+      gap: 10px;
+      border-bottom: 2px solid var(--border-color);
+      margin-bottom: 25px;
+      overflow-x: auto;
+      padding-bottom: 5px;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+ 
+    .tab-btn {
+      padding: 12px 24px;
+      background-color: transparent;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+      color: #555;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+ 
+    .tab-btn:hover {
+      color: var(--primary-color);
+    }
+ 
+    .tab-btn.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+ 
+    .tab-content {
+      display: none;
+    }
+ 
+    .tab-content.active {
+      display: block;
+    }
+ 
+    .section-title {
+      font-size: 20px;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      border-right: 4px solid var(--primary-color);
+      padding-right: 10px;
+      background: rgba(255, 255, 255, 0.96);
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+ 
+    .lecture-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    }
+ 
+    .lecture-card.locked {
+      opacity: 0.92;
+      background-color: rgba(250, 250, 250, 0.96);
+    }
+ 
+    .lecture-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+ 
+    .lecture-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1a252f;
+    }
+ 
+    .attendance-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      background-color: var(--danger-bg);
+      color: var(--danger-color);
+    }
+ 
+    .attendance-badge.attended {
+      background-color: var(--success-bg);
+      color: var(--success-color);
+    }
+ 
+    .actions-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+ 
+    .btn-open-lecture {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      background-color: var(--accent-color);
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      text-align: center;
+    }
+ 
+    .btn-homework {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      background-color: #ef6c00;
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      text-align: center;
+    }
+ 
+    .btn-confirm-attendance {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+ 
+    .btn-confirm-attendance:disabled {
+      background-color: #a5d6a7;
+      cursor: not-allowed;
+    }
+ 
+    /* --- تنسيقات منتدى الطلاب --- */
+    .forum-form-card, .forum-post-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+ 
+    .forum-textarea {
+      width: 100%;
+      min-height: 90px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 15px;
+      resize: vertical;
+      outline: none;
+      margin-bottom: 12px;
+    }
+ 
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f0f0f0;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+ 
+    .author-name {
+      font-weight: bold;
+      color: var(--primary-color);
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+ 
+    .post-date {
+      font-size: 12px;
+      color: #777;
+    }
+ 
+    .post-content {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #222;
+      white-space: pre-line;
+    }
+ 
+    .teacher-reply-box {
+      margin-top: 15px;
+      background-color: #f0f7f0;
+      border-right: 4px solid var(--primary-color);
+      padding: 12px 15px;
+      border-radius: 6px;
+    }
+ 
+    .teacher-reply-title {
+      font-weight: bold;
+      color: var(--primary-color);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+ 
+    .teacher-input-group {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+    }
+ 
+    .teacher-input-group input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+ 
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.65);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+ 
+    .modal-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+ 
+    .modal-title {
+      font-size: 22px;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+ 
+    .form-group {
+      margin-bottom: 16px;
+    }
+ 
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+ 
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 15px;
+      outline: none;
+    }
+ 
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+ 
+    .form-row .form-group {
+      flex: 1;
+    }
+ 
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+ 
+    .auth-toggle {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+ 
+    .auth-toggle span {
+      color: var(--accent-color);
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+ 
+    .error-msg {
+      color: var(--danger-color);
+      font-size: 14px;
+      margin-top: 10px;
+      text-align: center;
+      display: none;
+    }
+ 
+    /* --- تنسيقات زر الدعم العائم الثابت تماماً على الشاشة --- */
+    .support-widget {
+      position: fixed;
+      bottom: 25px;
+      left: 25px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: flex-start;
+      gap: 12px;
+    }
+ 
+    .support-main-btn {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      border: 2px solid #ffb300;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 26px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+ 
+    .support-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(15px);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+ 
+    .support-widget.active .support-options {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+ 
+    .support-view {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+ 
+    .support-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background-color: #0b2b1a;
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 30px;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
+      transition: transform 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+ 
+    .support-item:hover {
+      transform: translateX(5px);
+    }
+ 
+    .support-item.tech {
+      border: 1.5px solid #ffb300;
+    }
+ 
+    .support-item.academic {
+      border: 1.5px solid #25d366;
+    }
+ 
+    .support-item.activation {
+      border: 1.5px solid #00bcd4;
+    }
+ 
+    .support-item.back-btn {
+      background-color: #333333;
+      border: 1.5px solid #777777;
+      justify-content: center;
+    }
+ 
+    .support-item .info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1.2;
+    }
+ 
+    .support-item .phone {
+      font-size: 11px;
+      color: #cccccc;
+      direction: ltr;
+    }
+ 
+    /* ============================================================ */
+    /* ============  مشغل الفيديو المحمي (داخل المنصة)  ============ */
+    /* تصميم خفيف قصداً: بدون تأثيرات blur/shadow تقيلة فوق الفيديو،   */
+    /* وبدون تحميل الفيديو الفعلي (iframe) غير لحظة ما الطالب يدوس تشغيل */
+    /* ============================================================ */
+    .pv-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(5, 19, 14, 0.97);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .pv-overlay.active { display: flex; }
+ 
+    .pv-card {
+      width: 100%;
+      max-width: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
+      margin: 0;
+      background: linear-gradient(160deg, #04150d 0%, #0b2b1a 55%, #0e3a22 100%);
+      border: 2px solid #d4af37;
+      border-radius: 0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+      padding-top: calc(10px + env(safe-area-inset-top, 0px));
+      box-shadow: 0 10px 26px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+ 
+    /* من مقاس التابلت/الكمبيوتر فوق: عرض كامل ومريح للشاشة بدل الشكل الضيق بتاع الموبايل */
+    @media (min-width: 700px) {
+      .pv-card {
+        width: min(94vw, 1100px);
+        height: min(94dvh, 720px);
+        margin: auto;
+        border-radius: 16px;
+      }
+    }
+ 
+    .pv-close-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #d32f2f;
+      color: #fff;
+      border: 2px solid #fff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+ 
+    .pv-brand {
+      text-align: center;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+ 
+    .pv-brand-title {
+      color: #d4af37;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+ 
+    .pv-brand-sub {
+      color: #f4e285;
+      font-size: 0.72rem;
+      font-weight: 600;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+ 
+    .pv-title {
+      text-align: center;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+ 
+    .pv-video-wrap {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+ 
+    .pv-video-container {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      user-select: none;
+      -webkit-user-select: none;
+      /* الأبعاد الفعلية بتتحدد بالجافاسكريبت (pvFitLayout) عشان الفيديو يتلائم مع أي مقاس شاشة بالظبط بدون ما يزيد عن حجم الصندوق */
+      width: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 16 / 9;
+    }
+ 
+    .pv-video-container .plyr__video-embed iframe {
+      pointer-events: none !important;
+    }
+ 
+    /* واجهة "فاساد" خفيفة: صورة مصغّرة وزرار تشغيل، والفيديو الحقيقي (iframe) ما بيتحملش في الصفحة
+       إلا بعد ما الطالب يدوس عليها فعلياً — ده اللي بيمنع تهنيج الموبايل عند فتح المحاضرة */
+    .pv-facade {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #000;
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+    }
+    .pv-facade-play {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.55);
+      border: 2px solid #d4af37;
+      color: #fff;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+ 
+    .pv-support-row {
+      flex-shrink: 0;
+      display: flex;
+      gap: 8px;
+      padding-top: 2px;
+    }
+ 
+    .pv-support-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background-color: #0b2b1a;
+      color: #fff;
+      text-decoration: none;
+      border: 1.5px solid #ffb300;
+      border-radius: 30px;
+      padding: 8px 6px;
+      font-size: 11px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 1.3;
+    }
+ 
+    .pv-support-btn.academic { border-color: #25d366; }
+ 
+    .pv-support-btn .pv-phone {
+      display: block;
+      font-size: 10px;
+      color: #cccccc;
+      direction: ltr;
+      font-weight: normal;
+    }
+ 
+    .pv-touch-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: calc(100% - 50px);
+      z-index: 25;
+      display: none;
+    }
+    .pv-touch-zone {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+    }
+    .pv-touch-zone.pv-seek-right { width: 15%; }
+    .pv-touch-zone.pv-play-center { width: 70%; }
+    .pv-touch-zone.pv-seek-left { width: 15%; }
+ 
+    .pv-seek-feedback {
+      position: absolute;
+      background: rgba(0,0,0,0.8);
+      color: #d4af37;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      transform: scale(0.7);
+      border: 1px solid #d4af37;
+      white-space: nowrap;
+    }
+    .pv-seek-feedback.show { opacity: 1; transform: scale(1); }
+ 
+    #pv-watermark {
+      position: absolute;
+      top: 8px; right: 12px;
+      z-index: 99 !important;
+      color: rgba(255,255,255,0.4);
+      font-size: 0.55rem !important;
+      font-weight: 500;
+      pointer-events: none;
+      background: rgba(0,0,0,0.25);
+      padding: 2px 6px;
+      border-radius: 8px;
+      letter-spacing: 0.2px;
+      transition: top 1.5s linear, right 1.5s linear;
+      border: 1px solid rgba(212,175,55,0.12);
+      white-space: nowrap;
+    }
+ 
+    .pv-attention-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(3, 10, 7, 0.94);
+      z-index: 2100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .pv-attention-overlay.active { display: flex; }
+ 
+    .pv-attention-card {
+      background: rgba(10, 25, 18, 0.96);
+      border: 2px solid #d4af37;
+      border-radius: 20px;
+      padding: 25px 20px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      color: #fff;
+    }
+    .pv-attention-card h3 { color: #d4af37; margin: 8px 0; font-size: 1.3rem; }
+    .pv-attention-card p { color: #f4e285; font-size: 0.9rem; margin-bottom: 14px; }
+    .pv-attention-card input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #d4af37;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .pv-attention-card button {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(45deg, #d4af37, #f4e285);
+      color: #05130e;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .pv-attention-error {
+      color: #ff4d4d;
+      font-size: 0.85rem;
+      display: none;
+      margin-bottom: 10px;
+    }
+ 
+    /* ===== شريط تنبيه قرب موعد المحاضرة ===== */
+    .lecture-alert { position: sticky; top: 0; z-index: 110; display: none; align-items: center; gap: 10px; background: linear-gradient(90deg, #b71c1c, #ef6c00); color: #fff; padding: 8px 14px; font-weight: bold; font-size: 14px; box-shadow: 0 3px 10px rgba(0,0,0,.3); }
+    .lecture-alert.show { display: flex; }
+    .la-view { flex: 1; overflow: hidden; white-space: nowrap; direction: ltr; }
+    .la-track { display: inline-block; padding-left: 100%; direction: rtl; animation: laScroll var(--la-dur, 25s) linear infinite; }
+    .la-view:hover .la-track { animation-play-state: paused; }
+    @keyframes laScroll { to { transform: translateX(-100%); } }
+    .la-close { background: rgba(255,255,255,.2); border: 0; color: #fff; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; flex-shrink: 0; }
+    @media (prefers-reduced-motion: reduce) { .la-track { animation: none; padding-left: 0; } .la-view { white-space: normal; } }
+ 
+    /* ===== لوحة التحكم (الأدمن فقط) ===== */
+    .btn-admin { background: #fff; color: var(--primary-color); border: none; padding: 6px 12px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 13px; }
+    .adm-modal { max-width: 720px; }
+    .adm-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    .adm-row small { display: block; color: #666; margin-top: 4px; }
+    .adm-btn { border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; color: #fff; font-weight: bold; }
+    .adm-edit { background: var(--accent-color); }
+    .adm-del { background: var(--danger-color); }
+
+    /* ===== واجهة تفاعلية ===== */
+    button,.btn-submit,.tab-btn,.btn-open-lecture,.btn-homework{transition:transform .15s ease,box-shadow .2s ease,background-color .2s ease}
+    button:active,.btn-submit:active,.btn-open-lecture:active{transform:scale(.95)}
+    .btn-submit:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(27,94,32,.35)}
+    .modal-content{animation:popIn .35s cubic-bezier(.2,.9,.3,1.2)}
+    @keyframes popIn{from{opacity:0;transform:translateY(20px) scale(.94)}to{opacity:1;transform:none}}
+    .lecture-card{transition:transform .2s,box-shadow .2s}.lecture-card:hover{transform:translateY(-3px)}
+    .tab-content.active{animation:fadeUp .35s ease}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .name-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .hdr-actions{display:flex;align-items:center;gap:8px;position:relative}
+    .icon-btn{position:relative;background:rgba(255,255,255,.2);border:none;color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer}
+    .icon-btn .dot{position:absolute;top:-4px;left:-4px;background:#e53935;color:#fff;font-size:11px;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px}
+    .avatar{width:34px;height:34px;border-radius:50%;background:#ffb300;color:#333;font-weight:bold;display:inline-flex;align-items:center;justify-content:center}
+    .profile-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:#fff;cursor:pointer;font-size:15px}
+    .dropdown{position:absolute;top:46px;left:0;min-width:200px;background:#fff;color:#222;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);display:none;z-index:300;overflow:hidden}
+    .dropdown.open{display:block;animation:popIn .2s}
+    .dropdown button{display:block;width:100%;text-align:right;padding:12px 16px;background:none;border:none;font-size:14px;cursor:pointer}
+    .dropdown button:hover{background:#e8f5e9}
+    .notif-item{padding:10px 14px;border-bottom:1px solid #eee;font-size:13px;line-height:1.6}
+    .notif-item.new{background:#f1f8e9;font-weight:bold}.notif-item small{display:block;color:#888;font-weight:normal}
+    #notifMenu{width:300px;max-height:320px;overflow:auto}
+    #welcomeScreen{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(135deg,#0d3b12,#1b5e20 60%,#2e7d32);color:#fff;font-size:30px;font-weight:bold;text-align:center;animation:fadeUp .4s}
+    #welcomeScreen small{font-size:16px;margin-top:10px;opacity:.85}
+    #progressBox{background:rgba(255,255,255,.96);border-radius:12px;padding:14px 18px;margin-bottom:18px;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none}
+    .pg-bar{height:14px;background:#e0e0e0;border-radius:8px;overflow:hidden;margin-top:8px}
+    .pg-fill{height:100%;width:0;background:linear-gradient(90deg,#2e7d32,#66bb6a);border-radius:8px;transition:width .8s ease}
+    .acc-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eee;font-size:14px}
+    .acc-row b{color:var(--primary-color)}
+
+    .greet-name{font-weight:bold;font-size:14px}
+    .avatar{background-size:cover;background-position:center}
+    #accountPage{max-width:760px}
+    .acc-hero{background:linear-gradient(135deg,#0d3b12,#1b5e20 60%,#2e7d32);color:#fff;border-radius:16px 16px 0 0;padding:28px 20px;text-align:center;position:relative;overflow:hidden}
+    .acc-hero::after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.07);top:-80px;left:-60px}
+    .acc-pic{width:110px;height:110px;border-radius:50%;border:4px solid #ffb300;background:#fff center/cover;color:#1b5e20;font-size:46px;font-weight:bold;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.3);position:relative;z-index:1}
+    .acc-hero h2{margin-top:12px;position:relative;z-index:1}.acc-hero p{opacity:.85;font-size:14px;position:relative;z-index:1}
+    .acc-card{background:var(--card-bg);border-radius:0 0 16px 16px;padding:20px;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+    .acc-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.acc-actions .btn-submit{flex:1;min-width:150px;margin:0}
+    .acc-back{background:rgba(255,255,255,.95);border:none;border-radius:20px;padding:8px 18px;font-weight:bold;cursor:pointer;margin-bottom:14px;color:var(--primary-color)}
+    .pic-edit{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+    .pic-edit .pic-btns{display:flex;gap:8px;flex-wrap:wrap}.pic-edit label.btn-activate-code{cursor:pointer}
+    .acc-card input,.acc-card select{width:100%}
+
+    /* ===== الوضع الليلي ===== */
+    html{transition:background-color .3s}
+    [data-theme="dark"]{--bg-color:#0e1a12;--card-bg:rgba(22,34,27,.97);--text-color:#e6eee8;--border-color:#2b3f32;--danger-bg:#3b1a1a;--success-bg:#173b1d;--primary-color:#2e7d32}
+    [data-theme="dark"] body::before{filter:brightness(.28) saturate(110%)}
+    [data-theme="dark"] header{background:#123d17}
+    [data-theme="dark"] .tabs-container,[data-theme="dark"] .section-title,[data-theme="dark"] #progressBox,[data-theme="dark"] .acc-card,[data-theme="dark"] .dropdown,[data-theme="dark"] .lecture-card,[data-theme="dark"] .lecture-card.locked,[data-theme="dark"] .forum-post-card,[data-theme="dark"] .forum-form-card,[data-theme="dark"] .modal-content,[data-theme="dark"] .course-card,[data-theme="dark"] .acc-back{background:#16221b!important;color:#e6eee8!important}
+    [data-theme="dark"] .lecture-title,[data-theme="dark"] .form-group label,[data-theme="dark"] .modal-title,[data-theme="dark"] .acc-row b,[data-theme="dark"] .section-title{color:#a5d6a7!important}
+    [data-theme="dark"] .tab-btn{color:#b7c7bb}[data-theme="dark"] .tab-btn.active{color:#a5d6a7;border-bottom-color:#66bb6a}
+    [data-theme="dark"] input,[data-theme="dark"] select,[data-theme="dark"] textarea{background:#0f1a13!important;color:#e6eee8!important;border-color:#2b3f32!important}
+    [data-theme="dark"] .dropdown button:hover{background:#1f3326}[data-theme="dark"] .notif-item,[data-theme="dark"] .acc-row{border-color:#2b3f32}[data-theme="dark"] .notif-item.new{background:#1b3324}
+    [data-theme="dark"] p,[data-theme="dark"] span{color:inherit}
+    /* ===== الكورسات / المراجعات / الفوتر ===== */
+    .courses-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+    .course-card{background:var(--card-bg);border-radius:16px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.14);transition:transform .25s,box-shadow .25s;display:flex;flex-direction:column}
+    .course-card:hover{transform:translateY(-5px);box-shadow:0 12px 28px rgba(0,0,0,.22)}
+    .course-cover{background:linear-gradient(135deg,#0d3b12,#2e7d32);color:#fff;padding:26px 18px;text-align:center;font-size:44px;position:relative}
+    .course-cover .badge{position:absolute;top:10px;left:10px;font-size:12px;background:#ffb300;color:#333;border-radius:12px;padding:3px 10px;font-weight:bold}
+    .course-cover .badge.on{background:#66bb6a;color:#fff}
+    .course-body{padding:16px;display:flex;flex-direction:column;gap:8px;flex:1}
+    .course-body h3{color:var(--primary-color)}.course-body p{font-size:13px;color:#666}
+    [data-theme="dark"] .course-body p{color:#9fb3a5}
+    .course-body .btn-submit{margin-top:auto}
+    .sub-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .sub-btn{padding:9px 18px;border-radius:20px;border:2px solid var(--primary-color);background:transparent;color:var(--primary-color);font-weight:bold;cursor:pointer}
+    .sub-btn.active{background:var(--primary-color);color:#fff}
+    .sub-content{display:none}.sub-content.active{display:block;animation:fadeUp .3s}
+    .course-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .course-bar h2{font-size:18px;background:rgba(255,255,255,.95);color:var(--primary-color);padding:6px 14px;border-radius:8px}
+    [data-theme="dark"] .course-bar h2{background:#16221b}
+    .chk-row{display:flex;gap:12px;flex-wrap:wrap;padding:6px 0}.chk-row label{display:flex;align-items:center;gap:6px;font-size:14px}.chk-row input{width:auto}
+    /* ===== الشريط السفلي ===== */
+    .site-footer{margin-top:40px;background:linear-gradient(135deg,#0d3b12,#14532d);color:#fff;padding:26px 16px 18px;font-size:14px;border-top:3px solid #f9a825;transition:margin-top .2s}
+    .ft-inner{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:16px}
+    .ft-links{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;width:100%}
+    .ft-link{display:inline-flex;align-items:center;gap:9px;padding:9px 18px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;text-decoration:none;font-weight:bold;font-size:14px;transition:background .2s,transform .15s}
+    .ft-link:hover{background:rgba(255,255,255,.22);transform:translateY(-2px)}
+    .ft-link:active{transform:scale(.96)}
+    .ft-link svg{width:22px;height:22px;flex:none}
+    .ft-bottom{width:100%;border-top:1px solid rgba(255,255,255,.15);padding-top:14px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 22px;font-size:13px;color:rgba(255,255,255,.85)}
+    .ft-credit{direction:ltr;font-weight:bold;color:#ffd54f;letter-spacing:.2px}
+    @media (max-width:560px){.ft-link{flex:1 1 calc(50% - 10px);justify-content:center;padding:9px 10px;font-size:13px}}
+    .acc-sync{font-size:12px;color:#888;text-align:center;min-height:16px;margin-top:8px}
+  </style>
+</head>
+<body>
+ 
+  <!-- شريط تنبيه المحاضرات القريبة -->
+  <div class="lecture-alert" id="lectureAlert" role="status">
+    <div class="la-view"><span class="la-track" id="laTrack"></span></div>
+    <button type="button" class="la-close" onclick="dismissAlert()" title="إخفاء">✕</button>
+  </div>
+ 
+  <header>
+    <div class="header-container">
+      <div class="brand-title" id="brandHome" role="link" tabindex="0" style="cursor:pointer" onclick="goHome()" onkeydown="if(event.key==='Enter')goHome()" title="الصفحة الرئيسية للكورسات">
+        <img src="https://lh3.googleusercontent.com/d/11cx_kG09s3PtT70TFoBZ2S8yw_WvIOkD" alt="شعار منصة الشافعي الصغير" class="brand-logo">
+        <span>منصة الشافعي الصغير</span>
+      </div>
+      <div class="user-info" id="userInfo">
+        <div class="hdr-actions">
+          <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="تبديل الوضع الليلي/الصباحي">🌙</button>
+          <button class="icon-btn" onclick="toggleMenu('notifMenu',event)" title="الإشعارات">🔔<span class="dot" id="notifDot">0</span></button>
+          <div class="dropdown" id="notifMenu"></div>
+          <button class="profile-btn" onclick="toggleMenu('profileMenu',event)"><span class="avatar" id="avatarLetter">ط</span><span id="studentNameDisplay" class="greet-name">طالب</span></button>
+          <div class="dropdown" id="profileMenu"><button onclick="openAccount()">👤 الحساب</button><button onclick="logout()" style="color:#c62828">🚪 تسجيل الخروج</button></div>
+        </div>
+        <button class="btn-admin" id="adminBtn" style="display:none" onclick="openAdminPanel()">⚙️ لوحة التحكم</button>
+        <button class="btn-activate-code" onclick="openCodeModal()">🔑 تفعيل كود</button>
+      </div>
+    </div>
+  </header>
+ 
+  <div class="container" id="mainContainer" style="display:none">
+    <div class="course-bar"><button class="acc-back" style="margin:0" onclick="setView('courses')">← الكورسات</button><h2 id="courseTitle"></h2></div>
+    <div id="progressBox"></div>
+    <div class="tabs-container">
+      <button class="tab-btn active" onclick="switchTab('tawheedTab', this)">قسم التوحيد</button>
+      <button class="tab-btn" onclick="switchTab('tafseerTab', this)">قسم التفسير</button>
+      <button class="tab-btn" onclick="switchTab('fiqhTab', this)">قسم الفقه الشافعي</button>
+      <button class="tab-btn" onclick="switchTab('osoolTab', this)">قسم الحديث</button>
+      <button class="tab-btn" onclick="switchTab('reviewTab', this)">قسم المراجعات</button>
+      <button class="tab-btn" onclick="switchTab('forumTab', this)">💬 منتدى الطلاب</button>
+    </div>
+ 
+    <div id="tawheedTab" class="tab-content active">
+      <h2 class="section-title">محاضرات التوحيد</h2>
+      <div id="tawheedContainer"></div>
+    </div>
+ 
+    <div id="tafseerTab" class="tab-content">
+      <h2 class="section-title">محاضرات التفسير</h2>
+      <div id="tafseerContainer"></div>
+    </div>
+ 
+    <div id="fiqhTab" class="tab-content">
+      <h2 class="section-title">محاضرات الفقه الشافعي</h2>
+      <div id="fiqhContainer"></div>
+    </div>
+ 
+    <div id="osoolTab" class="tab-content">
+      <h2 class="section-title">محاضرات الحديث</h2>
+      <div id="osoolContainer"></div>
+    </div>
+ 
+    <div id="reviewTab" class="tab-content">
+      <h2 class="section-title">المراجعات</h2>
+      <div class="sub-tabs">
+        <button class="sub-btn active" onclick="switchSub('revTawheed', this)">مراجعة توحيد</button>
+        <button class="sub-btn" onclick="switchSub('revTafseer', this)">مراجعة تفسير</button>
+        <button class="sub-btn" onclick="switchSub('revHadith', this)">مراجعة حديث</button>
+        <button class="sub-btn" onclick="switchSub('revFiqh', this)">مراجعة فقه</button>
+      </div>
+      <div id="revTawheed" class="sub-content active"><div id="revTawheedContainer"></div></div>
+      <div id="revTafseer" class="sub-content"><div id="revTafseerContainer"></div></div>
+      <div id="revHadith" class="sub-content"><div id="revHadithContainer"></div></div>
+      <div id="revFiqh" class="sub-content"><div id="revFiqhContainer"></div></div>
+    </div>
+
+    <div id="forumTab" class="tab-content">
+      <h2 class="section-title">منتدى الطلاب والأستاذ</h2>
+      <div id="forumContainer"></div>
+    </div>
+  </div>
+ 
+  <div class="container" id="coursesPage">
+    <h2 class="section-title">الكورسات المتاحة</h2>
+    <div class="courses-grid" id="coursesGrid"></div>
+  </div>
+
+  <div class="container" id="accountPage" style="display:none"></div>
+
+  <footer class="site-footer" id="siteFooter">
+    <div class="ft-inner">
+      <div class="ft-links">
+        <a class="ft-link" href="https://www.youtube.com/@%D8%A7%D9%84%D8%B4%D8%A7%D9%81%D8%B9%D9%8A-%D8%A7%D9%84%D8%B5%D8%BA%D9%8A%D8%B1" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="4.5" fill="#ff0000"/><path d="M10 8.8v6.4l5.6-3.2z" fill="#fff"/></svg>
+          <span>الشافعي الصغير</span>
+        </a>
+        <a class="ft-link" href="https://www.facebook.com/share/g/1CXjDDHRVy/" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1877f2"/><path d="M13.2 20v-6.6h2.2l.4-2.6h-2.6V9.2c0-.8.3-1.3 1.4-1.3h1.3V5.6c-.3 0-1-.1-2-.1-2 0-3.3 1.2-3.3 3.4v1.9H8.4v2.6h2.2V20z" fill="#fff"/></svg>
+          <span>جروب الطلاب</span>
+        </a>
+        <a class="ft-link" href="https://www.facebook.com/profile.php?id=61592404065205" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1877f2"/><path d="M13.2 20v-6.6h2.2l.4-2.6h-2.6V9.2c0-.8.3-1.3 1.4-1.3h1.3V5.6c-.3 0-1-.1-2-.1-2 0-3.3 1.2-3.3 3.4v1.9H8.4v2.6h2.2V20z" fill="#fff"/></svg>
+          <span>الصفحة الرسمية</span>
+        </a>
+        <a class="ft-link" href="https://whatsapp.com/channel/0029Vb5pruO0lwgkTZpwO528" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#25d366"/><path d="M12 5.4a6.6 6.6 0 0 0-5.7 9.9l-.9 3.3 3.4-.9A6.6 6.6 0 1 0 12 5.4z" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><path d="M9.7 9.1c.2-.4.5-.4.7-.4l.5.9c.1.2 0 .4-.1.5l-.3.4c.5 1 1.3 1.7 2.3 2.2l.4-.4c.1-.2.3-.2.5-.1l.9.5c.1.2.1.5-.1.8-.4.6-1 .8-1.6.6-2-.6-3.5-2.1-4.1-4.1-.1-.6.2-1.2.9-1.9z" fill="#fff"/></svg>
+          <span>قناة الواتساب</span>
+        </a>
+      </div>
+      <div class="ft-bottom">
+        <span class="ft-credit">Developed by Abdelhalim Elfakhraney</span>
+        <span>© <span id="ftYear"></span> منصة الشافعي الصغير — جميع الحقوق محفوظة</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- نافذة التسجيل والدخول -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-content">
+      <h3 class="modal-title" id="modalTitle">تسجيل الدخول</h3>
+      <form id="authForm" onsubmit="handleAuthSubmit(event)">
+        
+        <div id="registerFields" style="display: none;">
+          <div class="form-group">
+            <label>الاسم (ثلاثي):</label>
+            <div class="name-row">
+              <input type="text" id="regFirst" placeholder="الاسم الأول" autocomplete="given-name">
+              <input type="text" id="regSecond" placeholder="الاسم الثاني">
+              <input type="text" id="regThird" placeholder="الاسم الثالث">
+            </div>
+          </div>
+ 
+          <div class="form-row">
+            <div class="form-group">
+              <label for="regParentPhone">رقم ولي الأمر:</label>
+              <input type="tel" id="regParentPhone" inputmode="numeric" maxlength="11" placeholder="01xxxxxxxxx">
+            </div>
+            <div class="form-group">
+              <label for="regGovernorate">المحافظة:</label>
+              <select id="regGovernorate">
+                <option value="">اختر المحافظة</option>
+                <option value="القاهرة">القاهرة</option>
+                <option value="الجيزة">الجيزة</option>
+                <option value="الأسكندرية">الأسكندرية</option>
+                <option value="الدقهلية">الدقهلية</option>
+                <option value="البحر الأحمر">البحر الأحمر</option>
+                <option value="البحيرة">البحيرة</option>
+                <option value="الفيوم">الفيوم</option>
+                <option value="الغربية">الغربية</option>
+                <option value="الإسماعيلية">الإسماعيلية</option>
+                <option value="المنوفية">المنوفية</option>
+                <option value="المنيا">المنيا</option>
+                <option value="القليوبية">القليوبية</option>
+                <option value="الوادي الجديد">الوادي الجديد</option>
+                <option value="السويس">السويس</option>
+                <option value="أسوان">أسوان</option>
+                <option value="أسيوط">أسيوط</option>
+                <option value="بني سويف">بني سويف</option>
+                <option value="بورسعيد">بورسعيد</option>
+                <option value="دمياط">دمياط</option>
+                <option value="الشرقية">الشرقية</option>
+                <option value="جنوب سيناء">جنوب سيناء</option>
+                <option value="كفر الشيخ">كفر الشيخ</option>
+                <option value="مطروح">مطروح</option>
+                <option value="قنا">قنا</option>
+                <option value="الأقصر">الأقصر</option>
+                <option value="سوهاج">سوهاج</option>
+                <option value="شمال سيناء">شمال سيناء</option>
+              </select>
+            </div>
+          </div>
+ 
+          <div class="form-group">
+            <label for="regNationality">هل أنت من مصر؟</label>
+            <select id="regNationality">
+              <option value="مصري">نعم، من مصر</option>
+              <option value="غير مصري">لا</option>
+            </select>
+          </div>
+        </div>
+ 
+        <div class="form-group">
+          <label for="studentPhone">رقم هاتف الطالب:</label>
+          <input type="tel" id="studentPhone" required inputmode="numeric" maxlength="14" placeholder="01xxxxxxxxx">
+        </div>
+ 
+        <div class="form-group">
+          <label for="studentPassword">كلمة السر:</label>
+          <input type="password" id="studentPassword" required placeholder="أدخل كلمة السر">
+        </div>
+ 
+        <div class="form-group" id="confirmPassGroup" style="display: none;">
+          <label for="confirmPassword">تأكيد كلمة السر:</label>
+          <input type="password" id="confirmPassword" placeholder="أعد أدخل كلمة السر">
+        </div>
+ 
+        <button type="submit" class="btn-submit" id="authSubmitBtn">دخول المنصة</button>
+        <div class="error-msg" id="authError"></div>
+ 
+        <div class="auth-toggle">
+          <span id="toggleText" onclick="toggleAuthMode()">ليس لديك حساب؟ إنشاء حساب جديد</span>
+        </div>
+      </form>
+    </div>
+  </div>
+ 
+
+  <div id="welcomeScreen"><div id="welcomeText"></div><small>مرحباً بك في منصة الشافعي الصغير</small></div>
+
+  <div class="modal-overlay" id="passModal" style="display:none;">
+    <div class="modal-content">
+      <h3 class="modal-title">تغيير كلمة المرور</h3>
+      <form onsubmit="submitPassChange(event)">
+        <div class="form-group"><label>كلمة المرور القديمة:</label><input type="password" id="pcOld" required autocomplete="current-password"></div>
+        <div class="form-group"><label>كلمة المرور الجديدة:</label><input type="password" id="pcNew" required minlength="6" autocomplete="new-password"></div>
+        <div class="form-group"><label>تأكيد كلمة المرور الجديدة:</label><input type="password" id="pcNew2" required minlength="6" autocomplete="new-password"></div>
+        <button class="btn-submit" type="submit" id="pcBtn">تغيير كلمة المرور</button>
+        <button class="btn-submit" type="button" style="background:#757575;margin-top:8px" onclick="closePass()">إلغاء</button>
+        <div class="error-msg" id="pcErr"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- نافذة التفعيل -->
+  <div class="modal-overlay" id="codeModal" style="display: none;">
+    <div class="modal-content">
+      <h3 class="modal-title" id="codeModalTitle">ضع كود التفعيل</h3>
+      <form id="codeForm" onsubmit="handleCodeSubmit(event)">
+        <div class="form-group">
+          <label for="activationCode">ضع كود التفعيل:</label>
+          <input type="text" id="activationCode" required placeholder="أدخل كود التفعيل">
+        </div>
+        <button type="submit" class="btn-submit" id="codeSubmitBtn">تفعيل الكورس الآن</button>
+        <button type="button" class="btn-submit" style="background-color: #757575; margin-top: 8px;" onclick="closeCodeModal()">إلغاء</button>
+        <div class="error-msg" id="codeError"></div>
+      </form>
+    </div>
+  </div>
+ 
+  <!-- لوحة التحكم: تُبنى محتوياتها بعد تحقق السيرفر من الأدمن فقط -->
+  <div class="modal-overlay" id="adminModal" style="display: none;">
+    <div class="modal-content adm-modal" id="adminBody"></div>
+  </div>
+ 
+  <!-- نافذة مشغل الفيديو المحمي (يفتح داخل المنصة عند الدخول للمحاضرة) -->
+  <div class="pv-overlay" id="pvOverlay">
+    <div class="pv-card">
+      <button type="button" class="pv-close-btn" onclick="closeProtectedPlayer()" title="إغلاق">✕</button>
+      <div class="pv-brand">
+        <div class="pv-brand-title">منصة الشافعي الصغير</div>
+        <div class="pv-brand-sub">إعداد أ. أبو بكر الشافعي</div>
+      </div>
+      <div class="pv-title" id="pvLectureTitle">المحاضرة</div>
+      <div class="pv-video-wrap" id="pvVideoWrap">
+        <div class="pv-video-container" id="pvVideoBox">
+          <div class="pv-facade" id="pvFacade" onclick="pvStartPlayback()">
+            <div class="pv-facade-play">▶</div>
+          </div>
+          <div class="pv-touch-overlay" id="pvTouchOverlay">
+            <div class="pv-touch-zone pv-seek-right" id="pvZoneRight" title="تقديم 10 ثوانٍ">
+              <div class="pv-seek-feedback" id="pvFeedbackRight">+10s</div>
+            </div>
+            <div class="pv-touch-zone pv-play-center" id="pvZoneCenter" title="تشغيل / إيقاف"></div>
+            <div class="pv-touch-zone pv-seek-left" id="pvZoneLeft" title="تأخير 10 ثوانٍ">
+              <div class="pv-seek-feedback" id="pvFeedbackLeft">-10s</div>
+            </div>
+          </div>
+          <div id="pvPlayer"></div>
+        </div>
+      </div>
+      <div class="pv-support-row">
+        <a href="https://wa.me/201099442329" target="_blank" class="pv-support-btn tech">
+          🎧 <span>الدعم الفني<span class="pv-phone">01099442329</span></span>
+        </a>
+        <a href="https://wa.me/201101662590" target="_blank" class="pv-support-btn academic">
+          💬 <span>واتساب المستر<span class="pv-phone">01101662590</span></span>
+        </a>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- نافذة فحص التركيز والانتباه أثناء مشاهدة المحاضرة المحمية -->
+  <div class="pv-attention-overlay" id="pvAttentionModal">
+    <div class="pv-attention-card">
+      <h3>اختبار التركيز! 🧠</h3>
+      <p>هل ما زلت تتابع المحاضرة بتركيز؟ أجب عن السؤال لمتابعة الشرح:</p>
+      <form id="pvAttentionForm" onsubmit="pvVerifyAttention(event)">
+        <label id="pvCaptchaQuestion" style="display:block; font-weight:bold; color:#f4e285; margin-bottom:8px;"></label>
+        <input type="number" id="pvCaptchaAnswer" required placeholder="اكتب الناتج..." autocomplete="off">
+        <p class="pv-attention-error" id="pvErrorMsg">الإجابة غير صحيحة، حاول مجدداً!</p>
+        <button type="submit">متابعة الشرح ✅</button>
+      </form>
+    </div>
+  </div>
+ 
+  <!-- عناصر الدعم العائم -->
+  <div class="support-widget" id="supportWidget">
+    <button class="support-main-btn" onclick="toggleSupportMenu()" title="الدعم والمساعدة">
+      🎧
+    </button>
+    
+    <div class="support-options">
+      <div class="support-view" id="mainSupportView">
+        <button type="button" class="support-item activation" onclick="showActivationSubMenu()">
+          <span>🔑</span>
+          <div class="info">
+            <span>تفعيل الأكواد</span>
+            <span class="phone">اضغط للتواصل</span>
+          </div>
+        </button>
+ 
+        <a href="https://wa.me/201099442329" target="_blank" class="support-item tech">
+          <span>🎧</span>
+          <div class="info">
+            <span>الدعم الفني</span>
+            <span class="phone">01099442329</span>
+          </div>
+        </a>
+ 
+        <a href="https://wa.me/201101662590" target="_blank" class="support-item academic">
+          <span>💬</span>
+          <div class="info">
+            <span>الدعم العلمي</span>
+            <span class="phone">01101662590</span>
+          </div>
+        </a>
+      </div>
+ 
+      <div class="support-view" id="activationSupportView" style="display: none;">
+        <a href="https://wa.me/201130913147" target="_blank" class="support-item activation">
+          <span>📱</span>
+          <div class="info">
+            <span>مس منة</span>
+            <span class="phone">01130913147</span>
+          </div>
+        </a>
+ 
+        <a href="https://wa.me/201093619854" target="_blank" class="support-item activation">
+          <span>💬</span>
+          <div class="info">
+            <span>مس رحمة</span>
+            <span class="phone">01093619854</span>
+          </div>
+        </a>
+ 
+        <a href="https://wa.me/201157948016" target="_blank" class="support-item activation">
+          <span>💬</span>
+          <div class="info">
+            <span>مس ملاك</span>
+            <span class="phone">01157948016</span>
+          </div>
+        </a>
+ 
+        <button type="button" class="support-item back-btn" onclick="showMainSupportMenu()">
+          <span>↩ العودة للخلف</span>
+        </button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- مكتبة المشغل الاحترافي للفيديو المحمي -->
+  <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+ 
+  <script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOxTAIi0vg-ljJYn95vaox2qRSC7fBdgvlIGebURXTGK6YPEP1CWRO9LwDwTspKTb6/exec";
+    const FORUM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbweDp9aFadfcGln2fprx1OGOg9ap1wWaDWJXfmb8JUwHRqMrL8GucM3sM_pRiAfkuKI/exec";
+    // رابط تطبيق الويب الخاص بإدارة المحاضرات (ألصقه هنا بعد النشر)
+    const LECTURES_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXD3_GQi_GIlUJJG07gC5EwZwVctKY4m8q2Wc72tkPZ-54ytExl5EFVKHUF3uE1wmm/exec";
+    const ADMIN_PHONE = "01099442329"; // يظهر زر لوحة التحكم لهذا الرقم فقط، والتحقق الفعلي يتم في السيرفر
+    
+    // قائمة الحسابات الإدارية وفريق الدعم المسموح لها بالرد في المنتدى
+    const SUPPORT_ADMIN_PHONES = [
+      "01101662590", // الدعم العلمي / الأستاذ
+      "01099442329", // الدعم الفني
+      "01130913147", // مس منة
+      "01093619854", // مس رحمة
+      "01157948016"  // مس ملاك
+    ];
+ 
+    // ======================= طبقة الاتصال والتحقق =======================
+    const REQUEST_TIMEOUT_MS = 12000;
+    const RETRY_DELAYS = [200, 500, 900];
+    const GENERIC_ERROR = "لم نتمكن من إتمام العملية الآن. برجاء المحاولة مرة أخرى بعد لحظات.";
+    // أخطاء مؤقتة من السيرفر (ضغط/انتهاء مهلة) - لا تُعرض للعميل وتُعاد محاولتها
+    const TRANSIENT_RE = /timeout|timed out|too many|quota|busy|service invoked|lock|exception|internal error|مشغول|انتهت المهلة|تجاوز/i;
+    // رسائل تدل أن الكود مستخدم
+    const USED_RE = /مستخدم|استخدم|مسبق|used|already/i;
+    // أي رسالة قادمة من السيرفر تكشف مكان التخزين لا تُعرض للعميل
+    const LEAK_RE = /sheet|spreadsheet|google|script|شيت|جوجل|جوجول|سكريبت|exception|typeerror|referenceerror|undefined|cannot read/i;
+ 
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    let sessionCreds = null; // بيانات الدخول في الذاكرة فقط ولا تُحفظ في أي مكان
+ 
+    function safeMsg(msg, fallback) {
+      const m = (msg == null ? "" : String(msg)).trim();
+      if (!m || LEAK_RE.test(m)) return fallback;
+      return m;
+    }
+ 
+    function toLatinDigits(str) {
+      return String(str == null ? "" : str)
+        .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+        .replace(/[\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) - 0x06F0));
+    }
+ 
+    function cleanText(str) {
+      return toLatinDigits(str).replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF\u00A0]/g, "").trim();
+    }
+ 
+    function normalizePhone(v) {
+      let p = cleanText(v).replace(/[^\d]/g, "");
+      if (p.length === 14 && p.startsWith("0020")) p = p.slice(4);
+      else if (p.length === 12 && p.startsWith("20")) p = p.slice(2);
+      if (p.length === 10 && p.startsWith("1")) p = "0" + p;
+      return p;
+    }
+ 
+    // صيغ الرقم المحتمل تخزينها (مع الصفر / بدون الصفر / كما كتبه المستخدم)
+    function phoneVariants(input) {
+      const n = normalizePhone(input);
+      const list = [n];
+      if (n.startsWith("0")) list.push(n.slice(1));
+      list.push(cleanText(input));
+      return [...new Set(list.filter(Boolean))];
+    }
+ 
+    function codeVariants(input) {
+      const c = cleanText(input);
+      const list = [c, c.replace(/\s+/g, ""), c.toUpperCase(), c.toLowerCase()];
+      return [...new Set(list.filter(Boolean))];
+    }
+ 
+    function sameCode(a, b) {
+      const f = (x) => cleanText(x).replace(/\s+/g, "").toLowerCase();
+      return f(a) !== "" && f(a) === f(b);
+    }
+ 
+    function isActivatedValue(code) {
+      const c = cleanText(code);
+      return c !== "" && c !== "غير مفعل";
+    }
+ 
+    // نسخة بيانات الطالب تُحفظ محلياً بدون أي حقل يخص كلمة السر
+    function saveStudentLocal() {
+      try {
+        const safe = Object.assign({}, currentStudent);
+        Object.keys(safe).forEach((k) => { if (/pass|pwd|سر/i.test(k)) delete safe[k]; });
+        localStorage.setItem("shafeei_student", JSON.stringify(safe));
+      } catch (_) {}
+    }
+
+    // ======================= الجلسة الدائمة (محلية فقط) =======================
+    // بيانات الطالب تبقى محفوظة في المتصفح، ولا يُسجَّل الخروج إلا بضغط زر "تسجيل الخروج".
+    function clearSession() {
+      try { localStorage.removeItem("shafeei_student"); localStorage.removeItem("shafeei_session"); } catch (_) {}
+    }
+    function mergeUser(u) {
+      if (!u || !currentStudent) return;
+      const safe = Object.assign({}, u);
+      Object.keys(safe).forEach((k) => { if (/pass|pwd|سر/i.test(k)) delete safe[k]; });
+      if (!safe.phone) delete safe.phone;
+      Object.assign(currentStudent, safe);
+    }
+
+    // محاولة واحدة: ok (نجاح مؤكد) | fail (رد قاطع من السيرفر) | transient (لا نتيجة موثوقة)
+    async function callScript(url, payload) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload),
+          signal: ctrl.signal
+        });
+        if (!res.ok) return { type: "transient" };
+        let data;
+        try { data = JSON.parse(await res.text()); } catch (_) { return { type: "transient" }; }
+        if (!data || typeof data !== "object") return { type: "transient" };
+        if (data.status === "success") return { type: "ok", data };
+        const msg = String(data.message || "");
+        if (TRANSIENT_RE.test(msg)) return { type: "transient" };
+        return { type: "fail", data, message: msg };
+      } catch (_) {
+        return { type: "transient" };
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+ 
+    // للطلبات القرائية فقط (آمنة للإعادة)
+    async function callWithRetry(url, payload, tries) {
+      for (let i = 0; i < tries; i++) {
+        const r = await callScript(url, payload);
+        if (r.type !== "transient") return r;
+        if (i < tries - 1) await sleep(RETRY_DELAYS[Math.min(i, RETRY_DELAYS.length - 1)]);
+      }
+      return { type: "transient" };
+    }
+ 
+    // ---- تسجيل الدخول: لا يُعلن الفشل إلا بعد تأكيد متكرر ----
+    async function robustLogin(phoneInput, password) {
+      // نطلق كل صيغ الرقم بالتوازي ونأخذ أول نجاح فوراً (بدون انتظار متسلسل)
+      const variants = phoneVariants(phoneInput).slice(0, 2);
+      const attempt = (phone) => callWithRetry(GOOGLE_SCRIPT_URL, { action: "login", studentPhone: phone, studentPassword: password }, 3);
+      return new Promise((resolve) => {
+        let pending = variants.length, done = false;
+        const results = [];
+        variants.forEach((v, i) => attempt(v).then((r) => {
+          if (done) return;
+          if (r.type === "ok") { done = true; return resolve(r); }
+          results[i] = r;
+          if (--pending === 0) { done = true; resolve(results[0] && results[0].type === "fail" ? results[0] : { type: "uncertain" }); }
+        }));
+      });
+    }
+ 
+    // ---- إنشاء الحساب: تجنّب الازدواج لو ضاع الرد ----
+    async function robustRegister(payload, password) {
+      let ambiguous = false;
+      for (let i = 0; i < 3; i++) {
+        const r = await callScript(GOOGLE_SCRIPT_URL, payload);
+        if (r.type === "ok") return r;
+        if (r.type === "fail") {
+          if (ambiguous) {
+            const lg = await robustLogin(payload.studentPhone, password);
+            if (lg.type === "ok") return lg;
+          }
+          return r;
+        }
+        ambiguous = true;
+        const lg = await callScript(GOOGLE_SCRIPT_URL, {
+          action: "login", studentPhone: payload.studentPhone, studentPassword: password
+        });
+        if (lg.type === "ok") return lg;
+        await sleep(RETRY_DELAYS[Math.min(i, RETRY_DELAYS.length - 1)]);
+      }
+      return { type: "uncertain" };
+    }
+ 
+    // ---- هل الكود مسجّل فعلاً على حساب هذا الطالب؟ ----
+    async function verifyActivation(code) {
+      if (!sessionCreds) return { state: "unknown" };
+      const lg = await robustLogin(sessionCreds.phone, sessionCreds.password);
+      if (lg.type !== "ok" || !lg.data.user) return { state: "unknown" };
+      const u = lg.data.user;
+      if (isActivatedValue(u.code) && sameCode(u.code, code)) return { state: "yes", user: u };
+      return { state: "no" };
+    }
+ 
+    // ---- تفعيل الكود: لا يُعلن أنه مستخدم إلا بعد تأكيد ----
+    async function robustActivate(codeInput) {
+      const variants = codeVariants(codeInput);
+      const primary = variants[0];
+      const requestId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      const mk = (c) => ({ action: "activateCode", studentPhone: currentStudent.phone, code: c, requestId });
+      const okResult = (data) => ({ type: "ok", data });
+ 
+      let ambiguous = false;
+      let r = { type: "transient" };
+      for (let i = 0; i < 3; i++) {
+        r = await callScript(GOOGLE_SCRIPT_URL, mk(primary));
+        if (r.type !== "transient") break;
+        ambiguous = true; // ربما نُفّذ الطلب ولم يصلنا الرد
+        await sleep(RETRY_DELAYS[Math.min(i, RETRY_DELAYS.length - 1)]);
+      }
+ 
+      if (r.type === "ok") return r;
+ 
+      if (r.type === "transient") {
+        const v = await verifyActivation(primary);
+        if (v.state === "yes") return okResult({ status: "success", code: primary, user: v.user });
+        return { type: "uncertain" };
+      }
+ 
+      // رد قاطع بالفشل: نتحقق أولاً هل التفعيل تم فعلاً على نفس الحساب
+      const used = USED_RE.test(r.message);
+      if (used || ambiguous) {
+        const v = await verifyActivation(primary);
+        if (v.state === "yes") return okResult({ status: "success", code: primary, user: v.user });
+        if (ambiguous && used && v.state === "unknown") return { type: "uncertain" };
+      }
+ 
+      // إعادة فحص (صيغ الحروف + إعادة الأساسي) قبل إعلان الفشل
+      const recheck = await Promise.all(
+        variants.slice(1).concat(primary).map((c) => callWithRetry(GOOGLE_SCRIPT_URL, mk(c), 2))
+      );
+      const win = recheck.find((x) => x.type === "ok");
+      if (win) return win;
+      if (recheck[recheck.length - 1].type === "fail") return r; // فشل مؤكد
+      return { type: "uncertain" };
+    }
+ 
+    // تسخين الخدمات مسبقاً لإلغاء تأخير أول طلب
+    function warmUpServices() {
+      [GOOGLE_SCRIPT_URL, FORUM_SCRIPT_URL].forEach((u) => {
+        try { fetch(u, { method: "GET", mode: "no-cors", cache: "no-store" }).catch(() => {}); } catch (_) {}
+      });
+    }
+ 
+    // ===== المحاضرات اليدوية =====
+    // أضف سطراً جديداً داخل أي مصفوفة. الحقل releaseAt اختياري: لو كتبته (مثال "2026-10-05T20:00:00+03:00")
+    // تظهر المحاضرة تلقائياً عند هذا الموعد ويظهر التنبيه قبلها بساعتين، ولو تركته تظهر فوراً كما كانت.
+    // مثال: { id: "f12", title: "المحاضرة الثانية عشر: الفقه الشافعي", link: "https://youtu.be/XXXXXXXXXXX", homeworkLink: "", releaseAt: "2026-10-05T20:00:00+03:00" },
+    const tawheedLectures = [
+      { id: "t1", title: "المحاضرة الأولى: التوحيد", link: "https://drive.google.com/file/d/1tRQT8wGl0JBAULtHP8unHgOUvEuMAvfr/view?usp=drive_link", homeworkLink: "https://docs.google.com/forms/d/e/1FAIpQLSflltq-w4A3brHYdi7IQb8kqwKdoA24D4feQYECKf3sr8gBvw/viewform?usp=publish-editor" },
+      { id: "t2", title: "المحاضرة الثانية: التوحيد", link: "https://drive.google.com/file/d/1g2ERaFdG6cBM3eAfJtzqmFP5UwQcxMt9/view?usp=drive_link", homeworkLink: "https://docs.google.com/forms/d/16z53vS1Y84g9PAn7SbZXtx1NQOT_HDqxM0vCqRJc8xA/edit?usp=forms_home&ouid=106441308019209743681" },
+      { id: "t3", title: "المحاضرة الثالثة: التوحيد", link: "https://drive.google.com/file/d/1gk4Mexrh9jf5BlmUcaDafT0c3kncq85Y/view?usp=drive_link", homeworkLink: "https://docs.google.com/forms/d/e/1FAIpQLSdwmqzQa7IOzoYYUWisGsJTbTToNh5RQN0x_pmjyqxL1l3VbQ/viewform?usp=publish-editor" },
+      { id: "t4", title: "المحاضرة الرابعة: التوحيد", link: "https://drive.google.com/file/d/1fxC30t7ObU-JcnYKWfPhQkMgW-f7OHty/view?usp=drive_link", homeworkLink: "https://docs.google.com/forms/d/e/1FAIpQLSfmL632YLUQnsIywV_xBQvNIMVhDmd_KKa9ZOrXhOxT8LlQng/viewform?usp=publish-editor" }
+    ];
+ 
+    const tafseerLectures = [
+      { id: "tf1", title: "المحاضرة الأولى: التفسير", link: "https://drive.google.com/file/d/139CDLmXSSNs4GUrw26upbtCqq6byiDgn/view?usp=drive_link", homeworkLink: "https://forms.gle/38sL2my4QT7NoH7r7" },
+      { id: "tf2", title: "المحاضرة الثانية: التفسير", link: "https://drive.google.com/file/d/11ZAKMszdb9ElNIjMsllSBPBNaqpP68aM/view?usp=drive_link", homeworkLink: "https://docs.google.com/forms/d/1I40mwymBtTsKgtEUheOx2Cqn2NaYJ1t5XkuUN8FGkTw/edit?usp=forms_home&ouid=106441308019209743681" },
+      { id: "tf3", title: "المحاضرة الثالثة: التفسير", link: "https://drive.google.com/file/d/17ga9UaEakhtKJI6KUg_Ife0Dy4D4DFN7/view?usp=drive_link", homeworkLink: "https://forms.gle/XtFe2kFHJjLNgYy3A" },
+      { id: "tf4", title: "المحاضرة الرابعة: التفسير", link: "https://drive.google.com/file/d/1ybVBfpGwWhA5LbLtcptzduZwuipxECEl/view?usp=drive_link", homeworkLink: "https://forms.gle/thWPjEB9Geg3fhD99" },
+      { id: "tf5", title: "المحاضرة الخامسة: التفسير", link: "https://drive.google.com/file/d/1OOIoWtn-K1oIcI6I36jJS90EoRH1Aa82/view?usp=drive_link", homeworkLink: "https://forms.gle/YAQCB8V9FEMeE5BT6" },
+      { id: "tf6", title: "المحاضرة السادسة: التفسير", link: "https://drive.google.com/file/d/1tBOW4BSmxEGvgSCbEmcvWOF40ENRmxBV/view?usp=drive_link", homeworkLink: "" },
+      { id: "tf7", title: "المحاضرة السابعة: التفسير", link: "https://hlymw58-creator.github.io/8/", homeworkLink: "" },
+      { id: "tf8", title: "المحاضرة الثامنة: التفسير", link: "https://hlymw58-creator.github.io/9/", homeworkLink: "" }
+    ];
+ 
+    const fiqhLectures = [
+      { id: "f1", title: "المحاضرة الأولى: الفقه الشافعي", link: "https://drive.google.com/file/d/1DnbbyVdf-DPYRegAVp14fu8NOAdWeYkl/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f2", title: "المحاضرة الثانية: الفقه الشافعي", link: "https://drive.google.com/file/d/1QCbV_Cmxq1z9uslRzVr93pI46EmOiCAe/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f3", title: "المحاضرة الثالثة: الفقه الشافعي", link: "https://drive.google.com/file/d/1XEqiFjjcD7AmPxXBm8f5ktMFYOIrDhW2/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f4", title: "المحاضرة الرابعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1vGMqN_XRKk0v-jkOQBHdQVZV-bZC3qeL/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f5", title: "المحاضرة الخامسة: الفقه الشافعي", link: "https://drive.google.com/file/d/1sVj16wJql5FYl0P6hSJMJ9ngWWyOJEC5/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f6", title: "المحاضرة السادسة: الفقه الشافعي", link: "https://drive.google.com/file/d/1p3GzDReKov8p7w1oZwBuW7E6dFD-l6aR/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f7", title: "المحاضرة السابعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ZcRLp1vRYycezeu40Rl-NmmTBJawMOCg/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f8", title: "المحاضرة الثامنة: الفقه الشافعي", link: "https://drive.google.com/file/d/1xLErlwikAKjdOmWHIODlsdVhpiubOI1w/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f9", title: "المحاضرة التاسعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ApGtlqrh5-XRCj7YtxzusZleuT99SKiP/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
+      { id: "f10", title: "المحاضرة العاشرة: الفقه الشافعي", link: "https://www.youtube.com/watch?v=Xfh9yJtw-4I", homeworkLink: "https://hlymw58-creator.github.io/26-9-2026/" },
+      { id: "f11", title: "المحاضرة الحادي عشر: الفقه الشافعي", link: "https://www.youtube.com/watch?v=pFmTkCQPN94", homeworkLink: "https://hlymw58-creator.github.io/28-9-2026/" }
+    ];
+ 
+    // مراجعات: أضف محاضرات يدوية هنا بنفس الشكل (id, title, link, homeworkLink, releaseAt اختياري)
+    const reviewTawheedLectures = [];
+    const reviewTafseerLectures = [];
+    const reviewHadithLectures = [];
+    const reviewFiqhLectures = [];
+
+    const osoolLectures = [
+      { id: "o1", title: "المحاضرة الأولى: الحديث", link: "https://hlymw58-creator.github.io/86/", homeworkLink: "" },
+      { id: "o2", title: "المحاضرة الثانية: الحديث", link: "https://hlymw58-creator.github.io/23-9-2026/", homeworkLink: "" },
+      { id: "o3", title: "الحديث الثالث والرابع:", link: "https://www.youtube.com/watch?v=L4OqnZqkSlY&list=PLb_GUu31KnV8&index=3&t=359s&pp=iAQB", homeworkLink: "https://hlymw58-creator.github.io/30-9-2026/" }
+    ];
+ 
+    let currentStudent = null;
+    let attendanceRecords = {};
+    let isRegisterMode = false;
+    let forumPosts = [];
+ 
+
+    // ======================= تحية / إشعارات / تقدم / حساب =======================
+    const PHONE_RE = /^01[0125]\d{8}$/;
+    const firstName = () => cleanText((currentStudent && currentStudent.name) || "").split(/\s+/)[0] || "طالب";
+    function greetWord() {
+      const h = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: "Africa/Cairo" }).format(new Date())) % 24;
+      return h < 12 ? "صباح الخير" : "مساء الخير";
+    }
+    function setHeaderName() {
+      document.getElementById("studentNameDisplay").innerText = greetWord() + " يا " + firstName();
+      applyAvatar();
+    }
+    function showWelcome(after) {
+      const w = document.getElementById("welcomeScreen");
+      document.getElementById("welcomeText").innerText = greetWord() + " يا " + firstName();
+      w.style.display = "flex";
+      setTimeout(() => { w.style.display = "none"; if (after) after(); }, 1000);
+    }
+    function toggleMenu(id, ev) {
+      ev.stopPropagation();
+      ["notifMenu", "profileMenu"].forEach((m) => { if (m !== id) document.getElementById(m).classList.remove("open"); });
+      const el = document.getElementById(id); el.classList.toggle("open");
+      if (id === "notifMenu" && el.classList.contains("open")) markNotifsRead();
+    }
+    document.addEventListener("click", () => document.querySelectorAll(".dropdown.open").forEach((d) => d.classList.remove("open")));
+
+    // --- الإشعارات (محفوظة لكل طالب على جهازه) ---
+    const notifKey = () => "notifs_" + (currentStudent ? currentStudent.phone : "guest");
+    const getNotifs = () => { try { return JSON.parse(localStorage.getItem(notifKey()) || "[]"); } catch (_) { return []; } };
+    function pushNotif(text) {
+      const list = getNotifs(); list.unshift({ t: text, at: Date.now(), read: false });
+      try { localStorage.setItem(notifKey(), JSON.stringify(list.slice(0, 40))); } catch (_) {}
+      renderNotifs();
+    }
+    function markNotifsRead() {
+      const list = getNotifs().map((n) => Object.assign(n, { read: true }));
+      try { localStorage.setItem(notifKey(), JSON.stringify(list)); } catch (_) {}
+      setTimeout(renderNotifs, 1500);
+    }
+    function renderNotifs() {
+      const list = getNotifs(), unread = list.filter((n) => !n.read).length;
+      const dot = document.getElementById("notifDot");
+      dot.innerText = unread; dot.style.display = unread ? "flex" : "none";
+      document.getElementById("notifMenu").innerHTML = list.length
+        ? list.map((n) => `<div class="notif-item ${n.read ? "" : "new"}">${escapeHtml(n.t)}<small>${new Date(n.at).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Cairo" })}</small></div>`).join("")
+        : `<div class="notif-item">لا توجد إشعارات بعد</div>`;
+    }
+    // إشعار المحاضرات الجديدة: أول مرة نحفظ الموجود بدون إشعار، وبعدها أي محاضرة جديدة تنبّه الطالب
+    function checkNewLectures() {
+      if (!currentStudent || !isActivatedValue(currentStudent.code)) return;
+      const k = "seen_lec_" + currentStudent.phone;
+      let seen = null; try { seen = JSON.parse(localStorage.getItem(k) || "null"); } catch (_) {}
+      const ids = Object.keys(lectureIndex);
+      if (!Array.isArray(seen)) { try { localStorage.setItem(k, JSON.stringify(ids)); } catch (_) {} return; }
+      const fresh = ids.filter((id) => !seen.includes(id));
+      if (!fresh.length) return;
+      fresh.forEach((id) => pushNotif(`تم رفع محاضرة جديدة: ${lectureIndex[id].title} (${lectureIndex[id].subject})`));
+      try { localStorage.setItem(k, JSON.stringify(seen.concat(fresh))); } catch (_) {}
+    }
+
+    // --- مؤشر التقدم ---
+    function renderProgress() {
+      const box = document.getElementById("progressBox");
+      if (!currentStudent || !isActivatedValue(currentStudent.code)) { box.style.display = "none"; return; }
+      const ids = SUBJECTS.flatMap((x) => visibleFor(x).map((l) => l.id)), total = ids.length;
+      const done = ids.filter((id) => attendanceRecords[id]).length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      box.style.display = "block";
+      box.innerHTML = `<b>📈 مدى تقدمك الدراسي: ${pct}%</b> <span style="color:#666;font-size:13px">(أتممت ${done} من ${total} محاضرة متاحة)</span><div class="pg-bar"><div class="pg-fill" style="width:${pct}%"></div></div>`;
+    }
+
+    // --- الصورة الشخصية (محفوظة محلياً بعد ضغطها) ---
+    const avatarKey = () => "avatar_" + (currentStudent ? currentStudent.phone : "guest");
+    const getAvatar = () => { try { return localStorage.getItem(avatarKey()) || ""; } catch (_) { return ""; } };
+    function applyAvatar() {
+      const a = document.getElementById("avatarLetter"), img = getAvatar();
+      a.style.backgroundImage = img ? `url("${img}")` : "";
+      a.innerText = img ? "" : firstName().charAt(0);
+    }
+    function compressImage(file) {
+      return new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onerror = reject;
+        fr.onload = () => {
+          const im = new Image();
+          im.onerror = reject;
+          im.onload = () => {
+            const S = 256, c = document.createElement("canvas"); c.width = c.height = S;
+            const m = Math.min(im.width, im.height), sx = (im.width - m) / 2, sy = (im.height - m) / 2;
+            c.getContext("2d").drawImage(im, sx, sy, m, m, 0, 0, S, S);
+            resolve(c.toDataURL("image/jpeg", 0.8));
+          };
+          im.src = fr.result;
+        };
+        fr.readAsDataURL(file);
+      });
+    }
+
+    // --- صفحة الحساب الكاملة ---
+    let pendingAvatar = null; // null = بدون تغيير، "" = حذف
+    const govOptions = () => document.getElementById("regGovernorate").innerHTML;
+    function picStyle(img) { return img ? `style="background-image:url('${img}')"` : ""; }
+    function showPage(on) {
+      if (on) { prevView = view === "account" ? prevView : view; setView("account"); }
+      else setView(prevView || "courses");
+    }
+    function closeAccount() { showPage(false); }
+    let accMode = "view";
+    function openAccount() { pendingAvatar = null; renderAccountView(); showPage(true); syncAccount(); }
+
+    // تحديث بيانات الطالب من الشيت عبر أمر الدخول الموجود (متاح طالما كلمة السر في ذاكرة الجلسة الحالية)
+    async function fetchProfile() {
+      if (!currentStudent || currentStudent.isAdmin || !sessionCreds) return false;
+      const lg = await robustLogin(sessionCreds.phone, sessionCreds.password);
+      if (lg.type === "ok" && lg.data && lg.data.user) { mergeUser(lg.data.user); saveStudentLocal(); return true; }
+      return false;
+    }
+    async function syncAccount() {
+      if (!sessionCreds) return; // بعد إعادة التحميل تُعرض آخر بيانات محفوظة من الشيت
+      const el = () => document.getElementById("accSync");
+      if (el()) el().innerText = "جاري تحديث بياناتك...";
+      let ok = false;
+      try { ok = await fetchProfile(); } catch (_) {}
+      if (view !== "account" || accMode !== "view") return;
+      renderAccountView(); setHeaderName();
+      if (!ok && el()) el().innerText = "تعذر تحديث البيانات الآن، يتم عرض آخر بيانات محفوظة.";
+    }
+
+    function accHero(img, s) {
+      return `<div class="acc-hero"><div class="acc-pic" id="accPic" ${picStyle(img)}>${img ? "" : escapeHtml(firstName().charAt(0))}</div>
+        <h2>${escapeHtml(s.name || "طالب")}</h2><p>${greetWord()} يا ${escapeHtml(firstName())} 👋</p></div>`;
+    }
+    function renderAccountView() {
+      accMode = "view";
+      const s = currentStudent || {}, v = (x) => escapeHtml(x || "—");
+      document.getElementById("accountPage").innerHTML = `
+        <button class="acc-back" onclick="closeAccount()">← رجوع للمنصة</button>
+        ${accHero(getAvatar(), s)}
+        <div class="acc-card">
+          <div class="acc-row"><b>الاسم الكامل</b><span>${v(s.name)}</span></div>
+          <div class="acc-row"><b>رقم الهاتف</b><span dir="ltr">${v(s.phone)}</span></div>
+          <div class="acc-row"><b>رقم ولي الأمر</b><span dir="ltr">${v(s.parentPhone)}</span></div>
+          <div class="acc-row"><b>المحافظة</b><span>${v(s.governorate)}</span></div>
+          <div class="acc-row"><b>هل أنت من مصر؟</b><span>${s.nationality ? (s.nationality === "مصري" ? "نعم" : "لا") : "—"}</span></div>
+          <div class="acc-row"><b>حالة الاشتراك</b><span>${isActivatedValue(s.code) ? "مُفعّل" : "غير مفعّل"}</span></div>
+          <div class="acc-row"><b>كلمة المرور</b><span>***</span></div>
+          <div class="acc-actions">
+            <button class="btn-submit" onclick="renderAccountEdit()">✏️ تعديل البيانات</button>
+            <button class="btn-submit" style="background:#ef6c00" onclick="openPass()">🔒 تغيير كلمة المرور</button>
+          </div>
+          <div class="acc-sync" id="accSync"></div>
+        </div>`;
+    }
+    function renderAccountEdit() {
+      accMode = "edit";
+      const s = currentStudent || {}, parts = cleanText(s.name).split(/\s+/);
+      const img = pendingAvatar !== null ? pendingAvatar : getAvatar();
+      document.getElementById("accountPage").innerHTML = `
+        <button class="acc-back" onclick="renderAccountView()">← رجوع</button>
+        ${accHero(img, s)}
+        <form class="acc-card" onsubmit="saveProfile(event)">
+          <div class="pic-edit">
+            <div class="pic-btns">
+              <label class="btn-activate-code">📷 اختيار صورة<input type="file" accept="image/*" hidden onchange="pickAvatar(this)"></label>
+              <button type="button" class="btn-logout" style="color:#c62828;border-color:#c62828" onclick="pendingAvatar='';renderAccountEdit()">حذف الصورة</button>
+            </div>
+          </div>
+          <div class="form-group"><label>الاسم (ثلاثي):</label>
+            <div class="name-row">
+              <input id="epF" required placeholder="الأول" value="${escapeHtml(parts[0] || "")}">
+              <input id="epS" required placeholder="الثاني" value="${escapeHtml(parts[1] || "")}">
+              <input id="epT" required placeholder="الثالث" value="${escapeHtml(parts.slice(2).join(" "))}">
+            </div></div>
+          <div class="form-row">
+            <div class="form-group"><label>رقم هاتف الطالب:</label><input id="epPhone" type="tel" inputmode="numeric" maxlength="11" required dir="ltr" value="${escapeHtml(s.phone || "")}"></div>
+            <div class="form-group"><label>رقم ولي الأمر:</label><input id="epParent" type="tel" inputmode="numeric" maxlength="11" required dir="ltr" value="${escapeHtml(s.parentPhone || "")}"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>المحافظة:</label><select id="epGov" required>${govOptions()}</select></div>
+            <div class="form-group"><label>هل أنت من مصر؟</label><select id="epNat"><option value="مصري">نعم</option><option value="غير مصري">لا</option></select></div>
+          </div>
+          <div class="acc-actions">
+            <button class="btn-submit" type="submit" id="epBtn">💾 حفظ التعديلات</button>
+            <button class="btn-submit" type="button" style="background:#757575" onclick="pendingAvatar=null;renderAccountView()">إلغاء</button>
+          </div>
+          <div class="error-msg" id="epErr"></div>
+        </form>`;
+      document.getElementById("epGov").value = s.governorate || "";
+      document.getElementById("epNat").value = s.nationality === "غير مصري" ? "غير مصري" : "مصري";
+    }
+    async function pickAvatar(inp) {
+      const f = inp.files && inp.files[0]; if (!f) return;
+      try { pendingAvatar = await compressImage(f); } catch (_) { alert("تعذر قراءة الصورة، جرّب صورة أخرى."); return; }
+      const keep = ["epF","epS","epT","epPhone","epParent","epGov","epNat"].map((i) => document.getElementById(i).value);
+      renderAccountEdit();
+      ["epF","epS","epT","epPhone","epParent","epGov","epNat"].forEach((i, k) => { document.getElementById(i).value = keep[k]; });
+    }
+    async function saveProfile(e) {
+      e.preventDefault();
+      const g = (i) => document.getElementById(i).value;
+      const err = document.getElementById("epErr"), btn = document.getElementById("epBtn");
+      const show = (m) => { err.innerText = m; err.style.display = "block"; };
+      err.style.display = "none";
+      const parts = [g("epF"), g("epS"), g("epT")].map(cleanText);
+      const phone = normalizePhone(g("epPhone")), parent = normalizePhone(g("epParent"));
+      if (parts.some((p) => p.length < 2)) return show("يرجى كتابة الاسم الأول والثاني والثالث.");
+      if (!PHONE_RE.test(phone)) return show("رقم هاتف الطالب يجب أن يكون 11 رقماً ويبدأ بـ 010 أو 011 أو 012 أو 015.");
+      if (!PHONE_RE.test(parent)) return show("رقم ولي الأمر يجب أن يكون 11 رقماً ويبدأ بـ 010 أو 011 أو 012 أو 015.");
+      if (parent === phone) return show("رقم ولي الأمر يجب أن يكون مختلفاً عن رقم الطالب.");
+      if (!g("epGov")) return show("يرجى اختيار المحافظة.");
+      btn.disabled = true; btn.innerText = "جاري الحفظ...";
+      const oldPhone = currentStudent.phone, name = parts.join(" ");
+      const r = await callWithRetry(GOOGLE_SCRIPT_URL, { action: "updateProfile", updateExisting: true, studentPhone: oldPhone, newPhone: phone, studentName: name, parentPhone: parent, governorate: g("epGov"), nationality: g("epNat") }, 3);
+      const serverOk = r.type === "ok";
+      const phoneChanged = phone !== normalizePhone(oldPhone);
+      // نقل الصورة/الإشعارات للرقم الجديد فقط لو تأكد تغييره
+      const finalPhone = (phoneChanged && !serverOk) ? oldPhone : phone;
+      const img = pendingAvatar !== null ? pendingAvatar : getAvatar();
+      if (finalPhone !== oldPhone) {
+        ["attendance_", "notifs_", "seen_lec_"].forEach((p) => { try { const v = localStorage.getItem(p + oldPhone); if (v != null) localStorage.setItem(p + finalPhone, v); } catch (_) {} });
+        try { localStorage.removeItem("avatar_" + oldPhone); } catch (_) {}
+        if (sessionCreds) sessionCreds.phone = finalPhone;
+      }
+      Object.assign(currentStudent, { name, phone: finalPhone, parentPhone: parent, governorate: g("epGov"), nationality: g("epNat") });
+      try { if (img) localStorage.setItem(avatarKey(), img); else localStorage.removeItem(avatarKey()); } catch (_) {}
+      pendingAvatar = null;
+      saveStudentLocal(); setHeaderName(); renderNotifs(); renderProgress();
+      renderAccountView();
+      if (phoneChanged && !serverOk) alert("تم حفظ التعديلات، وتعذر تغيير رقم الهاتف الآن. برجاء المحاولة لاحقاً.");
+    }
+
+    // --- تغيير كلمة المرور (نافذة مستقلة) ---
+    function openPass() {
+      ["pcOld", "pcNew", "pcNew2"].forEach((i) => { document.getElementById(i).value = ""; });
+      document.getElementById("pcErr").style.display = "none";
+      document.getElementById("passModal").style.display = "flex";
+    }
+    function closePass() { document.getElementById("passModal").style.display = "none"; }
+    async function submitPassChange(e) {
+      e.preventDefault();
+      const o = document.getElementById("pcOld").value.trim(), n = document.getElementById("pcNew").value.trim(), n2 = document.getElementById("pcNew2").value.trim();
+      const err = document.getElementById("pcErr"), btn = document.getElementById("pcBtn");
+      const show = (m) => { err.innerText = m; err.style.display = "block"; };
+      err.style.display = "none";
+      if (!o) return show("يرجى إدخال كلمة المرور القديمة.");
+      if (n.length < 6) return show("كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف.");
+      if (n !== n2) return show("كلمتا السر الجديدتان غير متطابقتين.");
+      if (n === o) return show("كلمة المرور الجديدة يجب أن تختلف عن القديمة.");
+      btn.disabled = true; btn.innerText = "جاري الحفظ...";
+      try {
+        // 1) التحقق من صحة كلمة المرور القديمة أولاً (بدون تغيير الجلسة الحالية)
+        const chk = await robustLogin(currentStudent.phone, o);
+        if (chk.type === "fail") return show("كلمة المرور القديمة غير صحيحة.");
+        if (chk.type !== "ok") return show(GENERIC_ERROR);
+        // 2) القديمة صحيحة: نحدّث كلمة المرور الجديدة في الشيت
+        let r = await callWithRetry(GOOGLE_SCRIPT_URL, { action: "changePassword", updateExisting: true, studentPhone: currentStudent.phone, oldPassword: o, newPassword: n, studentPassword: n }, 3);
+        if (r.type !== "ok") { const v = await robustLogin(currentStudent.phone, n); if (v.type === "ok") r = { type: "ok" }; }
+        if (r.type === "ok") {
+          sessionCreds = { phone: currentStudent.phone, password: n };
+          closePass(); pushNotif("تم تغيير كلمة المرور بنجاح"); alert("تم تغيير كلمة المرور بنجاح ✅");
+        } else show(r.type === "fail" ? safeMsg(r.message, GENERIC_ERROR) : GENERIC_ERROR);
+      } finally { btn.disabled = false; btn.innerText = "تغيير كلمة المرور"; }
+    }
+
+
+    // ======================= الكورسات والعرض والوضع الليلي =======================
+    // لإضافة كورس جديد: أضف عنصراً هنا. isActive يحدد هل الطالب مشترك (يمكن ربطه بحقل آخر مستقبلاً).
+    // ولجعل محاضرة خاصة بكورس معيّن اكتب في المحاضرة اليدوية: courses: ["term1"]  (بدونها تظهر في كل الكورسات)
+    const COURSES = [
+      { id: "term1", icon: "📖", title: "كورس الترم الأول", sub: "منصة الشافعي الصغير", desc: "التوحيد • التفسير • الفقه • الحديث • المراجعات • المنتدى",
+        isActive: (u) => !!u && isActivatedValue(u.code) }
+    ];
+    let currentCourse = COURSES[0].id, view = "courses", prevView = "courses", activatingCourse = COURSES[0].id;
+    const inCourse = (l) => !l.courses || !l.courses.length || l.courses.includes(currentCourse);
+
+    function setView(v) {
+      view = v;
+      document.getElementById("coursesPage").style.display = v === "courses" ? "" : "none";
+      document.getElementById("mainContainer").style.display = v === "course" ? "" : "none";
+      document.getElementById("accountPage").style.display = v === "account" ? "block" : "none";
+      if (v === "courses") { renderCourses(); refreshStatus(); }
+      if (v === "course") { const c = COURSES.find((x) => x.id === currentCourse); document.getElementById("courseTitle").innerText = c ? c.title : ""; renderAll(); }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(pinFooter, 50);
+    }
+    function renderCourses() {
+      const g = document.getElementById("coursesGrid"); if (!g) return;
+      g.innerHTML = COURSES.map((c) => {
+        const on = c.isActive(currentStudent);
+        return `<div class="course-card"><div class="course-cover">${c.icon}<span class="badge ${on ? "on" : ""}">${on ? "مُشترك" : "غير مشترك"}</span></div>
+          <div class="course-body"><h3>${escapeHtml(c.title)}</h3><b style="font-size:14px">${escapeHtml(c.sub)}</b><p>${escapeHtml(c.desc)}</p>
+          ${on ? `<button class="btn-submit" onclick="enterCourse('${c.id}')">✅ دخول الكورس</button>`
+               : `<button class="btn-submit" style="background:#ef6c00" onclick="activatingCourse='${c.id}';openCodeModal()">🔑 اشترك الآن</button>`}</div></div>`;
+      }).join("");
+    }
+    function goHome() {
+      document.querySelectorAll(".dropdown.open").forEach((d) => d.classList.remove("open"));
+      closeAccountIfAny(); setView("courses");
+    }
+    function closeAccountIfAny() { const p = document.getElementById("accountPage"); if (p) p.style.display = "none"; }
+    function enterCourse(id) { currentCourse = id; setView("course"); }
+    // مزامنة حالة التفعيل من قاعدة البيانات بهدوء (إن كانت بيانات الدخول متاحة في الجلسة)
+    let statusBusy = false, statusAt = 0;
+    async function refreshStatus() {
+      if (statusBusy || !sessionCreds || Date.now() - statusAt < 15000) return;
+      statusBusy = true; statusAt = Date.now();
+      try {
+        const lg = await robustLogin(sessionCreds.phone, sessionCreds.password);
+        if (lg.type === "ok" && lg.data.user && cleanText(lg.data.user.code) !== cleanText(currentStudent.code)) {
+          currentStudent.code = lg.data.user.code; saveStudentLocal(); renderAll();
+        }
+      } finally { statusBusy = false; }
+    }
+    function switchSub(id, btn) {
+      document.querySelectorAll(".sub-content").forEach((e) => e.classList.remove("active"));
+      document.querySelectorAll(".sub-btn").forEach((e) => e.classList.remove("active"));
+      document.getElementById(id).classList.add("active"); btn.classList.add("active");
+    }
+    function updateThemeBtn() { const b = document.getElementById("themeBtn"); if (b) b.innerText = document.documentElement.dataset.theme === "dark" ? "☀️" : "🌙"; }
+    function toggleTheme() {
+      const d = document.documentElement, next = d.dataset.theme === "dark" ? "light" : "dark";
+      d.dataset.theme = next; try { localStorage.setItem("shafeei_theme", next); } catch (_) {}
+      updateThemeBtn();
+    }
+    // يُبقي الشريط السفلي في قاع الصفحة حتى لو المحتوى قصير
+    function pinFooter() {
+      const f = document.getElementById("siteFooter"); if (!f) return;
+      f.style.marginTop = "40px";
+      const gap = window.innerHeight - document.documentElement.scrollHeight;
+      if (gap > 0) f.style.marginTop = (40 + gap) + "px";
+    }
+    function initFooter() {
+      const y = document.getElementById("ftYear");
+      if (y) y.innerText = new Date().getFullYear();
+      updateThemeBtn();
+      pinFooter();
+      window.addEventListener("resize", pinFooter);
+      if (window.ResizeObserver) new ResizeObserver(pinFooter).observe(document.body);
+    }
+
+    function checkAuth() {
+      let savedStudent = null;
+      try { savedStudent = JSON.parse(localStorage.getItem("shafeei_student") || "null"); } catch (_) { savedStudent = null; }
+      if (savedStudent && typeof savedStudent === "object") {
+        currentStudent = savedStudent;
+        setHeaderName();
+        document.getElementById("authModal").style.display = "none";
+        loadAttendance();
+        loadForumPosts();
+      } else {
+        document.getElementById("authModal").style.display = "flex";
+      }
+      renderAll();
+    }
+ 
+    function toggleAuthMode() {
+      isRegisterMode = !isRegisterMode;
+      const modalTitle = document.getElementById("modalTitle");
+      const registerFields = document.getElementById("registerFields");
+      const confirmPassGroup = document.getElementById("confirmPassGroup");
+      const submitBtn = document.getElementById("authSubmitBtn");
+      const toggleText = document.getElementById("toggleText");
+      const errorDiv = document.getElementById("authError");
+ 
+      errorDiv.style.display = "none";
+      ["regFirst","regSecond","regThird","regParentPhone","regGovernorate","confirmPassword"].forEach((i) => { document.getElementById(i).required = isRegisterMode; });
+ 
+      if (isRegisterMode) {
+        modalTitle.innerText = "إنشاء حساب جديد";
+        registerFields.style.display = "block";
+        confirmPassGroup.style.display = "block";
+        submitBtn.innerText = "إنشاء الحساب";
+        toggleText.innerText = "لديك حساب بالفعل؟ تسجيل الدخول";
+      } else {
+        modalTitle.innerText = "تسجيل الدخول";
+        registerFields.style.display = "none";
+        confirmPassGroup.style.display = "none";
+        submitBtn.innerText = "دخول المنصة";
+        toggleText.innerText = "ليس لديك حساب؟ إنشاء حساب جديد";
+      }
+    }
+ 
+    let authInFlight = false;
+ 
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      if (authInFlight) return;
+ 
+      const rawPhone = document.getElementById("studentPhone").value;
+      const phone = normalizePhone(rawPhone);
+      const password = document.getElementById("studentPassword").value.trim();
+      const errorDiv = document.getElementById("authError");
+      const submitBtn = document.getElementById("authSubmitBtn");
+ 
+      const showError = (msg) => { errorDiv.innerText = msg; errorDiv.style.display = "block"; };
+      errorDiv.style.display = "none";
+ 
+      if (!phone) { showError("يرجى إدخال رقم الهاتف."); return; }
+ 
+      let registerPayload = null;
+      if (isRegisterMode) {
+        const parts = ["regFirst","regSecond","regThird"].map((i) => cleanText(document.getElementById(i).value));
+        const name = parts.join(" ");
+        const parentPhoneRaw = document.getElementById("regParentPhone").value;
+        const governorate = document.getElementById("regGovernorate").value;
+        const nationality = document.getElementById("regNationality").value;
+        const confirmPass = document.getElementById("confirmPassword").value.trim();
+ 
+        if (parts.some((p) => p.length < 2)) { showError("يرجى كتابة الاسم الأول والثاني والثالث (كل خانة إجبارية)."); return; }
+        const pp = normalizePhone(parentPhoneRaw);
+        if (!PHONE_RE.test(phone)) { showError("رقم هاتف الطالب يجب أن يكون 11 رقماً ويبدأ بـ 010 أو 011 أو 012 أو 015."); return; }
+        if (!PHONE_RE.test(pp)) { showError("رقم ولي الأمر يجب أن يكون 11 رقماً ويبدأ بـ 010 أو 011 أو 012 أو 015."); return; }
+        if (pp === phone) { showError("رقم ولي الأمر يجب أن يكون مختلفاً عن رقم الطالب."); return; }
+        if (!governorate) { showError("يرجى اختيار المحافظة."); return; }
+        if (password.length < 6) { showError("كلمة السر يجب ألا تقل عن 6 أحرف."); return; }
+        if (password !== confirmPass) { showError("كلمتا السر غير متطابقتين!"); return; }
+ 
+        registerPayload = {
+          action: "register",
+          studentName: name,
+          studentPhone: phone,
+          parentPhone: normalizePhone(parentPhoneRaw) || parentPhoneRaw.trim(),
+          governorate: governorate,
+          nationality: nationality,
+          studentPassword: password
+        };
+      }
+ 
+      authInFlight = true;
+      submitBtn.disabled = true;
+      submitBtn.innerText = isRegisterMode ? "جاري إنشاء الحساب..." : "جاري التحقق...";
+ 
+      try {
+        const result = (phone === ADMIN_PHONE && lecturesConfigured())
+          ? await adminSignIn(phone, password, isRegisterMode)
+          : (isRegisterMode ? await robustRegister(registerPayload, password) : await robustLogin(rawPhone, password));
+ 
+        if (result.type === "ok" && result.data && result.data.user) {
+          currentStudent = result.data.user;
+          if (!currentStudent.phone) currentStudent.phone = phone;
+          sessionCreds = { phone: currentStudent.phone, password: password };
+          saveStudentLocal();
+          setHeaderName();
+          document.getElementById("authModal").style.display = "none";
+          loadAttendance();
+          loadForumPosts();
+          renderAll();
+          if (isRegisterMode) pushNotif(`تم إنشاء حسابك بنجاح، ${greetWord()} يا ${firstName()}، مرحباً بك في منصة الشافعي الصغير`);
+          if (!isRegisterMode) pushNotif(`${greetWord()} يا ${firstName()}، سعدنا بعودتك إلى منصة الشافعي الصغير`);
+          showWelcome();
+        } else if (result.type === "fail") {
+          showError(safeMsg(result.message, "بيانات الدخول غير صحيحة."));
+        } else {
+          showError(GENERIC_ERROR);
+        }
+      } catch (err) {
+        console.error(err);
+        showError(GENERIC_ERROR);
+      } finally {
+        authInFlight = false;
+        submitBtn.disabled = false;
+        submitBtn.innerText = isRegisterMode ? "إنشاء الحساب" : "دخول المنصة";
+      }
+    }
+ 
+    function openCodeModal() {
+      document.getElementById("codeModal").style.display = "flex";
+    }
+ 
+    function closeCodeModal() {
+      document.getElementById("codeModal").style.display = "none";
+    }
+ 
+    let activationInFlight = false;
+ 
+    async function handleCodeSubmit(e) {
+      e.preventDefault();
+      if (activationInFlight) return;
+ 
+      const codeInput = document.getElementById("activationCode").value;
+      const errorDiv = document.getElementById("codeError");
+      const submitBtn = document.getElementById("codeSubmitBtn");
+      const showError = (msg) => { errorDiv.innerText = msg; errorDiv.style.display = "block"; };
+ 
+      errorDiv.style.display = "none";
+ 
+      if (!cleanText(codeInput)) { showError("يرجى إدخال كود التفعيل."); return; }
+      if (!currentStudent || !currentStudent.phone) { showError("يرجى تسجيل الدخول أولاً."); return; }
+ 
+      activationInFlight = true;
+      submitBtn.disabled = true;
+      submitBtn.innerText = "جاري حفظ البيانات...";
+ 
+      try {
+        const result = await robustActivate(codeInput);
+ 
+        if (result.type === "ok") {
+          const d = result.data || {};
+          currentStudent.code = d.code || (d.user && d.user.code) || cleanText(codeInput);
+          saveStudentLocal();
+          document.getElementById("activationCode").value = "";
+          closeCodeModal();
+          renderAll();
+          loadForumPosts();
+          pushNotif("تم تفعيل " + (COURSES.find((c) => c.id === activatingCourse) || COURSES[0]).title + " بنجاح");
+          alert("تم تفعيل الكورس بنجاح!");
+        } else if (result.type === "fail") {
+          showError(safeMsg(result.message, "الكود غير صحيح أو تم استخدامه مسبقاً."));
+        } else {
+          showError(GENERIC_ERROR);
+        }
+      } catch (err) {
+        console.error(err);
+        showError(GENERIC_ERROR);
+      } finally {
+        activationInFlight = false;
+        submitBtn.disabled = false;
+        submitBtn.innerText = "تفعيل الكورس الآن";
+      }
+    }
+ 
+    function logout() {
+      if (confirm("هل تريد تسجيل الخروج؟")) {
+        clearSession(); sessionCreds = null;
+        location.reload();
+      }
+    }
+ 
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      
+      document.getElementById(tabId).classList.add("active");
+      btnElement.classList.add("active");
+ 
+      if (tabId === 'forumTab') {
+        loadForumPosts();
+      }
+    }
+ 
+    function renderLectures(lecturesList, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+ 
+      let html = "";
+      const isCourseActivated = currentStudent && currentStudent.code && currentStudent.code !== "غير مفعل";
+ 
+      lecturesList.forEach(lecture => {
+        // الروابط تُكتب مباشرة في الكود (في مصفوفات المحاضرات بالأعلى)
+        const effectiveLink = lecture.link;
+        const homeworkLink = lecture.homeworkLink || "";
+ 
+        const hasLink = effectiveLink && effectiveLink.trim() !== "";
+        const isAttended = attendanceRecords[lecture.id] || false;
+ 
+        let actionButtonHTML = "";
+        if (!isCourseActivated) {
+          actionButtonHTML = `
+            <button type="button" class="btn-open-lecture" style="background-color: #757575;" onclick="openCodeModal()">
+              🔒 المحاضرة مغلقة (اضغط هنا لتفعيل الكود)
+            </button>
+          `;
+        } else {
+          const linkHref = hasLink ? effectiveLink : "#";
+          const isYouTubeLink = hasLink && isYouTubeUrl(effectiveLink);
+ 
+          let homeworkButtonHTML = "";
+          if (homeworkLink && homeworkLink.trim() !== "") {
+            homeworkButtonHTML = `
+              <a href="${escapeHtml(safeUrl(homeworkLink))}" target="_blank" rel="noopener noreferrer" class="btn-homework">
+                📝 الواجب 
+              </a>
+            `;
+          }
+ 
+          let openLectureButtonHTML;
+          if (!hasLink) {
+            openLectureButtonHTML = `
+              <a href="#" onclick="alert('لم يتم إدراج رابط المحاضرة حتى الآن'); return false;" class="btn-open-lecture">
+                🔗 دخول المحاضرة
+              </a>
+            `;
+          } else if (isYouTubeLink) {
+            // رابط يوتيوب: يفتح داخل المشغل المحمي في نفس المنصة
+            openLectureButtonHTML = `
+              <button type="button" class="btn-open-lecture" onclick="openLectureById('${lecture.id}')">
+                🔗 دخول المحاضرة
+              </button>
+            `;
+          } else {
+            // أي رابط آخر (درايف مثلاً) يفتح في تبويب جديد كالمعتاد
+            openLectureButtonHTML = `
+              <a href="${escapeHtml(safeUrl(linkHref))}" target="_blank" rel="noopener noreferrer" class="btn-open-lecture">
+                🔗 دخول المحاضرة
+              </a>
+            `;
+          }
+ 
+          actionButtonHTML = `
+            ${openLectureButtonHTML}
+            ${homeworkButtonHTML}
+            <button type="button" 
+                    class="btn-confirm-attendance" 
+                    id="btn-att-${lecture.id}" 
+                    ${isAttended ? 'disabled' : ''} 
+                    onclick="markAttendance('${lecture.id}')">
+              ${isAttended ? 'تم الحضور بنجاح' : 'تأكيد مشاهدة المحاضرة وتسجيل الحضور'}
+            </button>
+          `;
+        }
+ 
+        html += `
+          <div class="lecture-card ${!isCourseActivated ? 'locked' : ''}" id="card-${lecture.id}">
+            <div class="lecture-header">
+              <h3 class="lecture-title">${escapeHtml(lecture.title)}</h3>
+              <span class="attendance-badge ${isAttended ? 'attended' : ''}" id="badge-${lecture.id}">
+                ${isAttended ? 'تم تسجيل الحضور' : 'لم يتم الحضور'}
+              </span>
+            </div>
+ 
+            <div class="actions-group">
+              ${actionButtonHTML}
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+ 
+    function markAttendance(lectureId, lectureTitle) {
+      lectureTitle = lectureTitle || (lectureIndex[lectureId] && lectureIndex[lectureId].title) || "";
+      attendanceRecords[lectureId] = true;
+      localStorage.setItem("attendance_" + (currentStudent ? currentStudent.phone : "guest"), JSON.stringify(attendanceRecords));
+      
+      const badge = document.getElementById(`badge-${lectureId}`);
+      if (badge) {
+        badge.innerText = "تم تسجيل الحضور";
+        badge.classList.add("attended");
+      }
+      const btn = document.getElementById(`btn-att-${lectureId}`);
+      if (btn) {
+        btn.innerText = "تم الحضور بنجاح";
+        btn.disabled = true;
+      }
+      renderProgress();
+      alert(`تم تسجيل حضورك في محاضرة: ${lectureTitle} بنجاح!`);
+    }
+ 
+    function loadAttendance() {
+      if (!currentStudent) return;
+      const saved = localStorage.getItem("attendance_" + currentStudent.phone);
+      if (saved) {
+        attendanceRecords = JSON.parse(saved);
+      }
+    }
+ 
+    // ============================================================
+    // ============  مشغل الفيديو المحمي (داخل المنصة)  ============
+    // ============================================================
+ 
+    // يتعرف هل الرابط رابط يوتيوب أم لا (المحاضرات اللي رابطها يوتيوب هتفتح
+    // بالمشغل المحمي جوه المنصة، وأي رابط تاني زي الدرايف هيفتح بتاب جديد كالمعتاد)
+    function isYouTubeUrl(url) {
+      return /(?:youtube\.com|youtu\.be)/i.test(url || "");
+    }
+ 
+    // يستخرج ID فيديو اليوتيوب من أي شكل رابط (watch, youtu.be, embed, shorts)
+    function extractYouTubeId(url) {
+      if (!url) return "";
+      const patterns = [
+        /(?:youtube\.com\/watch\?v=)([^&\s]+)/,
+        /(?:youtu\.be\/)([^?&\s]+)/,
+        /(?:youtube\.com\/embed\/)([^?&\s]+)/,
+        /(?:youtube\.com\/shorts\/)([^?&\s]+)/
+      ];
+      for (const p of patterns) {
+        const m = url.match(p);
+        if (m && m[1]) return m[1];
+      }
+      return "";
+    }
+ 
+    let pvPlayerInstance = null;
+    let pvCheckPoints = [];
+    let pvCheckedPoints = new Set();
+    let pvCorrectAnswer = 0;
+    let pvWatermarkInterval = null;
+    let pvPendingVideoId = null;
+    let pvPendingTitle = "";
+    let pvResizeScheduled = false;
+ 
+    // بيحسب المساحة المتاحة فعلياً حوالين الفيديو (بعد العنوان والأزرار) ويظبط مقاس صندوق
+    // الفيديو بالبكسل بحيث يفضل بنسبة 16:9 ومتلائم تماماً مع أي شاشة من غير ما يزيد عنها أو يعمل سكرول
+    function pvFitLayout() {
+      const wrap = document.getElementById("pvVideoWrap");
+      const box = document.getElementById("pvVideoBox");
+      if (!wrap || !box) return;
+      const availW = wrap.clientWidth;
+      const availH = wrap.clientHeight;
+      if (availW <= 0 || availH <= 0) return;
+ 
+      let w = availW;
+      let h = (w * 9) / 16;
+      if (h > availH) {
+        h = availH;
+        w = (h * 16) / 9;
+      }
+      box.style.width = Math.floor(w) + "px";
+      box.style.height = Math.floor(h) + "px";
+    }
+ 
+    // نأجّل إعادة الحساب لأول فريم متاح فقط، حتى لو الشاشة بتطلق أحداث resize كتير ورا بعض
+    // (زي إخفاء/إظهار شريط عنوان الموبايل)، بدل ما نعيد الحساب في كل مرة وتحصل إعادة رسم مستمرة
+    function pvScheduleFit() {
+      if (pvResizeScheduled) return;
+      pvResizeScheduled = true;
+      requestAnimationFrame(() => {
+        pvResizeScheduled = false;
+        pvFitLayout();
+      });
+    }
+ 
+    window.addEventListener("resize", () => {
+      if (document.getElementById("pvOverlay").classList.contains("active")) pvScheduleFit();
+    }, { passive: true });
+    window.addEventListener("orientationchange", () => {
+      if (document.getElementById("pvOverlay").classList.contains("active")) setTimeout(pvFitLayout, 200);
+    });
+ 
+    // بيوقف أي تشغيل حالي وينظّف الفيديو الثقيل من الصفحة (iframe + مؤقتات العلامة المائية)
+    // بدون ما يقفل نافذة المشغل نفسها
+    function pvResetPlayer() {
+      if (pvPlayerInstance) {
+        try { pvPlayerInstance.pause(); } catch (_) {}
+        try { pvPlayerInstance.destroy(); } catch (_) {}
+        pvPlayerInstance = null;
+      }
+      if (pvWatermarkInterval) {
+        clearInterval(pvWatermarkInterval);
+        pvWatermarkInterval = null;
+      }
+      pvCheckPoints = [];
+      pvCheckedPoints = new Set();
+      const oldPlayerDiv = document.getElementById("pvPlayer");
+      if (oldPlayerDiv) {
+        const freshDiv = document.createElement("div");
+        freshDiv.id = "pvPlayer";
+        oldPlayerDiv.replaceWith(freshDiv);
+      }
+    }
+ 
+    // فتح نافذة المحاضرة: بيعرض بس واجهة خفيفة (صورة مصغّرة + زرار تشغيل)،
+    // من غير ما يحمّل الفيديو المحمي (Plyr/iframe) الثقيل إلا لما الطالب يدوس "تشغيل" فعلياً
+    function openProtectedPlayer(youtubeUrl, lectureTitle) {
+      const videoId = extractYouTubeId(youtubeUrl);
+      if (!videoId) {
+        alert("تعذر تشغيل رابط المحاضرة، تأكد أن الرابط رابط يوتيوب صحيح.");
+        return;
+      }
+ 
+      pvResetPlayer();
+      pvPendingVideoId = videoId;
+      pvPendingTitle = lectureTitle || "المحاضرة";
+ 
+      document.getElementById("pvLectureTitle").innerText = pvPendingTitle;
+      document.getElementById("pvOverlay").classList.add("active");
+ 
+      const facade = document.getElementById("pvFacade");
+      facade.style.backgroundImage = `url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg')`;
+      facade.style.display = "flex";
+      document.getElementById("pvTouchOverlay").style.display = "none";
+ 
+      requestAnimationFrame(pvFitLayout);
+    }
+ 
+    // اللحظة الوحيدة اللي فعلاً بيتحمّل فيها المشغل الثقيل (Plyr + iframe يوتيوب)
+    function pvStartPlayback() {
+      if (!pvPendingVideoId) return;
+      const videoId = pvPendingVideoId;
+      const playerHost = document.getElementById("pvVideoBox");
+      const playerDiv = document.getElementById("pvPlayer");
+ 
+      playerDiv.setAttribute("data-plyr-provider", "youtube");
+      playerDiv.setAttribute("data-plyr-embed-id", videoId);
+ 
+      pvPlayerInstance = new Plyr(playerDiv, {
+        controls: [
+          "play-large", "rewind", "play", "fast-forward",
+          "progress", "current-time", "mute", "volume",
+          "settings", "fullscreen"
+        ],
+        seekTime: 10,
+        settings: ["speed"],
+        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
+        youtube: {
+          noCookie: true,
+          rel: 0,
+          showinfo: 0,
+          iv_load_policy: 3,
+          modestbranding: 1,
+          controls: 0,
+          disablekb: 1,
+          autoplay: 1,
+          playsinline: 1
+        }
+      });
+ 
+      document.getElementById("pvFacade").style.display = "none";
+      document.getElementById("pvTouchOverlay").style.display = "flex";
+ 
+      // العلامة المائية باسم ورقم الطالب الحالي
+      const watermarkDiv = document.createElement("div");
+      watermarkDiv.id = "pv-watermark";
+      const studentName = currentStudent ? (currentStudent.name || "طالب") : "طالب";
+      const studentPhone = currentStudent ? (currentStudent.phone || "") : "";
+      watermarkDiv.innerText = `${studentName} | ${studentPhone}`;
+ 
+      pvPlayerInstance.on("ready", () => {
+        const plyrContainer = playerHost.querySelector(".plyr");
+        if (plyrContainer) plyrContainer.appendChild(watermarkDiv);
+        pvFitLayout();
+      });
+ 
+      const cornerPositions = [
+        { top: "8%", right: "5%" },
+        { top: "8%", right: "70%" },
+        { top: "75%", right: "5%" },
+        { top: "75%", right: "70%" }
+      ];
+      let currentCorner = 0;
+      pvWatermarkInterval = setInterval(() => {
+        currentCorner = (currentCorner + 1) % cornerPositions.length;
+        watermarkDiv.style.top = cornerPositions[currentCorner].top;
+        watermarkDiv.style.right = cornerPositions[currentCorner].right;
+      }, 6000);
+ 
+      pvPlayerInstance.on("loadedmetadata", () => {
+        const duration = pvPlayerInstance.duration;
+        if (duration && duration > 60) {
+          pvCheckPoints = [
+            Math.floor(duration * 0.4),
+            Math.floor(duration * 0.7)
+          ];
+        }
+      });
+ 
+      pvPlayerInstance.on("timeupdate", () => {
+        const currentTime = Math.floor(pvPlayerInstance.currentTime);
+        pvCheckPoints.forEach(point => {
+          if (currentTime === point && !pvCheckedPoints.has(point)) {
+            pvCheckedPoints.add(point);
+            pvTriggerAttentionCheck();
+          }
+        });
+      });
+ 
+      pvSetupTouchZones();
+    }
+ 
+    function closeProtectedPlayer() {
+      pvResetPlayer();
+      pvPendingVideoId = null;
+      document.getElementById("pvOverlay").classList.remove("active");
+      document.getElementById("pvAttentionModal").classList.remove("active");
+    }
+ 
+    function pvTriggerAttentionCheck() {
+      if (pvPlayerInstance) pvPlayerInstance.pause();
+      pvGenerateQuestion();
+      document.getElementById("pvAttentionModal").classList.add("active");
+    }
+ 
+    function pvGenerateQuestion() {
+      const num1 = Math.floor(Math.random() * 8) + 2;
+      const num2 = Math.floor(Math.random() * 8) + 1;
+      pvCorrectAnswer = num1 + num2;
+      document.getElementById("pvCaptchaQuestion").innerText = `كم يساوي: ${num1} + ${num2} ؟`;
+      document.getElementById("pvCaptchaAnswer").value = "";
+      document.getElementById("pvErrorMsg").style.display = "none";
+    }
+ 
+    function pvVerifyAttention(event) {
+      event.preventDefault();
+      const userAnswer = parseInt(document.getElementById("pvCaptchaAnswer").value);
+      if (userAnswer === pvCorrectAnswer) {
+        document.getElementById("pvAttentionModal").classList.remove("active");
+        if (pvPlayerInstance) pvPlayerInstance.play();
+      } else {
+        document.getElementById("pvErrorMsg").style.display = "block";
+        pvGenerateQuestion();
+      }
+    }
+ 
+    function pvTriggerFeedback(elem) {
+      elem.classList.add("show");
+      setTimeout(() => { elem.classList.remove("show"); }, 400);
+    }
+ 
+    function pvSetupTouchZones() {
+      const zoneRight = document.getElementById("pvZoneRight");
+      const zoneLeft = document.getElementById("pvZoneLeft");
+      const zoneCenter = document.getElementById("pvZoneCenter");
+      const feedbackRight = document.getElementById("pvFeedbackRight");
+      const feedbackLeft = document.getElementById("pvFeedbackLeft");
+ 
+      // نستبدل العناصر بنسخة جديدة لتفادي تكرار ربط الأحداث عند فتح المشغل أكثر من مرة
+      const newRight = zoneRight.cloneNode(true);
+      zoneRight.replaceWith(newRight);
+      const newLeft = zoneLeft.cloneNode(true);
+      zoneLeft.replaceWith(newLeft);
+      const newCenter = zoneCenter.cloneNode(true);
+      zoneCenter.replaceWith(newCenter);
+ 
+      newRight.addEventListener("click", () => {
+        if (pvPlayerInstance) pvPlayerInstance.forward(10);
+        pvTriggerFeedback(document.getElementById("pvFeedbackRight"));
+      });
+      newLeft.addEventListener("click", () => {
+        if (pvPlayerInstance) pvPlayerInstance.rewind(10);
+        pvTriggerFeedback(document.getElementById("pvFeedbackLeft"));
+      });
+      newCenter.addEventListener("click", () => {
+        if (pvPlayerInstance) pvPlayerInstance.togglePlay();
+      });
+    }
+ 
+    let forumLoadSeq = 0;
+ 
+    async function fetchForumPosts() {
+      const r = await callWithRetry(FORUM_SCRIPT_URL, { action: "getPosts" }, 3);
+      if (r.type === "ok") return r.data.posts || [];
+      return null;
+    }
+ 
+    async function loadForumPosts() {
+      const container = document.getElementById("forumContainer");
+      if (!container) return;
+ 
+      const isCourseActivated = currentStudent && currentStudent.code && currentStudent.code !== "غير مفعل";
+ 
+      if (!isCourseActivated) {
+        container.innerHTML = `
+          <div class="lecture-card locked" style="text-align: center; padding: 30px;">
+            <h3>🔒 منتدى الطلاب مغلق</h3>
+            <p style="margin: 15px 0; color: #555;">يجب عليك تفعيل كود الكورس أولاً لكي تتمكن من المشاركة في المنتدى والتواصل مع الأستاذ والزملاء.</p>
+            <button class="btn-activate-code" style="padding: 10px 20px; font-size: 15px;" onclick="openCodeModal()">🔑 تفعيل كود الآن</button>
+          </div>
+        `;
+        return;
+      }
+ 
+      const seq = ++forumLoadSeq;
+      container.innerHTML = `<p style="text-align: center; color: #666; padding: 20px;">جاري تحميل المنشورات...</p>`;
+ 
+      const posts = await fetchForumPosts();
+      if (seq !== forumLoadSeq) return; // طلب أحدث حلّ محلّه
+ 
+      if (posts) {
+        forumPosts = posts;
+        renderForumUI();
+      } else {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 20px;">
+            <p style="color: red; margin-bottom: 12px;">تعذر تحميل المنشورات الآن.</p>
+            <button type="button" class="btn-activate-code" style="padding: 10px 20px; font-size: 15px;" onclick="loadForumPosts()">إعادة المحاولة</button>
+          </div>
+        `;
+      }
+    }
+ 
+    function renderForumUI() {
+      const container = document.getElementById("forumContainer");
+      if (!container) return;
+ 
+      let postsHTML = `
+        <div class="forum-form-card">
+          <h3 style="margin-bottom: 12px; color: var(--primary-color);">إضافة منشور أو سؤال جديد</h3>
+          <textarea id="forumInputContent" class="forum-textarea" placeholder="اكتب سؤالك أو استفسارك هنا ليراه الأستاذ وزملاؤك..."></textarea>
+          <button type="button" class="btn-submit" id="submitPostBtn" onclick="submitForumPost()">نشر في المنتدى</button>
+        </div>
+        <div id="postsListContainer">
+      `;
+ 
+      if (forumPosts.length === 0) {
+        postsHTML += `<p style="text-align: center; color: #666; padding: 20px;">لا توجد منشورات حالياً. كن أول المشاركين!</p>`;
+      } else {
+        forumPosts.forEach((post) => {
+          let teacherReplyHTML = "";
+          if (post.teacherReply && post.teacherReply.trim() !== "") {
+            teacherReplyHTML = `
+              <div class="teacher-reply-box">
+                <div class="teacher-reply-title">رد الأستاذ / فريق الدعم:</div>
+                <div class="post-content">${post.teacherReply}</div>
+              </div>
+            `;
+          }
+ 
+          let teacherInputBox = "";
+          // السماح للحسابات الإدارية المحددة فقط بظهور صندوق وكتابة الرد
+          if (currentStudent && SUPPORT_ADMIN_PHONES.includes(normalizePhone(currentStudent.phone))) {
+            teacherInputBox = `
+              <div class="teacher-input-group">
+                <input type="text" id="reply-input-${post.rowIndex}" placeholder="اكتب رد الدعم أو الأستاذ هنا...">
+                <button type="button" class="btn-activate-code" onclick="submitTeacherReply(${post.rowIndex})">إرسال الرد</button>
+              </div>
+            `;
+          }
+ 
+          postsHTML += `
+            <div class="forum-post-card">
+              <div class="post-header">
+                <span class="author-name">👤 ${post.author}</span>
+                <span class="post-date">${post.date}</span>
+              </div>
+              <div class="post-content">${post.content}</div>
+              ${teacherReplyHTML}
+              ${teacherInputBox}
+            </div>
+          `;
+        });
+      }
+ 
+      postsHTML += `</div>`;
+      container.innerHTML = postsHTML;
+    }
+ 
+    async function submitForumPost() {
+      const content = document.getElementById("forumInputContent").value.trim();
+      const submitBtn = document.getElementById("submitPostBtn");
+ 
+      if (!content) {
+        alert("يرجى كتابة محتوى للمنشور قبل النشر.");
+        return;
+      }
+ 
+      submitBtn.disabled = true;
+      submitBtn.innerText = "جاري النشر...";
+ 
+      try {
+        const r = await callScript(FORUM_SCRIPT_URL, {
+          action: "addPost",
+          author: currentStudent ? currentStudent.name : "طالب",
+          phone: currentStudent ? currentStudent.phone : "",
+          content: content
+        });
+ 
+        let posted = r.type === "ok";
+        if (r.type === "transient") {
+          // ربما نُشر المنشور ولم يصلنا الرد: نتحقق قبل إعلان أي نتيجة (لتجنب التكرار)
+          const posts = await fetchForumPosts();
+          posted = !!(posts && posts.some((p) => String(p.content || "").trim() === content));
+        }
+ 
+        if (posted) {
+          document.getElementById("forumInputContent").value = "";
+          loadForumPosts();
+        } else if (r.type === "fail") {
+          alert(safeMsg(r.message, "حدث خطأ أثناء النشر."));
+        } else {
+          alert(GENERIC_ERROR);
+        }
+      } catch (err) {
+        console.error(err);
+        alert(GENERIC_ERROR);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "نشر في المنتدى";
+      }
+    }
+ 
+    async function submitTeacherReply(rowIndex) {
+      const input = document.getElementById(`reply-input-${rowIndex}`);
+      if (!input) return;
+      const replyText = input.value.trim();
+ 
+      if (!replyText) {
+        alert("يرجى كتابة نص الرد.");
+        return;
+      }
+ 
+      try {
+        const r = await callScript(FORUM_SCRIPT_URL, {
+          action: "teacherReply",
+          rowIndex: rowIndex,
+          replyText: replyText
+        });
+ 
+        let done = r.type === "ok";
+        if (r.type === "transient") {
+          const posts = await fetchForumPosts();
+          const post = posts && posts.find((p) => p.rowIndex === rowIndex);
+          done = !!(post && String(post.teacherReply || "").trim() === replyText);
+        }
+ 
+        if (done) {
+          alert("تم إرسال الرد بنجاح!");
+          loadForumPosts();
+        } else if (r.type === "fail") {
+          alert(safeMsg(r.message, "حدث خطأ أثناء إرسال الرد."));
+        } else {
+          alert(GENERIC_ERROR);
+        }
+      } catch (err) {
+        console.error(err);
+        alert(GENERIC_ERROR);
+      }
+    }
+ 
+    // ============================================================
+    // ======  نظام المحاضرات (يدوي + لوحة تحكم) والمؤقت والتنبيه  ======
+    // ============================================================
+    const SUBJECTS = [
+      { name: "التوحيد", container: "tawheedContainer", manual: () => tawheedLectures },
+      { name: "التفسير", container: "tafseerContainer", manual: () => tafseerLectures },
+      { name: "الفقه", container: "fiqhContainer", manual: () => fiqhLectures },
+      { name: "الحديث", container: "osoolContainer", manual: () => osoolLectures },
+      { name: "مراجعة توحيد", container: "revTawheedContainer", manual: () => reviewTawheedLectures },
+      { name: "مراجعة تفسير", container: "revTafseerContainer", manual: () => reviewTafseerLectures },
+      { name: "مراجعة حديث", container: "revHadithContainer", manual: () => reviewHadithLectures },
+      { name: "مراجعة فقه", container: "revFiqhContainer", manual: () => reviewFiqhLectures }
+    ];
+    const ALERT_BEFORE_MS = 2 * 60 * 60 * 1000;
+    const LECTURES_CACHE_KEY = "shafeei_lectures_v1";
+    let sheetLectures = [], timeOffset = 0, lectureIndex = {}, visibleBySubject = {}, upcomingList = [];
+    let adminToken = null, adminLectures = [], lecturesFetching = false, lastFetchAt = 0, lastTryAt = 0, retryTimer = null, alertKey = "";
+ 
+    const nowMs = () => Date.now() + timeOffset; // وقت السيرفر التقريبي (لا يتأثر بضبط ساعة جهاز الطالب)
+    const lecturesConfigured = () => /^https:\/\/script\.google\.com\//.test(LECTURES_SCRIPT_URL);
+    const timeOf = (l) => { const t = Date.parse(l.releaseAt); return isNaN(t) ? 0 : t; };
+    const isAdminUser = () => !!currentStudent && normalizePhone(currentStudent.phone) === ADMIN_PHONE;
+    const fmtTime = (t) => new Date(t).toLocaleTimeString("ar-EG", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Africa/Cairo" });
+    const fmtDateTime = (t) => new Date(t).toLocaleString("ar-EG", { dateStyle: "full", timeStyle: "short", timeZone: "Africa/Cairo" });
+    const fmtCd = (ms) => {
+      const s = Math.max(0, Math.floor(ms / 1000)), p = (n) => String(n).padStart(2, "0");
+      return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
+    };
+ 
+    function escapeHtml(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+    function safeUrl(u) {
+      const s = String(u || "").trim();
+      return (s === "#" || /^https?:\/\//i.test(s)) ? s : "#";
+    }
+ 
+    // دمج المحاضرات اليدوية (المكتوبة في الكود) مع محاضرات الجدول. أي محاضرة لها releaseAt مستقبلي تُخفى حتى موعدها.
+    function rebuildLectures() {
+      lectureIndex = {}; visibleBySubject = {}; upcomingList = [];
+      const now = nowMs();
+      SUBJECTS.forEach((s) => {
+        const manual = s.manual().map((l) => Object.assign({}, l, { subject: s.name }));
+        const remote = sheetLectures.filter((l) => l.subject === s.name).sort((a, b) => timeOf(a) - timeOf(b));
+        const vis = [];
+        manual.concat(remote).forEach((l) => {
+          if (lectureIndex[l.id]) return;
+          if (timeOf(l) > now || (l.remote && !l.link)) { upcomingList.push(l); return; }
+          lectureIndex[l.id] = l; vis.push(l);
+        });
+        visibleBySubject[s.name] = vis;
+      });
+    }
+    const normCourses = (c) => Array.isArray(c) ? c.map(String) : String(c || "").split(",").map((x) => x.trim()).filter(Boolean);
+    const visibleFor = (s) => (visibleBySubject[s.name] || []).filter(inCourse);
+    function openLectureById(id) { const l = lectureIndex[id]; if (l) openProtectedPlayer(l.link, l.title); }
+ 
+    function initLectures() {
+      try {
+        const c = JSON.parse(localStorage.getItem(LECTURES_CACHE_KEY) || "null");
+        if (c && Array.isArray(c.lectures)) { sheetLectures = c.lectures; timeOffset = Number(c.offset) || 0; }
+      } catch (_) {}
+      fetchLectures();
+      setInterval(tick, 1000);
+      setInterval(() => { if (!document.hidden) fetchLectures(); }, 120000);
+      document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - lastFetchAt > 60000) fetchLectures(); });
+    }
+ 
+    // القراءة صامتة: عند أي تعذر نكمل بآخر بيانات محفوظة دون إظهار خطأ
+    async function fetchLectures() {
+      if (!lecturesConfigured() || lecturesFetching) return;
+      lecturesFetching = true; lastTryAt = Date.now();
+      try {
+        const t0 = Date.now();
+        const r = await callWithRetry(LECTURES_SCRIPT_URL, { action: "list" }, 3);
+        if (r.type !== "ok" || !Array.isArray(r.data.lectures)) return;
+        const off = Number(r.data.serverNow) - (t0 + Date.now()) / 2;
+        timeOffset = isFinite(off) ? off : 0;
+        sheetLectures = r.data.lectures.map((l) => ({
+          id: String(l.id), title: String(l.title || ""), subject: l.subject, link: l.link || "",
+          homeworkLink: l.homeworkLink || "", releaseAt: l.releaseAt, remote: true, courses: normCourses(l.courses)
+        }));
+        lastFetchAt = Date.now();
+        try { localStorage.setItem(LECTURES_CACHE_KEY, JSON.stringify({ lectures: sheetLectures, offset: timeOffset })); } catch (_) {}
+        renderAll();
+      } finally { lecturesFetching = false; }
+    }
+ 
+    function tick() {
+      const now = nowMs();
+      let dueManual = false, dueRemote = false;
+      upcomingList.forEach((l) => { if (timeOf(l) <= now) { if (l.remote) dueRemote = true; else dueManual = true; } });
+      if (dueManual) renderAll();
+      if (dueRemote && !retryTimer && Date.now() - lastTryAt > 15000) {
+        retryTimer = setTimeout(() => { retryTimer = null; fetchLectures(); }, Math.random() * 6000); // تأخير عشوائي لتخفيف الضغط
+      }
+      updateAlert();
+    }
+ 
+    // ---------- شريط التنبيه (قبل الموعد بساعتين) ----------
+    const dismissedAlerts = () => { try { return JSON.parse(sessionStorage.getItem("shafeei_dismissed") || "{}"); } catch (_) { return {}; } };
+    const setAlertH = (h) => document.documentElement.style.setProperty("--alert-h", h + "px");
+ 
+    function updateAlert() {
+      const box = document.getElementById("lectureAlert");
+      if (!box) return;
+      const now = nowMs(), dis = dismissedAlerts();
+      const eligible = !!currentStudent && isActivatedValue(currentStudent.code);
+      const items = !eligible ? [] : upcomingList
+        .filter((l) => { const d = timeOf(l) - now; return d > 0 && d <= ALERT_BEFORE_MS && !dis[l.id + "|" + l.releaseAt]; })
+        .sort((a, b) => timeOf(a) - timeOf(b));
+      if (!items.length) {
+        if (alertKey) { alertKey = ""; box.classList.remove("show"); setAlertH(0); }
+        return;
+      }
+      const key = items.map((l) => l.id + "|" + l.releaseAt).join(",");
+      if (key !== alertKey) {
+        alertKey = key;
+        document.getElementById("laTrack").innerHTML = items.map((l) =>
+          `📢 محاضرة «${escapeHtml(l.title)}» في مادة ${escapeHtml(l.subject)} ستبدأ قريباً — الموعد الساعة ${fmtTime(timeOf(l))} — باقي <span class="la-cd" dir="ltr" data-t="${timeOf(l)}"></span>`
+        ).join(" &nbsp;•&nbsp; ");
+        box.style.setProperty("--la-dur", Math.max(22, items.length * 24) + "s");
+        box.classList.add("show");
+        setAlertH(box.offsetHeight);
+      }
+      box.querySelectorAll(".la-cd").forEach((el) => { el.textContent = fmtCd(Number(el.dataset.t) - now); });
+    }
+ 
+    function dismissAlert() {
+      const dis = dismissedAlerts();
+      alertKey.split(",").forEach((k) => { if (k) dis[k] = 1; });
+      try { sessionStorage.setItem("shafeei_dismissed", JSON.stringify(dis)); } catch (_) {}
+      updateAlert();
+    }
+ 
+    // ---------- دخول الأدمن (يتحقق منه السيرفر فقط) ----------
+    async function adminSignIn(phone, password, isRegister) {
+      if (isRegister) return { type: "fail", message: "هذا الرقم غير متاح للتسجيل." };
+      let r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: phone, password: password });
+      if (r.type === "transient") r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: phone, password: password });
+      if (r.type === "ok") {
+        adminToken = r.data.token;
+        return { type: "ok", data: { user: { name: r.data.name, phone: phone, code: "ADMIN", isAdmin: true } } };
+      }
+      if (r.type === "fail") return { type: "fail", message: safeMsg(r.message, "بيانات الدخول غير صحيحة.") };
+      return { type: "uncertain" };
+    }
+ 
+    function refreshAdminUI() {
+      const b = document.getElementById("adminBtn");
+      if (b) b.style.display = isAdminUser() ? "" : "none";
+    }
+ 
+    // ---------- لوحة التحكم ----------
+    const adminBody = () => document.getElementById("adminBody");
+ 
+    function openAdminPanel() {
+      if (!isAdminUser() || !lecturesConfigured()) return;
+      document.getElementById("adminModal").style.display = "flex";
+      if (adminToken) loadAdminList(); else renderAdminLogin();
+    }
+    function closeAdminPanel() { document.getElementById("adminModal").style.display = "none"; }
+ 
+    function renderAdminLogin(msg) {
+      adminBody().innerHTML = `
+        <h3 class="modal-title">لوحة التحكم</h3>
+        <form onsubmit="adminUnlock(event)">
+          <div class="form-group"><label>الرقم السري:</label><input type="password" id="admPass" required autocomplete="current-password"></div>
+          <button class="btn-submit" type="submit" id="admUnlockBtn">دخول</button>
+          <button class="btn-submit" type="button" style="background:#757575" onclick="closeAdminPanel()">إغلاق</button>
+          <div class="error-msg" style="display:${msg ? "block" : "none"}">${escapeHtml(msg || "")}</div>
+        </form>`;
+    }
+ 
+    async function adminUnlock(e) {
+      e.preventDefault();
+      const btn = document.getElementById("admUnlockBtn");
+      btn.disabled = true; btn.innerText = "جاري التحقق...";
+      const r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: currentStudent.phone, password: document.getElementById("admPass").value });
+      if (r.type === "ok") { adminToken = r.data.token; loadAdminList(); }
+      else renderAdminLogin(r.type === "fail" ? safeMsg(r.message, "بيانات الدخول غير صحيحة.") : GENERIC_ERROR);
+    }
+ 
+    async function adminCall(payload) {
+      const r = await callScript(LECTURES_SCRIPT_URL, Object.assign({ token: adminToken }, payload));
+      if (r.type === "fail" && r.data && r.data.code === "AUTH") { adminToken = null; renderAdminLogin("انتهت الجلسة، أدخل الرقم السري مرة أخرى."); return null; }
+      return r;
+    }
+ 
+    async function loadAdminList() {
+      adminBody().innerHTML = `<p style="text-align:center;padding:20px">جاري التحميل...</p>`;
+      const r = await adminCall({ action: "adminList" });
+      if (!r) return;
+      if (r.type !== "ok") {
+        adminBody().innerHTML = `<p style="text-align:center;color:red;padding:20px">${GENERIC_ERROR}</p><button class="btn-submit" onclick="loadAdminList()">إعادة المحاولة</button>`;
+        return;
+      }
+      adminLectures = (r.data.lectures || []).map((l) => Object.assign(l, { courses: normCourses(l.courses) })).sort((a, b) => timeOf(b) - timeOf(a));
+      renderAdminList();
+    }
+ 
+    function renderAdminList() {
+      const rows = adminLectures.map((l) => `
+        <div class="adm-row">
+          <div><b>${escapeHtml(l.title)}</b><small>${escapeHtml(l.subject)} — ${fmtDateTime(timeOf(l))}</small></div>
+          <div><button class="adm-btn adm-edit" onclick="renderAdminForm('${escapeHtml(l.id)}')">تعديل</button>
+               <button class="adm-btn adm-del" onclick="adminDelete('${escapeHtml(l.id)}')">حذف</button></div>
+        </div>`).join("") || `<p style="text-align:center;color:#666;padding:16px">لا توجد محاضرات مضافة من لوحة التحكم بعد.</p>`;
+      adminBody().innerHTML = `
+        <h3 class="modal-title">إدارة المحاضرات</h3>
+        <button class="btn-submit" onclick="renderAdminForm()">➕ إضافة محاضرة</button>
+        <div style="margin-top:14px">${rows}</div>
+        <button class="btn-submit" style="background:#757575" onclick="closeAdminPanel()">إغلاق</button>`;
+    }
+ 
+    function toLocalInput(t) {
+      const d = new Date(t), p = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+    }
+ 
+    function renderAdminForm(id) {
+      const l = adminLectures.find((x) => x.id === id) || {};
+      const mk = (list) => list.map((x) => `<option value="${x}" ${l.subject === x ? "selected" : ""}>${x}</option>`).join("");
+      const opts = `<optgroup label="الأقسام الرئيسية">${mk(["الفقه", "التوحيد", "التفسير", "الحديث"])}</optgroup><optgroup label="المراجعات (قسم فرعي)">${mk(["مراجعة توحيد", "مراجعة تفسير", "مراجعة حديث", "مراجعة فقه"])}</optgroup>`;
+      const sel = (l.courses && l.courses.length) ? l.courses : (id ? COURSES.map((c) => c.id) : [COURSES[0].id]);
+      const courseBoxes = COURSES.map((c) => `<label><input type="checkbox" class="admCourse" value="${c.id}" ${sel.includes(c.id) ? "checked" : ""}>${escapeHtml(c.title)}</label>`).join("");
+      adminBody().innerHTML = `
+        <h3 class="modal-title">${id ? "تعديل محاضرة" : "إضافة محاضرة"}</h3>
+        <form onsubmit="adminSave(event, '${id || ""}')">
+          <div class="form-group"><label>اسم المحاضرة:</label><input id="admTitle" maxlength="150" required value="${escapeHtml(l.title || "")}"></div>
+          <div class="form-group"><label>القسم / المادة:</label><select id="admSubject" required><option value="">اختر القسم</option>${opts}</select></div>
+          <div class="form-group"><label>الكورس المستهدف (يمكن اختيار أكثر من كورس):</label><div class="chk-row">${courseBoxes}</div></div>
+          <div class="form-group"><label>رابط يوتيوب:</label><input id="admYt" type="url" required dir="ltr" value="${escapeHtml(l.youtubeUrl || "")}"></div>
+          <div class="form-group"><label>موعد نزول المحاضرة (اليوم والتاريخ والساعة):</label><input id="admAt" type="datetime-local" required value="${l.releaseAt ? toLocalInput(timeOf(l)) : ""}"></div>
+          <div class="form-group"><label>رابط الواجب (اختياري):</label><input id="admHw" type="url" dir="ltr" value="${escapeHtml(l.homeworkLink || "")}"></div>
+          <button class="btn-submit" type="submit" id="admSaveBtn">حفظ</button>
+          <button class="btn-submit" type="button" style="background:#757575" onclick="renderAdminList()">رجوع</button>
+          <div class="error-msg" id="admErr"></div>
+        </form>`;
+    }
+ 
+    async function adminSave(e, id) {
+      e.preventDefault();
+      const btn = document.getElementById("admSaveBtn"), err = document.getElementById("admErr");
+      const showErr = (m) => { err.innerText = m; err.style.display = "block"; };
+      const courses = Array.from(document.querySelectorAll(".admCourse:checked")).map((x) => x.value);
+      if (!courses.length) { showErr("اختر كورساً واحداً على الأقل."); return; }
+      const at = new Date(document.getElementById("admAt").value);
+      if (isNaN(at)) { showErr("موعد النزول غير صحيح."); return; }
+      btn.disabled = true; btn.innerText = "جاري الحفظ...";
+      const r = await adminCall({ action: "save", lecture: {
+        id: id, title: document.getElementById("admTitle").value, subject: document.getElementById("admSubject").value,
+        youtubeUrl: document.getElementById("admYt").value, releaseAt: at.toISOString(), homeworkLink: document.getElementById("admHw").value, courses: courses, course: courses.join(",")
+      } });
+      if (!r) return;
+      if (r.type === "ok") { await loadAdminList(); fetchLectures(); return; }
+      if (r.type === "fail") { showErr(safeMsg(r.message, "تعذر الحفظ، راجع البيانات.")); btn.disabled = false; btn.innerText = "حفظ"; return; }
+      // لم يصل الرد: لا نعيد الإرسال تلقائياً لتفادي التكرار، نعرض القائمة ليتأكد الأدمن
+      await loadAdminList();
+      alert("لم يصلنا تأكيد الحفظ. راجع القائمة قبل إعادة المحاولة.");
+    }
+ 
+    async function adminDelete(id) {
+      const l = adminLectures.find((x) => x.id === id);
+      if (!l || !confirm(`حذف «${l.title}» نهائياً؟`)) return;
+      const r = await adminCall({ action: "delete", id: id });
+      if (!r) return;
+      if (r.type !== "ok") alert(r.type === "fail" ? safeMsg(r.message, GENERIC_ERROR) : "لم يصلنا تأكيد الحذف. راجع القائمة.");
+      await loadAdminList(); fetchLectures();
+    }
+ 
+    function renderAll() {
+      rebuildLectures();
+      SUBJECTS.forEach((s) => renderLectures(visibleFor(s), s.container));
+      refreshAdminUI();
+      updateAlert();
+      checkNewLectures();
+      renderProgress();
+      renderNotifs();
+      renderCourses();
+    }
+ 
+    function toggleSupportMenu() {
+      const widget = document.getElementById("supportWidget");
+      widget.classList.toggle("active");
+    }
+ 
+    function showActivationSubMenu() {
+      document.getElementById("mainSupportView").style.display = "none";
+      document.getElementById("activationSupportView").style.display = "flex";
+    }
+ 
+    function showMainSupportMenu() {
+      document.getElementById("activationSupportView").style.display = "none";
+      document.getElementById("mainSupportView").style.display = "flex";
+    }
+ 
+    window.onload = function() {
+      [warmUpServices, initFooter, initLectures, checkAuth].forEach((fn) => {
+        try { fn(); } catch (e) { console.error(fn.name, e); }
+      });
+      setInterval(() => { if (!document.hidden) warmUpServices(); }, 240000);
+    };
+  </script>
+</body>
+</html>
