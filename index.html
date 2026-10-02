@@ -973,6 +973,14 @@
     .ft-credit{direction:ltr;font-weight:bold;color:#ffd54f;letter-spacing:.2px}
     @media (max-width:560px){.ft-link{flex:1 1 calc(50% - 10px);justify-content:center;padding:9px 10px;font-size:13px}}
     .acc-sync{font-size:12px;color:#888;text-align:center;min-height:16px;margin-top:8px}
+  
+    .lecture-card { content-visibility: auto; contain-intrinsic-size: 1px 220px; }
+    .pv-drive-frame { position:absolute; inset:0; width:100%; height:100%; border:0; background:#000; z-index:1; }
+    .pv-drive-shield { position:absolute; top:0; right:0; width:72px; height:64px; z-index:3; background:transparent; }
+    .sub-timer { width:100%; text-align:center; font-weight:700; font-size:.9rem; color:#2e7d32; direction:rtl; }
+    .sub-expired { width:100%; text-align:center; font-weight:700; color:#c62828; padding:8px 0; }
+    .btn-subscribe { background:#2e7d32; color:#fff; border:0; border-radius:10px; padding:12px; font-weight:700; cursor:pointer; width:100%; font-family:inherit; }
+    .btn-subscribe:disabled { opacity:.6; cursor:not-allowed; }
   </style>
 </head>
 <body>
@@ -1334,12 +1342,17 @@
   </div>
  
   <!-- مكتبة المشغل الاحترافي للفيديو المحمي -->
-  <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+  
  
   <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOxTAIi0vg-ljJYn95vaox2qRSC7fBdgvlIGebURXTGK6YPEP1CWRO9LwDwTspKTb6/exec";
     const FORUM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbweDp9aFadfcGln2fprx1OGOg9ap1wWaDWJXfmb8JUwHRqMrL8GucM3sM_pRiAfkuKI/exec";
     // رابط تطبيق الويب الخاص بإدارة المحاضرات (ألصقه هنا بعد النشر)
+    // ضع هنا رابط سكريبت الاشتراكات الجديد (Subscriptions.gs) بعد نشره. اتركه فارغاً لتعطيل نظام الاشتراك.
+    const SUBS_SCRIPT_URL = "";
+    const SUBS_ON = () => true; // نظام الاشتراك شغال دائماً
+    const SUBS_REMOTE = () => /^https:\/\/script\.google\.com\//.test(SUBS_SCRIPT_URL); // لو فاضي: يُحفظ الاشتراك في متصفح الطالب
+    const SUB_HOURS = 168, EXT_HOURS = 12, MAX_TRIES = 6; // 168 ساعة = 7 أيام | المد = 12 ساعة | 6 محاولات
     const LECTURES_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXD3_GQi_GIlUJJG07gC5EwZwVctKY4m8q2Wc72tkPZ-54ytExl5EFVKHUF3uE1wmm/exec";
     const ADMIN_PHONE = "01099442329"; // يظهر زر لوحة التحكم لهذا الرقم فقط، والتحقق الفعلي يتم في السيرفر
     
@@ -2188,54 +2201,9 @@
             </button>
           `;
         } else {
-          const linkHref = hasLink ? effectiveLink : "#";
-          const isYouTubeLink = hasLink && isYouTubeUrl(effectiveLink);
- 
-          let homeworkButtonHTML = "";
-          if (homeworkLink && homeworkLink.trim() !== "") {
-            homeworkButtonHTML = `
-              <a href="${escapeHtml(safeUrl(homeworkLink))}" target="_blank" rel="noopener noreferrer" class="btn-homework">
-                📝 الواجب 
-              </a>
-            `;
-          }
- 
-          let openLectureButtonHTML;
-          if (!hasLink) {
-            openLectureButtonHTML = `
-              <a href="#" onclick="alert('لم يتم إدراج رابط المحاضرة حتى الآن'); return false;" class="btn-open-lecture">
-                🔗 دخول المحاضرة
-              </a>
-            `;
-          } else if (isYouTubeLink) {
-            // رابط يوتيوب: يفتح داخل المشغل المحمي في نفس المنصة
-            openLectureButtonHTML = `
-              <button type="button" class="btn-open-lecture" onclick="openLectureById('${lecture.id}')">
-                🔗 دخول المحاضرة
-              </button>
-            `;
-          } else {
-            // أي رابط آخر (درايف مثلاً) يفتح في تبويب جديد كالمعتاد
-            openLectureButtonHTML = `
-              <a href="${escapeHtml(safeUrl(linkHref))}" target="_blank" rel="noopener noreferrer" class="btn-open-lecture">
-                🔗 دخول المحاضرة
-              </a>
-            `;
-          }
- 
-          actionButtonHTML = `
-            ${openLectureButtonHTML}
-            ${homeworkButtonHTML}
-            <button type="button" 
-                    class="btn-confirm-attendance" 
-                    id="btn-att-${lecture.id}" 
-                    ${isAttended ? 'disabled' : ''} 
-                    onclick="markAttendance('${lecture.id}')">
-              ${isAttended ? 'تم الحضور بنجاح' : 'تأكيد مشاهدة المحاضرة وتسجيل الحضور'}
-            </button>
-          `;
+          actionButtonHTML = subButtonsHTML(lecture, homeworkLink, isAttended);
         }
- 
+
         html += `
           <div class="lecture-card ${!isCourseActivated ? 'locked' : ''}" id="card-${lecture.id}">
             <div class="lecture-header">
@@ -2287,6 +2255,11 @@
  
     // يتعرف هل الرابط رابط يوتيوب أم لا (المحاضرات اللي رابطها يوتيوب هتفتح
     // بالمشغل المحمي جوه المنصة، وأي رابط تاني زي الدرايف هيفتح بتاب جديد كالمعتاد)
+    function extractDriveId(url) {
+      const m = String(url || "").match(/drive\.google\.com\/(?:file\/(?:u\/\d+\/)?d\/|open\?id=|uc\?(?:[^#]*&)?id=)([\w-]{10,})/i);
+      return m ? m[1] : "";
+    }
+    let pvPendingDriveId = null;
     function isYouTubeUrl(url) {
       return /(?:youtube\.com|youtu\.be)/i.test(url || "");
     }
@@ -2357,6 +2330,7 @@
     // بيوقف أي تشغيل حالي وينظّف الفيديو الثقيل من الصفحة (iframe + مؤقتات العلامة المائية)
     // بدون ما يقفل نافذة المشغل نفسها
     function pvResetPlayer() {
+      document.querySelectorAll(".pv-drive-frame,.pv-drive-shield,#pv-watermark").forEach((n) => n.remove());
       if (pvPlayerInstance) {
         try { pvPlayerInstance.pause(); } catch (_) {}
         try { pvPlayerInstance.destroy(); } catch (_) {}
@@ -2380,6 +2354,17 @@
     // من غير ما يحمّل الفيديو المحمي (Plyr/iframe) الثقيل إلا لما الطالب يدوس "تشغيل" فعلياً
     function openProtectedPlayer(youtubeUrl, lectureTitle) {
       const videoId = extractYouTubeId(youtubeUrl);
+      const driveId = videoId ? "" : extractDriveId(youtubeUrl);
+      if (driveId) {
+        pvResetPlayer(); pvPendingVideoId = null; pvPendingDriveId = driveId;
+        document.getElementById("pvLectureTitle").innerText = lectureTitle || "المحاضرة";
+        document.getElementById("pvOverlay").classList.add("active");
+        const f = document.getElementById("pvFacade"); f.style.backgroundImage = "none"; f.style.display = "flex";
+        document.getElementById("pvTouchOverlay").style.display = "none";
+        requestAnimationFrame(pvFitLayout);
+        return;
+      }
+      pvPendingDriveId = null;
       if (!videoId) {
         alert("تعذر تشغيل رابط المحاضرة، تأكد أن الرابط رابط يوتيوب صحيح.");
         return;
@@ -2401,8 +2386,34 @@
     }
  
     // اللحظة الوحيدة اللي فعلاً بيتحمّل فيها المشغل الثقيل (Plyr + iframe يوتيوب)
-    function pvStartPlayback() {
+    function loadPlyr() {
+      return new Promise((res) => {
+        if (window.Plyr) return res();
+        const s = document.createElement("script"); s.src = "https://cdn.plyr.io/3.7.8/plyr.js"; s.onload = res; s.onerror = res;
+        document.head.appendChild(s);
+      });
+    }
+    function pvStartDrive() {
+      const box = document.getElementById("pvVideoBox");
+      const fr = document.createElement("iframe");
+      fr.className = "pv-drive-frame";
+      fr.src = "https://drive.google.com/file/d/" + pvPendingDriveId + "/preview";
+      fr.allow = "autoplay; fullscreen"; fr.allowFullscreen = true;
+      fr.referrerPolicy = "no-referrer";
+      fr.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation"); // بدون allow-popups: يمنع زر فتح الرابط الأصلي
+      const shield = document.createElement("div"); shield.className = "pv-drive-shield";
+      shield.oncontextmenu = (e) => e.preventDefault();
+      const wm = document.createElement("div"); wm.id = "pv-watermark";
+      wm.innerText = (currentStudent ? (currentStudent.name || "طالب") : "طالب") + " | " + (currentStudent ? currentStudent.phone : "");
+      box.appendChild(fr); box.appendChild(shield); box.appendChild(wm);
+      document.getElementById("pvFacade").style.display = "none";
+      const corners = [{ t: "8%", r: "5%" }, { t: "8%", r: "70%" }, { t: "75%", r: "5%" }, { t: "75%", r: "70%" }]; let c = 0;
+      pvWatermarkInterval = setInterval(() => { c = (c + 1) % 4; wm.style.top = corners[c].t; wm.style.right = corners[c].r; }, 6000);
+    }
+    async function pvStartPlayback() {
+      if (pvPendingDriveId) return pvStartDrive();
       if (!pvPendingVideoId) return;
+      if (!window.Plyr) { await loadPlyr(); if (!window.Plyr) return; }
       const videoId = pvPendingVideoId;
       const playerHost = document.getElementById("pvVideoBox");
       const playerDiv = document.getElementById("pvPlayer");
@@ -2486,7 +2497,7 @@
  
     function closeProtectedPlayer() {
       pvResetPlayer();
-      pvPendingVideoId = null;
+      pvPendingVideoId = null; pvPendingDriveId = null;
       document.getElementById("pvOverlay").classList.remove("active");
       document.getElementById("pvAttentionModal").classList.remove("active");
     }
@@ -2752,7 +2763,7 @@
     let adminToken = null, adminLectures = [], lecturesFetching = false, lastFetchAt = 0, lastTryAt = 0, retryTimer = null, alertKey = "";
  
     const nowMs = () => Date.now() + timeOffset; // وقت السيرفر التقريبي (لا يتأثر بضبط ساعة جهاز الطالب)
-    const lecturesConfigured = () => /^https:\/\/script\.google\.com\//.test(LECTURES_SCRIPT_URL);
+    const lecturesConfigured = () => /^https:\/\/script\.google\.com\//.test(SUBS_REMOTE() ? SUBS_SCRIPT_URL : LECTURES_SCRIPT_URL);
     const timeOf = (l) => { const t = Date.parse(l.releaseAt); return isNaN(t) ? 0 : t; };
     const isAdminUser = () => !!currentStudent && normalizePhone(currentStudent.phone) === ADMIN_PHONE;
     const fmtTime = (t) => new Date(t).toLocaleTimeString("ar-EG", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Africa/Cairo" });
@@ -2780,7 +2791,7 @@
         const vis = [];
         manual.concat(remote).forEach((l) => {
           if (lectureIndex[l.id]) return;
-          if (timeOf(l) > now || (l.remote && !l.link)) { upcomingList.push(l); return; }
+          if (timeOf(l) > now || (l.remote && !l.link && !SUBS_REMOTE())) { upcomingList.push(l); return; }
           lectureIndex[l.id] = l; vis.push(l);
         });
         visibleBySubject[s.name] = vis;
@@ -2788,7 +2799,85 @@
     }
     const normCourses = (c) => Array.isArray(c) ? c.map(String) : String(c || "").split(",").map((x) => x.trim()).filter(Boolean);
     const visibleFor = (s) => (visibleBySubject[s.name] || []).filter(inCourse);
-    function openLectureById(id) { const l = lectureIndex[id]; if (l) openProtectedPlayer(l.link, l.title); }
+    
+    // ============ نظام الاشتراك والتايمر الفردي ============
+    let subsMap = {}, subsFor = "", subsLoading = false, expRenderGuard = false;
+    const subsKey = () => "subs_" + (currentStudent ? currentStudent.phone : "guest");
+    function subState(id) {
+      const s = subsMap[id];
+      if (!s) return { st: "none" };
+      const left = s.until - nowMs();
+      return left > 0 ? { st: "active", left: left, until: s.until } : { st: "expired", triesLeft: Math.max(0, MAX_TRIES - (s.tries || 0)) };
+    }
+    const fmtDhms = (ms) => {
+      const s = Math.max(0, Math.floor(ms / 1000)), p = (n) => String(n).padStart(2, "0");
+      const d = Math.floor(s / 86400);
+      return (d ? d + " يوم " : "") + p(Math.floor((s % 86400) / 3600)) + ":" + p(Math.floor((s % 3600) / 60)) + ":" + p(s % 60);
+    };
+    function subButtonsHTML(lecture, homeworkLink, isAttended) {
+      const id = lecture.id, S = subState(id);
+      if (S.st === "none") return `<button type="button" class="btn-subscribe" id="sub-btn-${id}" onclick="doSubscribe('${id}')">✅ اشترك في المحاضرة (صالحة ${Math.round(SUB_HOURS / 24)} أيام)</button>`;
+      if (S.st === "expired") {
+        const btn = S.triesLeft > 0
+          ? `<button type="button" class="btn-subscribe" id="ext-btn-${id}" onclick="doExtend('${id}')">⏱️ مد المحاضرة لمدة ${EXT_HOURS} ساعة (المحاولات المتبقية: ${S.triesLeft})</button>`
+          : `<button type="button" class="btn-subscribe" disabled>انتهت محاولات المد لهذه المحاضرة</button>`;
+        return `<div class="sub-expired">انتهت مدة صلاحية مشاهدة المحاضرة</div>${btn}`;
+      }
+      const hw = homeworkLink && homeworkLink.trim() ? `<a href="${escapeHtml(safeUrl(homeworkLink))}" target="_blank" rel="noopener noreferrer" class="btn-homework">📝 الواجب</a>` : "";
+      return `<div class="sub-timer" data-exp="${S.until}">⏳ ${fmtDhms(S.left)}</div>
+        <button type="button" class="btn-open-lecture" onclick="openLectureById('${id}')">🔗 دخول المحاضرة</button>${hw}
+        <button type="button" class="btn-confirm-attendance" id="btn-att-${id}" ${isAttended ? "disabled" : ""} onclick="markAttendance('${id}')">${isAttended ? "تم الحضور بنجاح" : "تأكيد مشاهدة المحاضرة وتسجيل الحضور"}</button>`;
+    }
+    function updateSubTimers() {
+      const now = nowMs(); let crossed = false;
+      document.querySelectorAll(".sub-timer[data-exp]").forEach((el) => {
+        const left = Number(el.dataset.exp) - now;
+        if (left <= 0) crossed = true; else el.textContent = "⏳ " + fmtDhms(left);
+      });
+      if (crossed && !expRenderGuard) { expRenderGuard = true; renderAll(); setTimeout(() => { expRenderGuard = false; }, 1500); }
+    }
+    function saveSubs() { try { localStorage.setItem(subsKey(), JSON.stringify(subsMap)); } catch (_) {} }
+    async function loadSubs() {
+      if (!SUBS_ON() || !currentStudent || subsLoading || subsFor === currentStudent.phone) return;
+      try { subsMap = JSON.parse(localStorage.getItem(subsKey()) || "{}"); } catch (_) { subsMap = {}; }
+      subsFor = currentStudent.phone; // العرض فوري من الكاش المحلي ثم يُصحَّح من الخادم
+      if (!SUBS_REMOTE()) return;
+      subsLoading = true;
+      try {
+        const r = await callWithRetry(SUBS_SCRIPT_URL, { action: "subs", phone: currentStudent.phone }, 3);
+        if (r.type === "ok" && r.data.subs) { subsMap = r.data.subs; saveSubs(); renderAll(); }
+      } finally { subsLoading = false; }
+    }
+    function localSub(p) {
+      const now = nowMs(), s = subsMap[p.lectureId];
+      if (p.action === "subscribe") { if (!s) subsMap[p.lectureId] = { at: now, until: now + SUB_HOURS * 3600000, tries: 0 }; }
+      else if (p.action === "extend" && s && now >= s.until && (s.tries || 0) < MAX_TRIES)
+        subsMap[p.lectureId] = { at: s.at, until: now + EXT_HOURS * 3600000, tries: (s.tries || 0) + 1 };
+      saveSubs();
+    }
+    async function subCall(btn, label, payload, onDone) {
+      if (!SUBS_REMOTE()) { localSub(payload); renderAll(); if (onDone) onDone(); return; }
+      if (btn) { btn.disabled = true; btn.textContent = label; }
+      const r = await callWithRetry(SUBS_SCRIPT_URL, Object.assign({ phone: currentStudent.phone, requestId: Date.now() + "-" + Math.random().toString(36).slice(2) }, payload), 3);
+      if (r.type === "ok" && r.data.sub) { subsMap[payload.lectureId] = r.data.sub; saveSubs(); renderAll(); if (onDone) onDone(); return; }
+      alert(r.type === "fail" ? safeMsg(r.message, GENERIC_ERROR) : GENERIC_ERROR);
+      renderAll();
+    }
+    function doSubscribe(id) { subCall(document.getElementById("sub-btn-" + id), "جاري الاشتراك...", { action: "subscribe", lectureId: id }, () => openLectureById(id)); }
+    function doExtend(id) { subCall(document.getElementById("ext-btn-" + id), "جاري المد...", { action: "extend", lectureId: id }, () => openLectureById(id)); }
+
+    async function openLectureById(id) {
+      const l = lectureIndex[id]; if (!l) return;
+      if (SUBS_ON() && subState(id).st !== "active") { renderAll(); return; }
+      let link = l.link;
+      if (!link && SUBS_REMOTE()) { // الرابط لا يُرسل للمتصفح إلا عند فتح المحاضرة وبعد تحقق الخادم من الاشتراك
+        const r = await callWithRetry(SUBS_SCRIPT_URL, { action: "getLink", phone: currentStudent.phone, lectureId: id }, 3);
+        if (r.type === "ok" && r.data.link) link = r.data.link;
+        else { alert(r.type === "fail" ? safeMsg(r.message, GENERIC_ERROR) : GENERIC_ERROR); return; }
+      }
+      if (!link) { alert("لم يتم إدراج رابط المحاضرة حتى الآن"); return; }
+      openProtectedPlayer(link, l.title);
+    }
  
     function initLectures() {
       try {
@@ -2807,7 +2896,7 @@
       lecturesFetching = true; lastTryAt = Date.now();
       try {
         const t0 = Date.now();
-        const r = await callWithRetry(LECTURES_SCRIPT_URL, { action: "list" }, 3);
+        const r = SUBS_REMOTE() ? await callWithRetry(SUBS_SCRIPT_URL, { action: "lectures" }, 3) : await callWithRetry(LECTURES_SCRIPT_URL, { action: "list" }, 3);
         if (r.type !== "ok" || !Array.isArray(r.data.lectures)) return;
         const off = Number(r.data.serverNow) - (t0 + Date.now()) / 2;
         timeOffset = isFinite(off) ? off : 0;
@@ -2825,7 +2914,8 @@
       const now = nowMs();
       let dueManual = false, dueRemote = false;
       upcomingList.forEach((l) => { if (timeOf(l) <= now) { if (l.remote) dueRemote = true; else dueManual = true; } });
-      if (dueManual) renderAll();
+      if (dueManual || (dueRemote && SUBS_REMOTE())) renderAll();
+      updateSubTimers();
       if (dueRemote && !retryTimer && Date.now() - lastTryAt > 15000) {
         retryTimer = setTimeout(() => { retryTimer = null; fetchLectures(); }, Math.random() * 6000); // تأخير عشوائي لتخفيف الضغط
       }
@@ -3005,6 +3095,7 @@
     }
  
     function renderAll() {
+      loadSubs();
       rebuildLectures();
       SUBJECTS.forEach((s) => renderLectures(visibleFor(s), s.container));
       refreshAdminUI();
