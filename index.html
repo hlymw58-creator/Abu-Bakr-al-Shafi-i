@@ -978,6 +978,10 @@
     .lecture-card { content-visibility: auto; contain-intrinsic-size: 1px 220px; }
     .pv-video-container video { pointer-events: none; }
     .pv-video-container .plyr__controls { pointer-events: auto; }
+    .pv-yt-cover { position:absolute; inset:0; z-index:2; display:none; align-items:center; justify-content:center; text-align:center; padding:18px;
+      color:#f4e285; font-weight:700; font-size:clamp(13px,3.2vw,18px); line-height:1.9; pointer-events:none;
+      background:linear-gradient(rgba(5,26,12,.93),rgba(5,26,12,.93)), var(--pv-thumb) center/cover #000; }
+    .pv-yt-cover.show { display:flex; animation:fadeUp .25s ease both; }
     .pv-drive-frame { position:absolute; inset:0; width:100%; height:100%; border:0; background:#000; z-index:1; }
     .pv-drive-shield { position:absolute; top:0; right:0; left:0; width:auto; height:clamp(44px,9%,64px); z-index:3; background:transparent; }
     .sub-timer { width:100%; text-align:center; font-weight:700; font-size:.9rem; color:#2e7d32; direction:rtl; }
@@ -1578,7 +1582,7 @@
     // محاولة واحدة: ok (نجاح مؤكد) | fail (رد قاطع من السيرفر) | transient (لا نتيجة موثوقة)
     async function callScript(url, payload) {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+      const timer = setTimeout(() => ctrl.abort(), payload && payload.action === "uploadPdf" ? 90000 : REQUEST_TIMEOUT_MS); // رفع الـ PDF يحتاج وقتاً أطول
       try {
         const res = await fetch(url, {
           method: "POST",
@@ -2516,7 +2520,8 @@
     // بيوقف أي تشغيل حالي وينظّف الفيديو الثقيل من الصفحة (iframe + مؤقتات العلامة المائية)
     // بدون ما يقفل نافذة المشغل نفسها
     function pvResetPlayer() {
-      document.querySelectorAll(".pv-drive-frame,.pv-drive-shield,#pv-watermark").forEach((n) => n.remove());
+      clearTimeout(pvYtPauseTimer);
+      document.querySelectorAll(".pv-drive-frame,.pv-drive-shield,.pv-yt-cover,#pv-watermark").forEach((n) => n.remove());
       if (pvPlayerInstance) {
         try { pvPlayerInstance.pause(); } catch (_) {}
         try { pvPlayerInstance.destroy(); } catch (_) {}
@@ -2715,8 +2720,42 @@
       });
 
       pvSetupTouchZones();
+      if (!isDrive) pvSetupYtShield(videoId, playerHost); // يوتيوب فقط: إخفاء فيديوهات يوتيوب المقترحة
     }
- 
+
+    // ===== درع يوتيوب =====
+    // يوتيوب نفسه بيرسم شاشة "فيديوهات مقترحة/المزيد" فوق الفيديو في حالتين: عند نهاية الفيديو وعند الإيقاف المؤقت،
+    // حتى لو الفيديو علني وبإعداد rel=0. الحل إننا نغطي الإطار بغطاء خاص (فيه صورة الفيديو مظلّلة + رسالة) في الحالتين.
+    // لو عايز الفيديو يفضل ظاهر وقت الإيقاف (عشان الطالب يقرا السبورة) خلّيها false: هيتغطى عند النهاية بس.
+    const PV_HIDE_FRAME_ON_PAUSE = true;
+    let pvYtPauseTimer = null;
+    function pvSetupYtShield(videoId, host) {
+      const p = pvPlayerInstance; if (!p) return;
+      const cover = document.createElement("div");
+      cover.className = "pv-yt-cover";
+      cover.style.setProperty("--pv-thumb", `url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg')`);
+      const msg = document.createElement("div"); cover.appendChild(msg);
+      // داخل .plyr نفسه (زي العلامة المائية) عشان يفضل شغال في وضع ملء الشاشة بتاع Plyr
+      (host.querySelector(".plyr") || host).appendChild(cover);
+      const END_TXT = "✅ انتهت المحاضرة — اضغط في المنتصف لإعادة المشاهدة";
+      const PAUSE_TXT = "⏸ الفيديو متوقف مؤقتاً — اضغط في المنتصف للمتابعة";
+      const show = (t) => { msg.textContent = t; cover.classList.add("show"); };
+      const hide = () => { clearTimeout(pvYtPauseTimer); cover.classList.remove("show"); };
+      const nearEnd = () => p.duration > 5 && p.duration - p.currentTime < 0.8; // نغطي قبل آخر ثانية عشان ما تظهرش لقطة النهاية
+      p.on("playing", () => { if (!nearEnd()) hide(); });
+      p.on("pause", () => {
+        if (!PV_HIDE_FRAME_ON_PAUSE) return;
+        clearTimeout(pvYtPauseTimer);
+        pvYtPauseTimer = setTimeout(() => { if (p.paused && !p.ended) show(PAUSE_TXT); }, 300); // تأخير بسيط يتجاهل التوقف اللحظي أثناء التقديم
+      });
+      p.on("ended", () => { clearTimeout(pvYtPauseTimer); show(END_TXT); });
+      p.on("timeupdate", () => {
+        if (!p.playing) return;
+        if (nearEnd()) show(END_TXT);
+        else if (cover.classList.contains("show")) hide(); // رجّع الطالب للخلف أو كمّل تشغيل
+      });
+    }
+
     function closeProtectedPlayer() {
       pvSetFull(false);
       pvResetPlayer();
