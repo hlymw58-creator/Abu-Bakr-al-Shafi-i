@@ -979,7 +979,7 @@
     .pv-video-container video { pointer-events: none; }
     .pv-video-container .plyr__controls { pointer-events: auto; }
     .pv-drive-frame { position:absolute; inset:0; width:100%; height:100%; border:0; background:#000; z-index:1; }
-    .pv-drive-shield { position:absolute; top:0; right:0; width:72px; height:64px; z-index:3; background:transparent; }
+    .pv-drive-shield { position:absolute; top:0; right:0; left:0; width:auto; height:clamp(44px,9%,64px); z-index:3; background:transparent; }
     .sub-timer { width:100%; text-align:center; font-weight:700; font-size:.9rem; color:#2e7d32; direction:rtl; }
     .sub-expired { width:100%; text-align:center; font-weight:700; color:#c62828; padding:8px 0; }
     .btn-subscribe { background:#2e7d32; color:#fff; border:0; border-radius:10px; padding:12px; font-weight:700; cursor:pointer; width:100%; font-family:inherit; }
@@ -1020,7 +1020,79 @@
     body:has(.pv-overlay.active) #supportWidget { display: none !important; }
     /* موبايل رأسي ضيق: هوامش أصغر ليأخذ الفيديو أقصى عرض */
     @media (max-width: 699px) and (orientation: portrait) { .pv-card { padding-left: 6px; padding-right: 6px; } }
+  
+    /* ===== آية / حديث اليوم ===== */
+    .verse-banner{display:flex;flex-direction:column;align-items:center;gap:3px;background:linear-gradient(135deg,#0d3b12,#14532d);color:#ffd54f;padding:11px 16px;text-align:center;border-bottom:2px solid #f9a825;box-shadow:0 3px 10px rgba(0,0,0,.2);position:relative;z-index:90}
+    .vb-text{font-size:16.5px;font-weight:700;line-height:1.9}
+    .vb-ref{font-size:12px;color:rgba(255,255,255,.82)}
+    [data-theme="dark"] .verse-banner{background:linear-gradient(135deg,#0a240d,#123d17)}
+    /* ===== تذكير الصلاة على النبي (لا يقطع أي نشاط) ===== */
+    .salawat-popup{position:fixed;top:16px;left:50%;transform:translate(-50%,-90px);z-index:6000;pointer-events:none;background:linear-gradient(135deg,#0d3b12,#1b5e20);color:#ffd54f;font-weight:800;font-size:20px;padding:13px 32px;border-radius:40px;border:2px solid #f9a825;box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;transition:transform .5s cubic-bezier(.2,.9,.3,1.2),opacity .4s;white-space:nowrap}
+    .salawat-popup.show{transform:translate(-50%,0);opacity:1}
+    /* ===== نافذة وقت الصلاة ===== */
+    .prayer-modal-overlay{position:fixed;inset:0;z-index:5500;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(4,18,10,.92)}
+    .prayer-modal-overlay.active{display:flex}
+    .prayer-modal-card{background:linear-gradient(160deg,#04150d,#0b2b1a);border:2px solid #d4af37;border-radius:20px;padding:28px 22px;max-width:430px;width:100%;text-align:center;color:#fff;animation:popIn .35s cubic-bezier(.2,.9,.3,1.2)}
+    .prayer-modal-card h3{color:#d4af37;margin:10px 0 4px;font-size:1.35rem}
+    .prayer-sub{color:#f4e285;font-size:.95rem;margin-bottom:14px}
+    .prayer-icon{font-size:44px;animation:pulseIcon 1.6s ease-in-out infinite}
+    @keyframes pulseIcon{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+    .azan-text{font-family:inherit;white-space:pre-wrap;color:#fff;font-size:1.08rem;line-height:2.1;min-height:185px;margin-bottom:16px}
+
+
+    /* ===== شبكة المواد الكبيرة ===== */
+    .subject-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:6px}
+    .subject-card{background:var(--card-bg);border-radius:18px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.14);display:flex;flex-direction:column;cursor:pointer;
+      transition:transform .25s cubic-bezier(.2,.8,.3,1),box-shadow .25s;animation:fadeUp .45s ease both}
+    .subject-card:hover,.subject-card:focus-visible{transform:translateY(-6px);box-shadow:0 14px 32px rgba(0,0,0,.25);outline:none}
+    .subject-card:active{transform:scale(.98)}
+    .subject-banner{position:relative;min-height:170px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding:16px;color:#fff;background-size:cover;background-position:center;overflow:hidden}
+    .subject-banner::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 15%,rgba(255,255,255,.18),transparent 45%),linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 70%)}
+    .subject-icon{position:absolute;top:12px;left:14px;font-size:54px;line-height:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));transition:transform .35s}
+    .subject-card:hover .subject-icon{transform:scale(1.15) rotate(-6deg)}
+    .subject-title{position:relative;font-size:24px;font-weight:800;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+    .subject-meta{position:relative;font-size:13px;opacity:.92}
+    .subject-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+    .subject-body p{font-size:13px;color:#666;line-height:1.7}
+    .sc-bar{height:7px;border-radius:6px;background:#e0e6e1;overflow:hidden}.sc-fill{height:100%;background:linear-gradient(90deg,#66bb6a,#1b5e20);border-radius:6px;transition:width .8s ease}
+    .subject-enter{margin-top:auto;width:100%}
+    [data-theme="dark"] .subject-card{background:#16221b!important;color:#e6eee8!important}
+    [data-theme="dark"] .subject-body p{color:#9fb3a5}[data-theme="dark"] .sc-bar{background:#2b3f32}
+
+    /* ===== شريط الآية: تلاشي عند التبديل ===== */
+    .verse-banner{transition:opacity .45s ease}.verse-banner.vb-fade{opacity:0}
+
+    /* ===== مركز الإشعارات ===== */
+    .notif-item{display:flex;gap:10px;align-items:flex-start}
+    .ni-ico{font-size:18px;line-height:1.4}.ni-body{flex:1}
+    .notif-item.nt-motivation.new{background:#fff8e1}.notif-item.nt-streak.new{background:#fff3e0}
+    .notif-item.new{animation:popIn .4s}
+    .dropdown#notifMenu{max-height:70vh;overflow-y:auto;min-width:min(320px,86vw)}
+    .notif-toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,24px);opacity:0;z-index:5500;max-width:min(380px,calc(100vw - 28px));
+      display:flex;gap:10px;align-items:center;background:#14532d;color:#fff;border:1px solid #f9a825;border-radius:14px;padding:12px 16px;font-size:14px;line-height:1.6;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .45s cubic-bezier(.2,.9,.3,1.2),opacity .35s;cursor:pointer}
+    .notif-toast.show{transform:translate(-50%,0);opacity:1}.notif-toast .ni-ico{font-size:24px}
+
+    /* ===== صفحة الحساب: بطاقات الإحصاء + الصورة ===== */
+    .acc-pic{transition:transform .3s cubic-bezier(.2,.9,.3,1.3),box-shadow .3s}
+    .acc-pic:hover{transform:scale(1.08) rotate(-3deg);box-shadow:0 0 0 6px rgba(255,179,0,.35),0 10px 24px rgba(0,0,0,.35)}
+    .acc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:14px}
+    .stat-card{background:linear-gradient(135deg,#f1f8e9,#e8f5e9);border:1px solid #c8e6c9;border-radius:14px;padding:14px 8px;text-align:center;
+      transition:transform .25s,box-shadow .25s;animation:fadeUp .5s ease both}
+    .stat-card:hover{transform:translateY(-4px) scale(1.03);box-shadow:0 8px 18px rgba(27,94,32,.2)}
+    .stat-card .st-ico{font-size:24px}.stat-card .st-val{display:block;font-size:26px;font-weight:800;color:var(--primary-color);margin:2px 0}
+    .stat-card .st-lbl{font-size:12px;color:#555}
+    .stat-card.bump{animation:statBump .6s ease}@keyframes statBump{40%{transform:scale(1.12);box-shadow:0 0 0 6px rgba(102,187,106,.35)}}
+    [data-theme="dark"] .stat-card{background:#1b3324;border-color:#2b3f32}[data-theme="dark"] .stat-card .st-lbl{color:#b7c7bb}
+
+    /* ===== حركات دقيقة عامة ===== */
+    .btn-open-lecture,.btn-homework,.btn-subscribe,.icon-btn,.support-main-btn{transition:transform .15s ease,box-shadow .2s ease,filter .2s}
+    .btn-open-lecture:hover,.btn-homework:hover,.btn-subscribe:not(:disabled):hover,.icon-btn:hover{transform:translateY(-2px);filter:brightness(1.07);box-shadow:0 6px 14px rgba(0,0,0,.2)}
+    .lecture-card:hover{box-shadow:0 8px 20px rgba(0,0,0,.15)}
+    @media (prefers-reduced-motion: reduce){.subject-card,.stat-card,.notif-item.new,.acc-pic{animation:none!important;transition:none!important}}
+    @media (max-width:560px){.subject-grid{grid-template-columns:1fr}.subject-banner{min-height:150px}}
   </style>
+<base target="_blank">
 </head>
 <body>
  
@@ -1039,6 +1111,7 @@
       <div class="user-info" id="userInfo">
         <div class="hdr-actions">
           <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="تبديل الوضع الليلي/الصباحي">🌙</button>
+          <button class="icon-btn" id="sfxBtn" type="button" onclick="toggleSfx()" title="تشغيل / كتم المؤثرات الصوتية">🔊</button>
           <button class="icon-btn" onclick="toggleMenu('notifMenu',event)" title="الإشعارات">🔔<span class="dot" id="notifDot">0</span></button>
           <div class="dropdown" id="notifMenu"></div>
           <button class="profile-btn" onclick="toggleMenu('profileMenu',event)"><span class="avatar" id="avatarLetter">ط</span><span id="studentNameDisplay" class="greet-name">طالب</span></button>
@@ -1050,17 +1123,14 @@
     </div>
   </header>
  
+
+  <div class="verse-banner" id="verseBanner" role="note" aria-live="polite"></div>
+
   <div class="container" id="mainContainer" style="display:none">
-    <div class="course-bar"><button class="acc-back" style="margin:0" onclick="setView('courses')">← الكورسات</button><h2 id="courseTitle"></h2></div>
+    <div class="course-bar"><button class="acc-back" id="courseBackBtn" type="button" style="margin:0" onclick="courseBack()">← الكورسات</button><h2 id="courseTitle"></h2></div>
     <div id="progressBox"></div>
-    <div class="tabs-container">
-      <button class="tab-btn active" onclick="switchTab('tawheedTab', this)">قسم التوحيد</button>
-      <button class="tab-btn" onclick="switchTab('tafseerTab', this)">قسم التفسير</button>
-      <button class="tab-btn" onclick="switchTab('fiqhTab', this)">قسم الفقه الشافعي</button>
-      <button class="tab-btn" onclick="switchTab('osoolTab', this)">قسم الحديث</button>
-      <button class="tab-btn" onclick="switchTab('reviewTab', this)">قسم المراجعات</button>
-      <button class="tab-btn" onclick="switchTab('forumTab', this)">💬 منتدى الطلاب</button>
-    </div>
+    <!-- شبكة المواد الكبيرة (تحل محل تبويبات الأعلى) -->
+    <div class="subject-grid" id="subjectGrid"></div>
  
     <div id="tawheedTab" class="tab-content active">
       <h2 class="section-title">محاضرات التوحيد</h2>
@@ -1317,6 +1387,20 @@
     </div>
   </div>
  
+  <!-- تذكير الصلاة على النبي (يظهر ويختفي تلقائياً) -->
+  <div class="salawat-popup" id="salawatPopup">🤍 صلّ على محمد 🤍</div>
+
+  <!-- نافذة وقت الصلاة حسب مواقيت مصر -->
+  <div class="prayer-modal-overlay" id="prayerModal" role="alertdialog" aria-modal="true">
+    <div class="prayer-modal-card">
+      <div class="prayer-icon">🕌</div>
+      <h3>حان الآن وقت صلاة <span id="prayerName"></span></h3>
+      <p class="prayer-sub">قم للصلاة وأكمل المحاضرة بعد الصلاة</p>
+      <pre class="azan-text" id="azanText"></pre>
+      <button type="button" class="btn-submit" onclick="dismissPrayerModal()">حاضر، هقوم أصلي 🕌</button>
+    </div>
+  </div>
+
   <!-- عناصر الدعم العائم -->
   <div class="support-widget" id="supportWidget">
     <button class="support-main-btn" onclick="toggleSupportMenu()" title="الدعم والمساعدة">
@@ -1708,10 +1792,14 @@
     // --- الإشعارات (محفوظة لكل طالب على جهازه) ---
     const notifKey = () => "notifs_" + (currentStudent ? currentStudent.phone : "guest");
     const getNotifs = () => { try { return JSON.parse(localStorage.getItem(notifKey()) || "[]"); } catch (_) { return []; } };
-    function pushNotif(text) {
-      const list = getNotifs(); list.unshift({ t: text, at: Date.now(), read: false });
+    // أنواع الإشعارات: lecture (محاضرة جديدة) | motivation (تحفيز) | streak (تقدّم) | system (عام، بدون صوت)
+    const NOTIF_ICONS = { lecture: "🎓", motivation: "🚀", streak: "🔥", system: "🔔" };
+    function pushNotif(text, type, opts) {
+      type = NOTIF_ICONS[type] ? type : "system"; opts = opts || {};
+      const list = getNotifs(); list.unshift({ t: text, at: Date.now(), read: false, type: type });
       try { localStorage.setItem(notifKey(), JSON.stringify(list.slice(0, 40))); } catch (_) {}
       renderNotifs();
+      if (type !== "system" && !opts.silent) { try { notifChime(); showNotifToast(text, type); } catch (_) {} }
     }
     function markNotifsRead() {
       const list = getNotifs().map((n) => Object.assign(n, { read: true }));
@@ -1723,7 +1811,7 @@
       const dot = document.getElementById("notifDot");
       dot.innerText = unread; dot.style.display = unread ? "flex" : "none";
       document.getElementById("notifMenu").innerHTML = list.length
-        ? list.map((n) => `<div class="notif-item ${n.read ? "" : "new"}">${escapeHtml(n.t)}<small>${new Date(n.at).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Cairo" })}</small></div>`).join("")
+        ? list.map((n) => `<div class="notif-item ${n.read ? "" : "new"} nt-${n.type || "system"}"><span class="ni-ico">${NOTIF_ICONS[n.type] || NOTIF_ICONS.system}</span><div class="ni-body">${escapeHtml(n.t)}<small>${new Date(n.at).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Cairo" })}</small></div></div>`).join("")
         : `<div class="notif-item">لا توجد إشعارات بعد</div>`;
     }
     // إشعار المحاضرات الجديدة: أول مرة نحفظ الموجود بدون إشعار، وبعدها أي محاضرة جديدة تنبّه الطالب
@@ -1735,7 +1823,7 @@
       if (!Array.isArray(seen)) { try { localStorage.setItem(k, JSON.stringify(ids)); } catch (_) {} return; }
       const fresh = ids.filter((id) => !seen.includes(id));
       if (!fresh.length) return;
-      fresh.forEach((id) => pushNotif(`تم رفع محاضرة جديدة: ${lectureIndex[id].title} (${lectureIndex[id].subject})`));
+      fresh.forEach((id) => pushNotif(`تم نزول محاضرة جديدة! ${lectureIndex[id].title} (${lectureIndex[id].subject})`, "lecture"));
       try { localStorage.setItem(k, JSON.stringify(seen.concat(fresh))); } catch (_) {}
     }
 
@@ -1818,11 +1906,14 @@
         <button class="acc-back" onclick="closeAccount()">← رجوع للمنصة</button>
         ${accHero(getAvatar(), s)}
         <div class="acc-card">
+          ${accStatsHTML()}
           <div class="acc-row"><b>الاسم الكامل</b><span>${v(s.name)}</span></div>
           <div class="acc-row"><b>رقم الهاتف</b><span dir="ltr">${v(s.phone)}</span></div>
           <div class="acc-row"><b>رقم ولي الأمر</b><span dir="ltr">${v(s.parentPhone)}</span></div>
           <div class="acc-row"><b>المحافظة</b><span>${v(s.governorate)}</span></div>
           <div class="acc-row"><b>هل أنت من مصر؟</b><span>${s.nationality ? (s.nationality === "مصري" ? "نعم" : "لا") : "—"}</span></div>
+          <div class="acc-row"><b>السنة الدراسية</b><span>${v(s.academicYear || s.year || s.grade || s.level)}</span></div>
+          <div class="acc-row"><b>الكورسات المشترك بها</b><span>${enrolledCoursesText()}</span></div>
           <div class="acc-row"><b>حالة الاشتراك</b><span>${isActivatedValue(s.code) ? "مُفعّل" : "غير مفعّل"}</span></div>
           <div class="acc-row"><b>كلمة المرور</b><span>***</span></div>
           <div class="acc-actions">
@@ -1831,6 +1922,7 @@
           </div>
           <div class="acc-sync" id="accSync"></div>
         </div>`;
+      if (typeof animateStats === "function") animateStats();
     }
     function renderAccountEdit() {
       accMode = "edit";
@@ -1960,7 +2052,7 @@
       document.getElementById("mainContainer").style.display = v === "course" ? "" : "none";
       document.getElementById("accountPage").style.display = v === "account" ? "block" : "none";
       if (v === "courses") { renderCourses(); refreshStatus(); }
-      if (v === "course") { const c = COURSES.find((x) => x.id === currentCourse); document.getElementById("courseTitle").innerText = c ? c.title : ""; renderAll(); }
+      if (v === "course") { showSubjectGrid(); renderAll(); }
       window.scrollTo({ top: 0, behavior: "smooth" });
       setTimeout(pinFooter, 50);
     }
@@ -1993,6 +2085,7 @@
       } finally { statusBusy = false; }
     }
     function switchSub(id, btn) {
+      try { sfxClick(); } catch (_) {}
       document.querySelectorAll(".sub-content").forEach((e) => e.classList.remove("active"));
       document.querySelectorAll(".sub-btn").forEach((e) => e.classList.remove("active"));
       document.getElementById(id).classList.add("active"); btn.classList.add("active");
@@ -2208,11 +2301,11 @@
     }
  
     function switchTab(tabId, btnElement) {
+      try { sfxClick(); } catch (_) {}
       document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
-      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
       
       document.getElementById(tabId).classList.add("active");
-      btnElement.classList.add("active");
+      if (btnElement && btnElement.classList) btnElement.classList.add("active");
  
       if (tabId === 'forumTab') {
         loadForumPosts();
@@ -2248,7 +2341,7 @@
         html += `
           <div class="lecture-card ${!isCourseActivated ? 'locked' : ''}" id="card-${lecture.id}">
             <div class="lecture-header">
-              <h3 class="lecture-title">${escapeHtml(lecture.title)}</h3>
+              <h3 class="lecture-title">${escapeHtml(lecture.title)}${isAttended ? ' <span style="color:#2e7d32">✓</span>' : ''}</h3>
               <span class="attendance-badge ${isAttended ? 'attended' : ''}" id="badge-${lecture.id}">
                 ${isAttended ? 'تم تسجيل الحضور' : 'لم يتم الحضور'}
               </span>
@@ -2263,7 +2356,7 @@
       container.innerHTML = html;
     }
  
-    function markAttendance(lectureId, lectureTitle) {
+    function markAttendance(lectureId, lectureTitle, silent) {
       lectureTitle = lectureTitle || (lectureIndex[lectureId] && lectureIndex[lectureId].title) || "";
       attendanceRecords[lectureId] = true;
       localStorage.setItem("attendance_" + (currentStudent ? currentStudent.phone : "guest"), JSON.stringify(attendanceRecords));
@@ -2279,7 +2372,8 @@
         btn.disabled = true;
       }
       renderProgress();
-      alert(`تم تسجيل حضورك في محاضرة: ${lectureTitle} بنجاح!`);
+      if (!silent) alert(`تم تسجيل حضورك في محاضرة: ${lectureTitle} بنجاح!`);
+      else renderAll();
     }
  
     function loadAttendance() {
@@ -2949,14 +3043,15 @@
       if (S.st === "none") return `<button type="button" class="btn-subscribe" id="sub-btn-${id}" onclick="doSubscribe('${id}')">✅ اشترك في المحاضرة (صالحة ${Math.round(SUB_HOURS / 24)} أيام)</button>`;
       if (S.st === "expired") {
         const btn = S.triesLeft > 0
-          ? `<button type="button" class="btn-subscribe" id="ext-btn-${id}" onclick="doExtend('${id}')">⏱️ مد المحاضرة لمدة ${EXT_HOURS} ساعة (المحاولات المتبقية: ${S.triesLeft})</button>`
+          ? `<button type="button" class="btn-subscribe" id="ext-btn-${id}" onclick="doExtend('${id}')">🔄 إعادة فتح / تمديد المحاضرة (${EXT_HOURS} ساعة) — المحاولات المتبقية: ${S.triesLeft}</button>`
           : `<button type="button" class="btn-subscribe" disabled>انتهت محاولات المد لهذه المحاضرة</button>`;
         return `<div class="sub-expired">انتهت مدة صلاحية مشاهدة المحاضرة</div>${btn}`;
       }
-      const hw = homeworkLink && homeworkLink.trim() ? `<a href="${escapeHtml(safeUrl(homeworkLink))}" target="_blank" rel="noopener noreferrer" class="btn-homework">📝 الواجب</a>` : "";
+      const done = (k) => !!attendanceRecords[k];
+      const hw = homeworkLink && homeworkLink.trim() ? `<a href="${escapeHtml(safeUrl(homeworkLink))}" target="_blank" rel="noopener noreferrer" class="btn-homework" onclick="markHomeworkDone('${id}')">📝 الواجب${done("hw_" + id) ? " ✓" : ""}</a>` : "";
+      const pdf = lecture.pdfLink ? `<a href="${escapeHtml(safeUrl(lecture.pdfLink))}" target="_blank" rel="noopener noreferrer" class="btn-open-lecture" style="background:#6a1b9a" onclick="markHomeworkDone('pdf_${id}')">📄 ملف PDF${done("pdf_" + id) ? " ✓" : ""}</a>` : "";
       return `<div class="sub-timer" data-exp="${S.until}">⏳ ${fmtDhms(S.left)}</div>
-        <button type="button" class="btn-open-lecture" onclick="openLectureById('${id}')">🔗 دخول المحاضرة</button>${hw}
-        <button type="button" class="btn-confirm-attendance" id="btn-att-${id}" ${isAttended ? "disabled" : ""} onclick="markAttendance('${id}')">${isAttended ? "تم الحضور بنجاح" : "تأكيد مشاهدة المحاضرة وتسجيل الحضور"}</button>`;
+        <button type="button" class="btn-open-lecture" onclick="openLectureById('${id}')">🔗 دخول المحاضرة${done(id) ? " ✓" : ""}</button>${hw}${pdf}`;
     }
     function updateSubTimers() {
       const now = nowMs(); let crossed = false;
@@ -2993,12 +3088,14 @@
       alert(r.type === "fail" ? safeMsg(r.message, GENERIC_ERROR) : GENERIC_ERROR);
       renderAll();
     }
-    function doSubscribe(id) { subCall(document.getElementById("sub-btn-" + id), "جاري الاشتراك...", { action: "subscribe", lectureId: id }, () => openLectureById(id)); }
+    function doSubscribe(id) { try { sfxClick(); } catch (_) {} subCall(document.getElementById("sub-btn-" + id), "جاري الاشتراك...", { action: "subscribe", lectureId: id }, () => openLectureById(id)); }
     function doExtend(id) { subCall(document.getElementById("ext-btn-" + id), "جاري المد...", { action: "extend", lectureId: id }, () => openLectureById(id)); }
 
     async function openLectureById(id) {
       const l = lectureIndex[id]; if (!l) return;
       if (SUBS_ON() && subState(id).st !== "active") { renderAll(); return; }
+      try { sfxClick(); } catch (_) {}
+      markAttendance(id, l.title, true);
       let link = l.link;
       if (!link && SUBS_REMOTE()) { // الرابط لا يُرسل للمتصفح إلا عند فتح المحاضرة وبعد تحقق الخادم من الاشتراك
         const r = await callWithRetry(SUBS_SCRIPT_URL, { action: "getLink", phone: currentStudent.phone, lectureId: id }, 3);
@@ -3032,7 +3129,7 @@
         timeOffset = isFinite(off) ? off : 0;
         sheetLectures = r.data.lectures.map((l) => ({
           id: String(l.id), title: String(l.title || ""), subject: l.subject, link: l.link || "",
-          homeworkLink: l.homeworkLink || "", releaseAt: l.releaseAt, remote: true, courses: normCourses(l.courses)
+          homeworkLink: l.homeworkLink || "", pdfLink: l.pdfLink || "", releaseAt: l.releaseAt, remote: true, courses: normCourses(l.courses)
         }));
         lastFetchAt = Date.now();
         try { localStorage.setItem(LECTURES_CACHE_KEY, JSON.stringify({ lectures: sheetLectures, offset: timeOffset })); } catch (_) {}
@@ -3188,6 +3285,8 @@
           <div class="form-group"><label>رابط يوتيوب:</label><input id="admYt" type="url" required dir="ltr" value="${escapeHtml(l.youtubeUrl || "")}"></div>
           <div class="form-group"><label>موعد نزول المحاضرة (اليوم والتاريخ والساعة):</label><input id="admAt" type="datetime-local" required value="${l.releaseAt ? toLocalInput(timeOf(l)) : ""}"></div>
           <div class="form-group"><label>رابط الواجب (اختياري):</label><input id="admHw" type="url" dir="ltr" value="${escapeHtml(l.homeworkLink || "")}"></div>
+          <div class="form-group"><label>رابط ملف PDF (اختياري):</label><input id="admPdf" type="url" dir="ltr" placeholder="https://...pdf" value="${escapeHtml(l.pdfLink || "")}"></div>
+          <div class="form-group"><label>أو ارفع ملف PDF مباشرة (اختياري، حتى 8 ميجا):</label><input id="admPdfFile" type="file" accept="application/pdf,.pdf"><small id="admPdfStatus" style="color:#666"></small></div>
           <button class="btn-submit" type="submit" id="admSaveBtn">حفظ</button>
           <button class="btn-submit" type="button" style="background:#757575" onclick="renderAdminList()">رجوع</button>
           <div class="error-msg" id="admErr"></div>
@@ -3203,9 +3302,17 @@
       const at = new Date(document.getElementById("admAt").value);
       if (isNaN(at)) { showErr("موعد النزول غير صحيح."); return; }
       btn.disabled = true; btn.innerText = "جاري الحفظ...";
+      let pdfLink = document.getElementById("admPdf").value;
+      const pdfFile = document.getElementById("admPdfFile") && document.getElementById("admPdfFile").files[0];
+      if (pdfFile) {
+        btn.innerText = "جاري رفع الـ PDF...";
+        const up = await adminUploadPdf(pdfFile);
+        if (!up.ok) { if (up.msg) showErr(up.msg); btn.disabled = false; btn.innerText = "حفظ"; return; }
+        pdfLink = up.url;
+      }
       const r = await adminCall({ action: "save", lecture: {
         id: id, title: document.getElementById("admTitle").value, subject: document.getElementById("admSubject").value,
-        youtubeUrl: document.getElementById("admYt").value, releaseAt: at.toISOString(), homeworkLink: document.getElementById("admHw").value, courses: courses, course: courses.join(",")
+        youtubeUrl: document.getElementById("admYt").value, releaseAt: at.toISOString(), homeworkLink: document.getElementById("admHw").value, pdfLink: pdfLink, courses: courses, course: courses.join(",")
       } });
       if (!r) return;
       if (r.type === "ok") { await loadAdminList(); fetchLectures(); return; }
@@ -3234,6 +3341,7 @@
       renderProgress();
       renderNotifs();
       renderCourses();
+      if (typeof renderSubjectGrid === "function") { renderSubjectGrid(); checkStreakAlerts(); refreshProfileStats(); }
     }
  
     function toggleSupportMenu() {
@@ -3252,11 +3360,338 @@
     }
  
     window.onload = function() {
-      [warmUpServices, initFooter, initLectures, checkAuth].forEach((fn) => {
+      [warmUpServices, initFooter, initLectures, checkAuth, initVerseBanner, initSalatReminder, initPrayerSystem].forEach((fn) => {
         try { fn(); } catch (e) { console.error(fn.name, e); }
       });
       setInterval(() => { if (!document.hidden) warmUpServices(); }, 240000);
     };
+  </script>
+ 
+  <script>
+    // ============================================================
+    // ===============  الميزات الإضافية المدمجة  ===============
+    // ============================================================
+
+    // ---------- 1) آية / حديث عن العلم (عشوائي عند كل فتح) ----------
+    const VERSES_POOL = [
+      { type: "quran", text: "وَقُل رَّبِّ زِدْنِي عِلْمًا", reference: "سورة طه - الآية 114" },
+      { type: "quran", text: "قُلْ هَلْ يَسْتَوِي الَّذِينَ يَعْلَمُونَ وَالَّذِينَ لَا يَعْلَمُونَ ۗ إِنَّمَا يَتَذَكَّرُ أُولُو الْأَلْبَابِ", reference: "سورة الزمر - الآية 9" },
+      { type: "quran", text: "يَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ", reference: "سورة المجادلة - الآية 11" },
+      { type: "quran", text: "إِنَّمَا يَخْشَى اللَّهَ مِنْ عِبَادِهِ الْعُلَمَاءُ", reference: "سورة فاطر - الآية 28" },
+      { type: "quran", text: "نَرْفَعُ دَرَجَاتٍ مَّن نَّشَاءُ ۗ وَفَوْقَ كُلِّ ذِي عِلْمٍ عَلِيمٌ", reference: "سورة يوسف - الآية 76" },
+      { type: "hadith", text: "مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا، سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ", reference: "صحيح مسلم (2699)" },
+      { type: "hadith", text: "إِذَا مَاتَ الإِنْسَانُ انْقَطَعَ عَنْهُ عَمَلُهُ إِلاَّ مِنْ ثَلاَثَةٍ: إِلاَّ مِنْ صَدَقَةٍ جَارِيَةٍ، أَوْ عِلْمٍ يُنْتَفَعُ بِهِ، أَوْ وَلَدٍ صَالِحٍ يَدْعُو لَهُ", reference: "صحيح مسلم (1631)" },
+      { type: "hadith", text: "مَنْ يُرِدِ اللَّهُ بِهِ خَيْرًا يُفَقِّهْهُ فِي الدِّينِ", reference: "صحيح البخاري (71) ومسلم (1037)" },
+      { type: "hadith", text: "فَضْلُ الْعَالِمِ عَلَى الْعَابِدِ كَفَضْلِي عَلَى أَدْنَاكُمْ", reference: "سنن الترمذي (2685) - حديث حسن صحيح" }
+    ];
+    // شريط الآيات والأحاديث: يتبدّل تلقائياً كل 14 ثانية بتلاشي ناعم، ولا يكرر نفس العنصر مرتين متتاليتين
+    let verseIdx = -1, verseTimer = null;
+    function renderVerse(el, v) {
+      el.textContent = "";
+      const t = document.createElement("span"); t.className = "vb-text"; t.textContent = v.text;
+      const r = document.createElement("span"); r.className = "vb-ref";
+      r.textContent = v.type === "quran" ? "﴿ " + v.reference + " ﴾" : v.reference;
+      el.appendChild(t); el.appendChild(r);
+    }
+    function nextVerse(el, animate) {
+      let i; do { i = Math.floor(Math.random() * VERSES_POOL.length); } while (i === verseIdx && VERSES_POOL.length > 1);
+      verseIdx = i;
+      if (!animate) { renderVerse(el, VERSES_POOL[i]); return; }
+      el.classList.add("vb-fade");
+      setTimeout(() => { renderVerse(el, VERSES_POOL[i]); el.classList.remove("vb-fade"); }, 450);
+    }
+    function initVerseBanner() {
+      const el = document.getElementById("verseBanner");
+      if (!el) return;
+      nextVerse(el, false);
+      if (verseTimer) clearInterval(verseTimer);
+      verseTimer = setInterval(() => { if (!document.hidden) nextVerse(el, true); }, 14000);
+    }
+
+    // ---------- 2) تذكير "صلّ على محمد" كل 30 دقيقة (3 ثوانٍ ثم يختفي) ----------
+    function showSalawatPopup() {
+      const p = document.getElementById("salawatPopup");
+      if (!p) return;
+      p.classList.add("show");
+      setTimeout(() => p.classList.remove("show"), 3000); // لا يوقف الفيديو ولا يعيد تحميل الصفحة
+    }
+    function initSalatReminder() { setInterval(showSalawatPopup, 30 * 60 * 1000); }
+
+    // ---------- 3) مواقيت الصلاة (مصر) عبر Aladhan API ----------
+    const PRAYERS_LIST = [["Fajr", "الفجر"], ["Dhuhr", "الظهر"], ["Asr", "العصر"], ["Maghrib", "المغرب"], ["Isha", "العشاء"]];
+    const AZAN_LINES = ["الله أكبر الله أكبر", "أشهد أن لا إله إلا الله", "أشهد أن محمداً رسول الله", "حي على الصلاة", "حي على الفلاح", "الله أكبر الله أكبر", "لا إله إلا الله"];
+    let prayerTimings = null, prayerShownMap = {}, azanTimer = null;
+
+    async function loadPrayerTimes() {
+      try {
+        const r = await fetch("https://api.aladhan.com/v1/timingsByCity?city=Cairo&country=Egypt&method=5");
+        const d = await r.json();
+        if (d && d.data && d.data.timings) prayerTimings = d.data.timings;
+      } catch (_) { /* نحتفظ بآخر مواقيت ناجحة */ }
+    }
+    function cairoParts() {
+      const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
+      const g = (t) => (parts.find((p) => p.type === t) || { value: "0" }).value;
+      return { hm: g("hour") + ":" + g("minute"), mins: (+g("hour")) * 60 + (+g("minute")) };
+    }
+    function cairoDayKey() { return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date()); }
+
+    function checkPrayerArrival() {
+      if (!prayerTimings || document.hidden) return;
+      const { mins } = cairoParts(), key = cairoDayKey();
+      for (const [en, ar] of PRAYERS_LIST) {
+        const t = (prayerTimings[en] || "").slice(0, 5);
+        const [h, m] = t.split(":").map(Number);
+        const pm = h * 60 + m;
+        if (pm > 0 && mins >= pm && mins <= pm + 3 && !prayerShownMap[key + en]) {
+          prayerShownMap[key + en] = 1;
+          showPrayerModal(ar);
+          break;
+        }
+      }
+    }
+    function showPrayerModal(name) {
+      const modal = document.getElementById("prayerModal");
+      document.getElementById("prayerName").textContent = name;
+      modal.classList.add("active");
+      const box = document.getElementById("azanText");
+      box.textContent = "";
+      let li = 0, ci = 0, out = "";
+      if (azanTimer) clearInterval(azanTimer);
+      azanTimer = setInterval(() => {
+        const line = AZAN_LINES[li];
+        ci++;
+        box.textContent = AZAN_LINES.slice(0, li).join("\n") + (li ? "\n" : "") + line.slice(0, ci);
+        if (ci >= line.length) {
+          li++; ci = 0;
+          if (li >= AZAN_LINES.length) { clearInterval(azanTimer); azanTimer = null; box.textContent = AZAN_LINES.join("\n"); }
+        }
+      }, 55);
+    }
+    function dismissPrayerModal() {
+      const modal = document.getElementById("prayerModal");
+      modal.classList.remove("active"); // يرجع الطالب لنشاطه فوراً دون المساس بالفيديو
+      if (azanTimer) { clearInterval(azanTimer); azanTimer = null; }
+    }
+    function initPrayerSystem() {
+      loadPrayerTimes();
+      setInterval(loadPrayerTimes, 6 * 60 * 60 * 1000);
+      setInterval(checkPrayerArrival, 20000);
+    }
+
+    // ---------- 4) علامات الإنجاز التلقائية (واجب / PDF / امتحان) ----------
+    function markItemDone(key) {
+      if (!currentStudent) return;
+      if (attendanceRecords[key]) return;
+      attendanceRecords[key] = true;
+      try { localStorage.setItem("attendance_" + currentStudent.phone, JSON.stringify(attendanceRecords)); } catch (_) {}
+      renderAll(); // تحديث علامة ✓ مباشرة
+    }
+    function markHomeworkDone(id) { markItemDone("hw_" + id); }
+
+    // ---------- 5) مؤثرات صوتية خفيفة ----------
+    let sfxCtx = null;
+    function sfxCtxEnsure() {
+      if (!sfxCtx) { try { sfxCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} }
+      if (sfxCtx && sfxCtx.state === "suspended") sfxCtx.resume();
+      return sfxCtx;
+    }
+    let sfxLast = 0;
+    const sfxOn = () => { try { return localStorage.getItem("shafeei_sfx") !== "off"; } catch (_) { return true; } };
+    function updateSfxBtn() { const b = document.getElementById("sfxBtn"); if (b) b.innerText = sfxOn() ? "🔊" : "🔇"; }
+    function toggleSfx() { try { localStorage.setItem("shafeei_sfx", sfxOn() ? "off" : "on"); } catch (_) {} updateSfxBtn(); sfxClick(); }
+    function sfxClick() { // نقرة خفيفة عند التفاعل
+      if (!sfxOn()) return;
+      const now = Date.now(); if (now - sfxLast < 90) return; sfxLast = now; // يمنع تكرار الصوت لنفس الضغطة
+      const ctx = sfxCtxEnsure(); if (!ctx) return;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = 640;
+      g.gain.setValueAtTime(0.05, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+      o.connect(g).connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.13);
+    }
+    function playChime() { // جرس إشعار ناعم عند وصول إشعار
+      if (!sfxOn()) return;
+      const ctx = sfxCtxEnsure(); if (!ctx) return;
+      [523.25, 659.25, 783.99].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = "sine"; o.frequency.value = f;
+        const t = ctx.currentTime + i * 0.13;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.07, t + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+        o.connect(g).connect(ctx.destination);
+        o.start(t); o.stop(t + 0.55);
+      });
+    }
+  </script>
+  <script>
+    // ============================================================
+    // ===========  وحدات الواجهة الجديدة (الإصدار 2)  ============
+    // ============================================================
+
+    // ---------- 1) شبكة المواد + صفحة مستقلة لكل مادة ----------
+    // لإضافة صورة بانر حقيقية لمادة: ضع رابط الصورة في الحقل banner (مثلاً رابط من جوجل درايف lh3.googleusercontent.com/d/ID)
+    const SUBJECT_CARDS = [
+      { tab: "fiqhTab",    title: "الفقه الشافعي", icon: "⚖️", short: "الفقه الشافعي", subjects: ["الفقه"],   banner: "", grad: "linear-gradient(135deg,#0d3b12,#2e7d32)", desc: "شرح أحكام الفقه الشافعي خطوة بخطوة مع الواجبات." },
+      { tab: "tawheedTab", title: "التوحيد",       icon: "🕋", short: "التوحيد",       subjects: ["التوحيد"], banner: "", grad: "linear-gradient(135deg,#0b3d5c,#1a73e8)", desc: "محاضرات العقيدة والتوحيد بأسلوب مبسّط." },
+      { tab: "tafseerTab", title: "التفسير",       icon: "📜", short: "التفسير",       subjects: ["التفسير"], banner: "", grad: "linear-gradient(135deg,#4a148c,#8e24aa)", desc: "تفسير الآيات وفهم معانيها ومقاصدها." },
+      { tab: "osoolTab",   title: "الحديث",        icon: "📚", short: "الحديث",        subjects: ["الحديث"],  banner: "", grad: "linear-gradient(135deg,#7a3e00,#ef6c00)", desc: "شرح الأحاديث النبوية وفوائدها." },
+      { tab: "reviewTab",  title: "قسم المراجعات", icon: "🔁", short: "المراجعات",     subjects: ["مراجعة توحيد", "مراجعة تفسير", "مراجعة حديث", "مراجعة فقه"], banner: "", grad: "linear-gradient(135deg,#004d40,#00897b)", desc: "مراجعات شاملة لكل المواد قبل الاختبار." },
+      { tab: "forumTab",   title: "المنتدى",       icon: "💬", short: "المنتدى",       subjects: [], forum: true, banner: "", grad: "linear-gradient(135deg,#880e4f,#d81b60)", desc: "اسأل أستاذك وزملاءك وشارك في النقاش." }
+    ];
+    let currentSubjectTab = null;
+    function subjectLectures(card) {
+      return (card.subjects || []).flatMap((n) => { const s = SUBJECTS.find((x) => x.name === n); return s ? visibleFor(s) : []; });
+    }
+    function renderSubjectGrid() {
+      const g = document.getElementById("subjectGrid"); if (!g) return;
+      g.innerHTML = SUBJECT_CARDS.map((c, i) => {
+        const ls = subjectLectures(c), total = ls.length, done = ls.filter((l) => attendanceRecords[l.id]).length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        const bg = c.banner ? `url('${c.banner}') center/cover, ${c.grad}` : c.grad;
+        const meta = c.forum ? "نقاش مباشر" : `${total} محاضرة • أتممت ${done}`;
+        return `<article class="subject-card" role="button" tabindex="0" style="animation-delay:${i * 60}ms" onclick="openSubject('${c.tab}')" onkeydown="if(event.key==='Enter')openSubject('${c.tab}')">
+          <div class="subject-banner" style="background:${bg}"><span class="subject-icon">${c.icon}</span><h3 class="subject-title">${escapeHtml(c.title)}</h3><span class="subject-meta">${meta}</span></div>
+          <div class="subject-body"><p>${escapeHtml(c.desc)}</p>${c.forum ? "" : `<div class="sc-bar"><div class="sc-fill" style="width:${pct}%"></div></div>`}
+            <button type="button" class="btn-submit subject-enter">الدخول</button></div></article>`;
+      }).join("");
+    }
+    function openSubject(tab) {
+      const c = SUBJECT_CARDS.find((x) => x.tab === tab); if (!c) return;
+      currentSubjectTab = tab;
+      document.getElementById("subjectGrid").style.display = "none";
+      switchTab(tab);
+      document.getElementById("courseTitle").innerText = c.title;
+      document.getElementById("courseBackBtn").innerText = "← المواد";
+      try { history.pushState({ subject: tab }, ""); } catch (_) {}
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(pinFooter, 50);
+    }
+    function showSubjectGrid() {
+      currentSubjectTab = null;
+      document.querySelectorAll(".tab-content").forEach((el) => el.classList.remove("active"));
+      document.getElementById("subjectGrid").style.display = "";
+      const c = COURSES.find((x) => x.id === currentCourse);
+      document.getElementById("courseTitle").innerText = c ? c.title : "";
+      document.getElementById("courseBackBtn").innerText = "← الكورسات";
+      renderSubjectGrid();
+      setTimeout(pinFooter, 50);
+    }
+    function courseBack() {
+      if (currentSubjectTab) {
+        if (history.state && history.state.subject) history.back(); else showSubjectGrid();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else setView("courses");
+    }
+    window.addEventListener("popstate", () => { if (currentSubjectTab) showSubjectGrid(); });
+
+    // ---------- 2) مركز الإشعارات: تنبيه منبثق + جرس + رسائل تحفيزية + تنبيهات التقدّم ----------
+    let notifChimeAt = 0, toastTimer = null;
+    function notifChime() { const n = Date.now(); if (n - notifChimeAt < 2500) return; notifChimeAt = n; playChime(); }
+    function showNotifToast(text, type) {
+      let el = document.getElementById("notifToast");
+      if (!el) { el = document.createElement("div"); el.id = "notifToast"; el.className = "notif-toast"; el.setAttribute("role", "status"); el.onclick = () => el.classList.remove("show"); document.body.appendChild(el); }
+      el.innerHTML = `<span class="ni-ico">${NOTIF_ICONS[type] || "🔔"}</span><span></span>`;
+      el.lastChild.textContent = text; // textContent: لا حقن HTML
+      requestAnimationFrame(() => el.classList.add("show"));
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 5500);
+    }
+    const MOTIVATION_MSGS = [
+      "استمر يا بطل! العلم نور وخطوة جديدة تقربك من هدفك 🚀",
+      "كل محاضرة تكملها بتقربك خطوة من التفوق 💪",
+      "المذاكرة النهاردة هي فرحتك بكرة، كمّل بنشاط 🌟",
+      "الاستمرارية أهم من السرعة، خطوة صغيرة كل يوم تصنع فرقاً كبيراً ✨",
+      "ربنا يفتح عليك ويبارك في وقتك، ابدأ بمحاضرة النهاردة 📖"
+    ];
+    function maybeMotivate() {
+      if (!currentStudent || !isActivatedValue(currentStudent.code) || document.hidden) return;
+      const k = "motiv_ts_" + currentStudent.phone; let last = 0;
+      try { last = Number(localStorage.getItem(k)) || 0; } catch (_) {}
+      if (Date.now() - last < 3 * 3600 * 1000) return; // رسالة تحفيزية كل 3 ساعات كحد أقصى
+      try { localStorage.setItem(k, String(Date.now())); } catch (_) {}
+      pushNotif(MOTIVATION_MSGS[Math.floor(Math.random() * MOTIVATION_MSGS.length)], "motivation");
+    }
+    function checkStreakAlerts() {
+      if (!currentStudent || !isActivatedValue(currentStudent.code)) return;
+      const k = "streak_sent_" + currentStudent.phone; let sent = [];
+      try { sent = JSON.parse(localStorage.getItem(k) || "[]"); } catch (_) {}
+      let changed = false;
+      SUBJECT_CARDS.filter((c) => !c.forum).forEach((c) => {
+        const ls = subjectLectures(c), total = ls.length; if (total < 2) return;
+        const left = total - ls.filter((l) => attendanceRecords[l.id]).length;
+        const tag = c.tab + ":" + total + ":" + left;
+        if (left === 1 && !sent.includes(tag)) { sent.push(tag); changed = true; pushNotif(`فاضلك محاضرة واحدة وتكمل فصل ${c.short}!`, "streak"); }
+        else if (left === 0 && !sent.includes(tag)) { sent.push(tag); changed = true; pushNotif(`ما شاء الله! أتممت كل محاضرات ${c.short} 🎉`, "streak"); }
+      });
+      if (changed) { try { localStorage.setItem(k, JSON.stringify(sent.slice(-60))); } catch (_) {} }
+    }
+
+    // ---------- 3) صفحة الحساب: بطاقات الإحصاء التفاعلية ----------
+    function profileStats() {
+      const ids = SUBJECTS.flatMap((x) => visibleFor(x)).map((l) => l.id), total = ids.length;
+      const done = ids.filter((id) => attendanceRecords[id]).length;
+      const extra = Object.keys(attendanceRecords).filter((k) => /^(hw_|pdf_|exam_)/.test(k) && attendanceRecords[k]).length;
+      return { done: done, pct: total ? Math.round((done / total) * 100) : 0, extra: extra, courses: COURSES.filter((c) => c.isActive(currentStudent)).length };
+    }
+    const STAT_DEFS = [["done", "✅", "محاضرات أتممتها", ""], ["pct", "📈", "نسبة التقدم", "%"], ["extra", "📝", "واجبات وملفات وامتحانات", ""], ["courses", "🎓", "كورسات مشترك بها", ""]];
+    function accStatsHTML() {
+      return `<div class="acc-stats">${STAT_DEFS.map((d, i) => `<div class="stat-card" data-stat="${d[0]}" style="animation-delay:${i * 80}ms"><span class="st-ico">${d[1]}</span><span class="st-val" data-suffix="${d[3]}">0${d[3]}</span><span class="st-lbl">${d[2]}</span></div>`).join("")}</div>`;
+    }
+    function enrolledCoursesText() {
+      const on = COURSES.filter((c) => c.isActive(currentStudent)).map((c) => escapeHtml(c.title));
+      return on.length ? on.join("، ") : "لا يوجد اشتراك مفعّل";
+    }
+    function countUp(el, to, suffix) {
+      const from = Number(el.dataset.v || 0), t0 = performance.now(), dur = 700;
+      el.dataset.v = to;
+      (function step(now) {
+        const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(from + (to - from) * e) + suffix;
+        if (p < 1) requestAnimationFrame(step);
+      })(t0);
+    }
+    function animateStats() { const st = profileStats(); document.querySelectorAll(".stat-card").forEach((c) => countUp(c.querySelector(".st-val"), st[c.dataset.stat], c.querySelector(".st-val").dataset.suffix)); }
+    function refreshProfileStats() { // يُحدّث الأرقام لحظياً مع نبضة صغيرة عند تغيّرها (مثلاً بعد فتح محاضرة)
+      if (accMode !== "view") return;
+      const st = profileStats();
+      document.querySelectorAll(".stat-card").forEach((c) => {
+        const v = c.querySelector(".st-val");
+        if (Number(v.dataset.v) !== st[c.dataset.stat]) { countUp(v, st[c.dataset.stat], v.dataset.suffix); c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); }
+      });
+    }
+
+    // ---------- 4) امتحانات: دالة جاهزة تُستدعى عند فتح/إنهاء أي امتحان (الواجب والـ PDF تُسجَّل تلقائياً) ----------
+    function markExamDone(examId) { markItemDone("exam_" + examId); }
+
+    // ---------- 5) رفع PDF من لوحة الأدمن (يرسل الملف للسيرفر ويستلم رابطاً) ----------
+    // يتطلب إجراء "uploadPdf" في سكريبت المحاضرات — انظر الملف apps-script-uploadPdf.gs المرفق
+    const PDF_MAX_BYTES = 8 * 1024 * 1024;
+    function fileToBase64(file) {
+      return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = () => rej(new Error("read")); r.readAsDataURL(file); });
+    }
+    async function adminUploadPdf(file) {
+      if (!/\.pdf$/i.test(file.name) || (file.type && file.type !== "application/pdf")) return { ok: false, msg: "الملف المختار ليس PDF." };
+      if (file.size > PDF_MAX_BYTES) return { ok: false, msg: "حجم الـ PDF أكبر من 8 ميجا. استخدم رابطاً بدلاً من الرفع." };
+      let data; try { data = await fileToBase64(file); } catch (_) { return { ok: false, msg: "تعذر قراءة الملف." }; }
+      const r = await adminCall({ action: "uploadPdf", fileName: file.name.slice(0, 100), mimeType: "application/pdf", data: data });
+      if (!r) return { ok: false, msg: "" }; // انتهت الجلسة: ظهرت شاشة الدخول
+      if (r.type === "ok" && r.data && r.data.url) return { ok: true, url: r.data.url };
+      return { ok: false, msg: "تعذر رفع الملف. تأكد أن السيرفر يدعم الإجراء uploadPdf أو استخدم رابط PDF." };
+    }
+
+    // ---------- 6) صوت نقرة عام على كل الأزرار والبطاقات (مع مفتاح كتم 🔊) ----------
+    document.addEventListener("click", (e) => {
+      const el = e.target.closest && e.target.closest("button,.btn-open-lecture,.btn-homework,.btn-subscribe,.subject-card,.course-card");
+      if (el && !el.disabled) { try { sfxClick(); } catch (_) {} }
+    }, true);
+
+    window.addEventListener("load", () => {
+      updateSfxBtn();
+      setTimeout(maybeMotivate, 20000);
+      setInterval(maybeMotivate, 15 * 60 * 1000);
+    });
   </script>
 </body>
 </html>
