@@ -1095,7 +1095,170 @@
     .lecture-card:hover{box-shadow:0 8px 20px rgba(0,0,0,.15)}
     @media (prefers-reduced-motion: reduce){.subject-card,.stat-card,.notif-item.new,.acc-pic{animation:none!important;transition:none!important}}
     @media (max-width:560px){.subject-grid{grid-template-columns:1fr}.subject-banner{min-height:150px}}
+
+    /* ============================================================
+       [NEW v3] 3D tactile buttons + micro-interactions
+       ============================================================ */
+    .btn-3d{position:relative;transform:translateY(0);
+      box-shadow:0 4px 0 rgba(0,0,0,.28),0 6px 14px rgba(0,0,0,.20);
+      transition:transform .13s cubic-bezier(.34,1.2,.64,1),box-shadow .13s ease,filter .18s ease;}
+    .btn-3d:hover{transform:translateY(-3px);
+      box-shadow:0 7px 0 rgba(0,0,0,.24),0 12px 22px rgba(0,0,0,.24),0 0 18px rgba(255,179,0,.28);
+      filter:brightness(1.05);}
+    .btn-3d:active{transform:translateY(3px);
+      box-shadow:0 1px 0 rgba(0,0,0,.32),0 2px 5px rgba(0,0,0,.22);
+      filter:brightness(.96);}
+    .btn-3d:active::after{content:"";position:absolute;inset:0;border-radius:inherit;
+      background:radial-gradient(circle at 50% 120%,rgba(255,255,255,.25),transparent 60%);}
+    .btn-3d-glow{overflow:hidden;}
+    .btn-3d-glow::before{content:"";position:absolute;top:0;left:-80%;width:50%;height:100%;
+      background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);
+      transform:skewX(-20deg);transition:left .5s ease;pointer-events:none;}
+    .btn-3d-glow:hover::before{left:130%;}
+    /* تطبيق التأثير على الأزرار الموجودة دون تغيير بنيتها */
+    .btn-submit,.btn-open-lecture,.btn-homework,.btn-subscribe,.btn-activate-code,
+    .btn-admin,.btn-logout,.btn-confirm-attendance,.acc-back,.sub-btn,
+    .support-main-btn,.icon-btn,.la-close,.mini-btn,.pv-close-btn,.pv-full-btn{transform:translateY(0);
+      box-shadow:0 3px 0 rgba(0,0,0,.26),0 5px 12px rgba(0,0,0,.16);
+      transition:transform .13s cubic-bezier(.34,1.2,.64,1),box-shadow .13s ease,filter .18s ease;}
+    .btn-submit:hover,.btn-open-lecture:hover,.btn-homework:hover,.btn-subscribe:hover,.btn-activate-code:hover,
+    .btn-admin:hover,.btn-confirm-attendance:hover,.acc-back:hover,.sub-btn:hover,
+    .support-main-btn:hover,.icon-btn:hover{transform:translateY(-3px);
+      box-shadow:0 6px 0 rgba(0,0,0,.22),0 10px 20px rgba(0,0,0,.22),0 0 16px rgba(255,179,0,.25);
+      filter:brightness(1.05);}
+    .btn-submit:active,.btn-open-lecture:active,.btn-homework:active,.btn-subscribe:active,.btn-activate-code:active,
+    .btn-admin:active,.btn-logout:active,.btn-confirm-attendance:active,.acc-back:active,.sub-btn:active,
+    .support-main-btn:active,.icon-btn:active,.la-close:active,.mini-btn:active{transform:translateY(2px);
+      box-shadow:0 1px 0 rgba(0,0,0,.30),0 2px 5px rgba(0,0,0,.20);filter:brightness(.96);}
+    .btn-confirm-attendance:disabled,.btn-submit:disabled,.btn-subscribe:disabled{transform:none;
+      box-shadow:0 2px 0 rgba(0,0,0,.12);filter:none;cursor:not-allowed;}
+    .tab-btn{transform:translateY(0);box-shadow:0 2px 0 rgba(0,0,0,.10);
+      transition:transform .13s ease,box-shadow .13s ease,color .2s;}
+    .tab-btn:hover{transform:translateY(-2px);}
+    .tab-btn:active{transform:translateY(2px);box-shadow:none;}
+
+    /* ============================================================
+       [NEW v3] Weekly Schedule Module (جدولي الأسبوعي)
+       ============================================================ */
+    .sched-wrap{display:flex;flex-direction:column;gap:16px;}
+    .sched-hero{background:linear-gradient(135deg,#0d3b12,#1b5e20 60%,#2e7d32);color:#fff;border-radius:16px;
+      padding:22px 20px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
+      box-shadow:0 8px 24px rgba(0,0,0,.25);position:relative;overflow:hidden;}
+    .sched-hero::after{content:"";position:absolute;width:200px;height:200px;border-radius:50%;
+      background:rgba(255,255,255,.07);top:-70px;left:-50px;}
+    .sched-hero h3{font-size:20px;position:relative;z-index:1;}
+    .sched-hero p{opacity:.9;font-size:13px;margin-top:4px;position:relative;z-index:1;}
+    .sched-hero-actions{display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1;}
+    .sched-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--card-bg);
+      border:1px solid var(--border-color);border-radius:14px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.10);}
+    .sched-title-input{flex:1;min-width:180px;padding:11px 14px;border:2px solid var(--border-color);border-radius:10px;
+      font-size:15px;font-weight:700;background:transparent;color:var(--text-color);outline:none;
+      transition:border-color .2s,box-shadow .2s;}
+    .sched-title-input:focus{border-color:#2e7d32;box-shadow:0 0 0 4px rgba(46,125,50,.15);}
+    .sched-days{display:flex;flex-direction:column;gap:16px;}
+    .sched-day{background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;padding:14px;
+      box-shadow:0 6px 20px rgba(0,0,0,.10);display:flex;flex-direction:column;gap:8px;}
+    .sched-day.today{border:2px solid #ffb300;box-shadow:0 0 0 4px rgba(255,179,0,.15),0 8px 24px rgba(0,0,0,.14);}
+    .sched-day-head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--border-color);
+      padding-bottom:8px;}
+    .sched-day-name{font-weight:800;font-size:16px;color:var(--primary-color);display:flex;align-items:center;gap:8px;}
+    .sched-today-badge{font-size:11px;background:#ffb300;color:#333;border-radius:12px;padding:2px 10px;font-weight:800;}
+    .sched-progress{font-size:12px;font-weight:700;color:#666;}
+    .sched-day-complete{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--success-color);
+      background:var(--success-bg);border-radius:8px;padding:6px 10px;}
+    .sched-entry{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;
+      background:rgba(0,0,0,.03);border:1px solid var(--border-color);animation:fadeUp .3s ease;}
+    .sched-entry.done{opacity:.75;background:var(--success-bg);border-color:transparent;}
+    .sched-entry.done .sched-name{text-decoration:line-through;}
+    .sched-check{width:21px;height:21px;cursor:pointer;flex:none;accent-color:#2e7d32;}
+    .sched-entry-main{flex:1;min-width:0;}
+    .sched-name{font-weight:700;font-size:14px;}
+    .sched-lesson{font-size:12px;color:#888;margin-top:2px;}
+    .sched-done-at{font-size:11px;color:var(--success-color);font-weight:700;margin-top:3px;}
+    .sched-time{font-size:12px;font-weight:800;background:var(--primary-color);color:#fff;border-radius:12px;
+      padding:3px 9px;flex:none;direction:ltr;}
+    .sched-entry-tools{display:flex;gap:4px;flex:none;}
+    .mini-btn{width:27px;height:27px;border-radius:8px;border:none;background:rgba(0,0,0,.08);color:inherit;
+      cursor:pointer;font-size:12px;display:inline-flex;align-items:center;justify-content:center;
+      box-shadow:0 2px 0 rgba(0,0,0,.15);transition:transform .12s,background .15s;}
+    .mini-btn:hover{background:rgba(0,0,0,.16);transform:translateY(-1px);}
+    .mini-btn:active{transform:translateY(2px);box-shadow:none;}
+    .mini-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+    .sched-add{display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:8px;margin-top:6px;align-items:stretch;}
+    .sched-add .sched-add-btn{grid-column:auto!important;padding:10px 18px!important;white-space:nowrap;}
+    @media (max-width:640px){
+      .sched-add{grid-template-columns:1fr 110px;}
+      .sched-add .sched-add-btn{grid-column:1/-1!important;}
+    }
+    .sched-add input{padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:13px;
+      background:transparent;color:inherit;outline:none;}
+    .sched-add input:focus{border-color:#2e7d32;}
+    .sched-add .full{grid-column:auto;}
+    @media (max-width:640px){.sched-add .full{grid-column:1/-1;}}
+    [data-theme="dark"] .sched-entry{background:rgba(255,255,255,.04);}
+    [data-theme="dark"] .mini-btn{background:rgba(255,255,255,.10);}
+    /* أزرار الإجراءات الكبيرة أسفل الصفحة */
+    .sched-bottom{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px;}
+    .sched-big-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:104px;
+      padding:18px 12px;border:none;border-radius:18px;color:#fff;font-family:inherit;font-size:20px;font-weight:800;cursor:pointer;
+      box-shadow:0 6px 0 rgba(0,0,0,.22),0 12px 24px rgba(0,0,0,.18);}
+    .sched-big-btn .sb-ico{font-size:38px;line-height:1;}
+    .sched-big-btn small{font-size:12px;font-weight:600;opacity:.9;}
+    .sched-big-btn:focus-visible{outline:4px solid #ffb300;outline-offset:3px;}
+    .sched-big-btn.pdf{background:linear-gradient(135deg,#0b3d5c,#1a73e8);}
+    .sched-big-btn.logs{background:linear-gradient(135deg,#0d3b12,#2e7d32);}
+    .sched-big-btn.fresh{background:linear-gradient(135deg,#b26a00,#ffb300);color:#2b2000;}
+    @media (max-width:640px){
+      .sched-bottom{grid-template-columns:1fr;}
+      .sched-big-btn{flex-direction:row;min-height:72px;gap:14px;font-size:19px;}
+      .sched-big-btn .sb-ico{font-size:32px;}
+      .sched-big-btn small{display:none;}
+    }
+    /* بطاقة الجدول في شبكة المواد */
+    .sched-card-banner{background:linear-gradient(135deg,#1a237e,#3949ab)!important;}
+
+    /* نافذة سجلات الجداول */
+    .arch-ver{border:1px solid var(--border-color);border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+    .arch-ver summary{cursor:pointer;font-weight:700;color:var(--primary-color);font-size:14px;}
+    .arch-ver .arch-body{margin-top:8px;font-size:13px;line-height:1.9;}
+
+    /* شريط التذكير الذكي بالمهمة التالية */
+    #schedPrompt{position:fixed;bottom:96px;left:50%;transform:translate(-50%,20px);z-index:4500;
+      max-width:min(460px,calc(100vw - 24px));background:linear-gradient(135deg,#0d3b12,#1b5e20);color:#fff;
+      border:2px solid #ffb300;border-radius:16px;padding:13px 16px;font-size:14px;font-weight:700;line-height:1.7;
+      box-shadow:0 10px 30px rgba(0,0,0,.4);display:none;gap:10px;align-items:center;
+      transition:transform .4s cubic-bezier(.2,.9,.3,1.2),opacity .3s;opacity:0;cursor:pointer;}
+    #schedPrompt.show{display:flex;transform:translate(-50%,0);opacity:1;animation:popIn .35s;}
+    #schedPrompt .sp-close{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:26px;height:26px;
+      cursor:pointer;flex:none;font-size:13px;}
+
+    /* ============================================================
+       [NEW v3] PDF / Print layout for schedule export
+       ============================================================ */
+    #printArea{display:none;}
+    @media print{
+      @page{size:A4;margin:12mm;}
+      body>*:not(#printArea){display:none!important;}
+      body::before{display:none!important;}
+      #printArea{display:block!important;direction:rtl;color:#000;background:#fff;
+        font-family:'Segoe UI',Tahoma,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+      .pr-head{display:flex;align-items:center;gap:10px;font-size:20pt;
+        border-bottom:3px solid #1b5e20;padding-bottom:8px;margin-bottom:14px;}
+      .pr-head img{height:1.3em;width:1.3em;object-fit:cover;border-radius:50%;border:2px solid #d4af37;}
+      .pr-brand{font-weight:800;color:#1b5e20;font-size:1em;line-height:1.2;}
+      .pr-title{font-size:.55em;color:#444;font-weight:600;}
+      .pr-meta{font-size:.45em;color:#666;margin-bottom:10px;}
+      .pr-table{width:100%;border-collapse:collapse;font-size:10.5pt;margin-bottom:10px;}
+      .pr-table th{background:#e8f5e9!important;color:#1b5e20;border:1px solid #9e9e9e;padding:6px 8px;text-align:right;}
+      .pr-table td{border:1px solid #bdbdbd;padding:6px 8px;text-align:right;}
+      .pr-day-row td{background:#f1f8e9!important;font-weight:800;color:#1b5e20;font-size:11pt;}
+      .pr-done{color:#2e7d32;font-weight:800;}
+      .pr-pending{color:#9e9e9e;}
+      .pr-foot{margin-top:14px;font-size:8.5pt;color:#777;text-align:center;border-top:1px solid #ccc;padding-top:8px;}
+    }
+
   </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -1122,7 +1285,7 @@
           <div class="dropdown" id="profileMenu"><button onclick="openAccount()">👤 الحساب</button><button onclick="logout()" style="color:#c62828">🚪 تسجيل الخروج</button></div>
         </div>
         <button class="btn-admin" id="adminBtn" style="display:none" onclick="openAdminPanel()">⚙️ لوحة التحكم</button>
-        <button class="btn-activate-code" onclick="openCodeModal()">🔑 تفعيل كود</button>
+                <button class="btn-activate-code" onclick="openCodeModal()">🔑 تفعيل كود</button>
       </div>
     </div>
   </header>
@@ -1168,6 +1331,11 @@
       <div id="revTafseer" class="sub-content"><div id="revTafseerContainer"></div></div>
       <div id="revHadith" class="sub-content"><div id="revHadithContainer"></div></div>
       <div id="revFiqh" class="sub-content"><div id="revFiqhContainer"></div></div>
+    </div>
+
+    <div id="scheduleTab" class="tab-content">
+      <h2 class="section-title">جدولي الأسبوعي</h2>
+      <div id="scheduleContainer"></div>
     </div>
 
     <div id="forumTab" class="tab-content">
@@ -2041,7 +2209,7 @@
 
 
     // ======================= الكورسات والعرض والوضع الليلي =======================
-    // لإضافة كورس جديد: أضف عنصراً هنا. isActive يحدد هل الطالب مشترك (يمكن ربطه بحقل آخر مستقبلاً).
+    // لإضافة كورس جديد: أضف عنصراً هنا (بطاقة «جدولي الأسبوعي» تظهر تلقائياً داخل أي كورس جديد ولها جدول مستقل لكل كورس). isActive يحدد هل الطالب مشترك (يمكن ربطه بحقل آخر مستقبلاً).
     // ولجعل محاضرة خاصة بكورس معيّن اكتب في المحاضرة اليدوية: courses: ["term1"]  (بدونها تظهر في كل الكورسات)
     const COURSES = [
       { id: "term1", icon: "📖", title: "كورس الترم الأول", sub: "منصة الشافعي الصغير", desc: "التوحيد • التفسير • الفقه • الحديث • المراجعات • المنتدى",
@@ -3732,5 +3900,253 @@
       setInterval(maybeMotivate, 15 * 60 * 1000);
     });
   </script>
+  <script>
+    // ============================================================
+    // ============ [NEW v3] Weekly Schedule Module ============
+    // ============================================================
+    const SCHED_DAYS = [["sat","السبت"],["sun","الأحد"],["mon","الاثنين"],["tue","الثلاثاء"],["wed","الأربعاء"],["thu","الخميس"],["fri","الجمعة"]];
+    const SCHED_MAX_PER_DAY = 100;
+    const LOGO_URL = "https://lh3.googleusercontent.com/d/11cx_kG09s3PtT70TFoBZ2S8yw_WvIOkD";
+
+    // كل كورس له جدوله الخاص تلقائياً (الكورس الأول يحتفظ بالمفتاح القديم حتى لا تضيع جداول الطلاب الحالية)
+    const schedKey = () => "sched_" + (currentStudent ? currentStudent.phone : "guest")
+      + ((typeof currentCourse !== "undefined" && currentCourse !== COURSES[0].id) ? "_" + currentCourse : "");
+    const schedArchiveKey = () => schedKey() + "_archive";
+    const schedDismissKey = () => schedKey() + "_dismissed";
+
+    function getSchedule() { try { return JSON.parse(localStorage.getItem(schedKey()) || "null"); } catch (_) { return null; } }
+    function saveSchedule(s) { s.updatedAt = Date.now(); try { localStorage.setItem(schedKey(), JSON.stringify(s)); } catch (_) {}
+      // سجل تخزين على السيرفر (أفضل جهد — لا يعطل العمل لو تعذّر)
+      try { if (currentStudent && typeof callScript === "function") callScript(GOOGLE_SCRIPT_URL, { action: "logSchedule", studentPhone: currentStudent.phone, course: currentCourse, schedule: s }); } catch (_) {} }
+    function getSchedArchive() { try { return JSON.parse(localStorage.getItem(schedArchiveKey()) || "[]"); } catch (_) { return []; } }
+    function archiveSchedule() {
+      const s = getSchedule(); if (!s) return;
+      const a = getSchedArchive(); a.unshift({ at: Date.now(), title: s.title, days: s.days });
+      try { localStorage.setItem(schedArchiveKey(), JSON.stringify(a.slice(0, 30))); } catch (_) {} }
+
+    const newSchedule = () => { const d = {}; SCHED_DAYS.forEach(([k]) => { d[k] = []; }); return { title: "جدولي الأسبوعي", days: d, createdAt: Date.now(), updatedAt: Date.now() }; };
+    const schedUid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const schedTodayKey = () => { try { return cairoDayKey(); } catch (_) { return new Date().toISOString().slice(0, 10); } };
+    const fmtSchedTime = (ts) => new Date(ts).toLocaleTimeString("ar-EG", { hour: "numeric", minute: "2-digit", timeZone: "Africa/Cairo" });
+
+    // يحدد مفتاح اليوم الحالي (بتوقيت القاهرة) للتمييز البصري
+    function todayDayCode() {
+      try {
+        const w = new Intl.DateTimeFormat("en-US", { timeZone: "Africa/Cairo", weekday: "short" }).format(new Date());
+        return { Sat: "sat", Sun: "sun", Mon: "mon", Tue: "tue", Wed: "wed", Thu: "thu", Fri: "fri" }[w] || "";
+      } catch (_) { return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][new Date().getDay()]; }
+    }
+
+    // ---------- الواجهة ----------
+    function schedLockedHTML() {
+      return `<div class="lecture-card locked" style="text-align:center;padding:30px;">
+        <h3>🔒 الجدول الأسبوعي</h3>
+        <p style="margin:14px 0;color:#555;">فعّل كود الكورس أولاً لكي تتمكن من إنشاء جدولك الأسبوعي وتتبع إنجازك.</p>
+        <button class="btn-activate-code" style="padding:10px 22px;font-size:15px;" onclick="openCodeModal()">🔑 تفعيل كود الآن</button></div>`; }
+
+    function schedEntryHTML(day, e, i, total) {
+      return `<div class="sched-entry ${e.done ? "done" : ""}">
+        <input type="checkbox" class="sched-check" ${e.done ? "checked" : ""} onchange="schedToggle('${day}','${e.id}')" title="علّم كمكتمل">
+        <div class="sched-entry-main">
+          <div class="sched-name">${i + 1}. ${escapeHtml(e.name)}</div>
+          ${e.lesson ? `<div class="sched-lesson">📖 ${escapeHtml(e.lesson)}</div>` : ""}
+          ${e.done && e.doneAt ? `<div class="sched-done-at">✅ أتممتها ${fmtSchedTime(e.doneAt)}</div>` : ""}
+        </div>
+        ${e.time ? `<span class="sched-time">${escapeHtml(e.time)}</span>` : ""}
+        <div class="sched-entry-tools">
+          <button class="mini-btn" onclick="schedMove('${day}','${e.id}',-1)" title="أولوية أعلى" ${i === 0 ? "disabled" : ""}>▲</button>
+          <button class="mini-btn" onclick="schedMove('${day}','${e.id}',1)" title="أولوية أقل" ${i === total - 1 ? "disabled" : ""}>▼</button>
+          <button class="mini-btn" onclick="schedDel('${day}','${e.id}')" title="حذف">🗑</button>
+        </div></div>`; }
+
+    function schedDayHTML(code, name, list, isToday) {
+      const done = list.filter((e) => e.done).length, total = list.length, allDone = total > 0 && done === total;
+      const lastAt = allDone ? Math.max.apply(null, list.map((e) => e.doneAt || 0)) : 0;
+      return `<div class="sched-day ${isToday ? "today" : ""}">
+        <div class="sched-day-head">
+          <span class="sched-day-name">${isToday ? '<span class="sched-today-badge">اليوم</span>' : ""} ${name}</span>
+          <span class="sched-progress">${total ? done + "/" + total + (allDone ? " ✅" : "") : "لا توجد مواد"}</span>
+        </div>
+        ${allDone ? `<div class="sched-day-complete">🏁 أتممت كل مهام اليوم في ${fmtSchedTime(lastAt)}</div>` : ""}
+        ${list.map((e, i) => schedEntryHTML(code, e, i, total)).join("")}
+        <div class="sched-add">
+          <input id="sn-${code}" placeholder="اسم المادة" maxlength="60">
+          <input id="st-${code}" type="time" title="الوقت المفضل">
+          <input id="sl-${code}" class="full" placeholder="اسم الدرس (اختياري)" maxlength="80">
+          <button class="btn-submit btn-3d btn-3d-glow sched-add-btn" style="grid-column:1/-1;padding:10px;font-size:14px;" onclick="schedAdd('${code}')">➕ إضافة المادة</button>
+        </div></div>`; }
+
+    function renderSchedule() {
+      const c = document.getElementById("scheduleContainer"); if (!c) return;
+      const ok = currentStudent && isActivatedValue(currentStudent.code);
+      if (!ok) { c.innerHTML = schedLockedHTML(); return; }
+      let s = getSchedule();
+      if (!s) {
+        c.innerHTML = `<div class="sched-wrap"><div class="sched-hero">
+          <div><h3>🗓️ اعمل جدولك الأسبوعي</h3><p>نظّم مذاكرتك: أضف موادك بأوقاتها، علّم على إنجازك يومياً، واطبع جدولك PDF.</p></div>
+          <div class="sched-hero-actions"><button class="btn-activate-code btn-3d" style="padding:12px 26px;font-size:15px;" onclick="schedCreate()">🚀 ابدأ الآن</button></div>
+        </div></div>`;
+        return; }
+      const td = todayDayCode();
+      c.innerHTML = `<div class="sched-wrap">
+        <div class="sched-hero">
+          <div><h3>🗓️ ${escapeHtml(s.title)}</h3><p>آخر تعديل: ${new Date(s.updatedAt).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Cairo" })}</p></div>
+        </div>
+        <div class="sched-toolbar">
+          <input class="sched-title-input" id="schedTitleInput" value="${escapeHtml(s.title)}" maxlength="60" placeholder="اسم الجدول">
+          <button class="btn-submit btn-3d btn-3d-glow" style="width:auto;padding:11px 20px;font-size:14px;" onclick="schedSaveTitle()">💾 حفظ الاسم</button>
+        </div>
+        <div class="sched-days">${SCHED_DAYS.map(([k, n]) => schedDayHTML(k, n, s.days[k] || [], k === td)).join("")}</div>
+        <div class="sched-bottom">
+          <button type="button" class="sched-big-btn pdf" onclick="exportSchedulePDF()"><span class="sb-ico">🖨️</span>إخراج PDF<small>اطبع جدولك أو احفظه</small></button>
+          <button type="button" class="sched-big-btn logs" onclick="openSchedArchive()"><span class="sb-ico">🗂️</span>سجلات الجداول<small>راجع نسخك السابقة</small></button>
+          <button type="button" class="sched-big-btn fresh" onclick="schedReset()"><span class="sb-ico">🧹</span>جدول جديد<small>أرشف الحالي وابدأ من جديد</small></button>
+        </div>
+      </div>`; }
+
+    // ---------- العمليات ----------
+    function schedCreate() { saveSchedule(newSchedule()); renderSchedule(); schedDailyNotify(true); }
+    function schedReset() { if (!confirm("سيتم أرشفة الجدول الحالي والبدء بجدول جديد. متابعة؟")) return; archiveSchedule(); saveSchedule(newSchedule()); renderSchedule(); }
+    function schedSaveTitle() { const s = getSchedule(); if (!s) return; const t = cleanText(document.getElementById("schedTitleInput").value); if (t) { archiveSchedule(); s.title = t; saveSchedule(s); pushNotif("تم حفظ جدولك الأسبوعي بنجاح ✅", "system", { silent: true }); } renderSchedule(); }
+    function schedAdd(day) {
+      const s = getSchedule(); if (!s) return;
+      const name = cleanText(document.getElementById("sn-" + day).value);
+      if (!name) { alert("اكتب اسم المادة أولاً."); return; }
+      const list = s.days[day] || (s.days[day] = []);
+      if (list.length >= SCHED_MAX_PER_DAY) { alert("وصلت للحد الأقصى (" + SCHED_MAX_PER_DAY + " مادة في اليوم)."); return; }
+      list.push({ id: schedUid(), name, lesson: cleanText(document.getElementById("sl-" + day).value), time: document.getElementById("st-" + day).value, done: false, doneAt: null });
+      saveSchedule(s); renderSchedule(); updateSchedPrompt(); }
+    function schedToggle(day, id) {
+      const s = getSchedule(); if (!s) return;
+      const e = (s.days[day] || []).find((x) => x.id === id); if (!e) return;
+      e.done = !e.done; e.doneAt = e.done ? Date.now() : null;
+      saveSchedule(s); renderSchedule(); updateSchedPrompt(); schedDailyNotify(false);
+      const today = s.days[day] || [];
+      if (e.done && day === todayDayCode() && today.length && today.every((x) => x.done))
+        pushNotif("🎉 ما شاء الله! أتممت كل مهام جدول اليوم. استمر أنت عظيم!", "streak"); }
+    function schedDel(day, id) { const s = getSchedule(); if (!s || !confirm("حذف هذه المادة من الجدول؟")) return; s.days[day] = (s.days[day] || []).filter((x) => x.id !== id); saveSchedule(s); renderSchedule(); updateSchedPrompt(); }
+    function schedMove(day, id, dir) {
+      const s = getSchedule(); if (!s) return; const l = s.days[day] || []; const i = l.findIndex((x) => x.id === id);
+      const j = i + dir; if (i < 0 || j < 0 || j >= l.length) return;
+      const t = l[i]; l[i] = l[j]; l[j] = t; saveSchedule(s); renderSchedule(); }
+
+    // ---------- سجل الجداول ----------
+    let schedArchModal = null;
+    function openSchedArchive() {
+      if (!schedArchModal) {
+        schedArchModal = document.createElement("div"); schedArchModal.className = "modal-overlay"; schedArchModal.style.display = "none";
+        schedArchModal.innerHTML = `<div class="modal-content"><h3 class="modal-title">🗂️ سجلات الجداول السابقة</h3>
+          <div id="schedArchList" style="max-height:55vh;overflow:auto;"></div>
+          <button class="btn-submit btn-3d" style="background:#757575;margin-top:8px" onclick="schedArchModal.style.display='none'">إغلاق</button></div>`;
+        document.body.appendChild(schedArchModal); }
+      const a = getSchedArchive();
+      document.getElementById("schedArchList").innerHTML = a.length ? a.map((v, i) => {
+        const n = Object.values(v.days || {}).reduce((x, l) => x + l.length, 0);
+        const rows = SCHED_DAYS.map(([k, nm]) => { const l = (v.days && v.days[k]) || []; return l.length ? `<b>${nm}:</b> ${l.map((e) => escapeHtml(e.name) + (e.time ? " (" + e.time + ")" : "")).join("، ")}` : ""; }).filter(Boolean).join("<br>");
+        return `<details class="arch-ver"><summary>${new Date(v.at).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Cairo" })} — ${escapeHtml(v.title)} (${n} مادة)</summary><div class="arch-body">${rows || "جدول فارغ"}</div></details>`;
+      }).join("") : '<p style="text-align:center;color:#777;padding:16px;">لا توجد نسخ مؤرشفة بعد — يتم الأرشفة تلقائياً عند كل تعديل.</p>';
+      schedArchModal.style.display = "flex"; }
+
+    // ---------- الإشعارات الذكية ----------
+    function schedDailyNotify(force) {
+      if (!currentStudent || !isActivatedValue(currentStudent.code)) return;
+      const s = getSchedule(); if (!s) return;
+      const list = s.days[todayDayCode()] || []; if (!list.length) return;
+      const k = schedKey() + "_greet_" + schedTodayKey();
+      if (!force && localStorage.getItem(k)) return;
+      try { localStorage.setItem(k, "1"); } catch (_) {}
+      const quotes = ["استمر أنت عظيم 💪", "خطوة كل يوم تصنع فرقاً كبيراً 🌟", "العلم نور، وربنا مع الصابرين 🤍"];
+      pushNotif(`🗓️ ${quotes[Math.floor(Math.random() * quotes.length)]} — ابدأ جدولك اليومي: عندك ${list.length} ${list.length === 1 ? "مادة" : "مواد"} النهاردة.`, "motivation"); }
+
+    // شريط المهمة التالية المعلّقة
+    let schedPromptEl = null, schedPromptHide = {};
+    function updateSchedPrompt() {
+      if (!schedPromptEl) { schedPromptEl = document.createElement("div"); schedPromptEl.id = "schedPrompt"; document.body.appendChild(schedPromptEl); }
+      const ok = currentStudent && isActivatedValue(currentStudent.code);
+      const s = ok ? getSchedule() : null;
+      const list = s ? (s.days[todayDayCode()] || []) : [];
+      const next = list.find((e) => !e.done);
+      if (!next) { schedPromptEl.classList.remove("show"); return; }
+      const dk = schedKey() + "_dismissed_" + schedTodayKey();
+      let dis = {}; try { dis = JSON.parse(sessionStorage.getItem(dk) || "{}"); } catch (_) {}
+      if (dis[next.id]) { schedPromptEl.classList.remove("show"); return; }
+      schedPromptEl.innerHTML = `<span>📌 أنت لسه ما خلصتش «${escapeHtml(next.name)}»${next.time ? " (الساعة " + escapeHtml(next.time) + ")" : ""} — لو خلصتها ادخل علّم عليها! 💪</span>
+        <button class="sp-close" onclick="event.stopPropagation();dismissSchedPrompt('${next.id}')" title="إخفاء">✕</button>`;
+      schedPromptEl.onclick = (ev) => { if (ev.target.closest(".sp-close")) return; openSubject("scheduleTab"); renderSchedule(); };
+      schedPromptEl.classList.add("show"); }
+    function dismissSchedPrompt(id) {
+      const dk = schedKey() + "_dismissed_" + schedTodayKey(); let dis = {};
+      try { dis = JSON.parse(sessionStorage.getItem(dk) || "{}"); } catch (_) {}
+      dis[id] = 1; try { sessionStorage.setItem(dk, JSON.stringify(dis)); } catch (_) {}
+      updateSchedPrompt(); }
+
+    // ---------- تصدير PDF ----------
+    function exportSchedulePDF() {
+      const s = getSchedule();
+      const total = s ? Object.values(s.days).reduce((a, l) => a + l.length, 0) : 0;
+      if (!s || !total) { alert("الجدول فارغ — أضف موادك أولاً."); return; }
+      const old = document.getElementById("printArea"); if (old) old.remove();
+      const pa = document.createElement("div"); pa.id = "printArea";
+      const rows = SCHED_DAYS.map(([k, nm]) => {
+        const l = (s.days[k] || []).filter((e) => e.name);
+        if (!l.length) return "";
+        const body = l.map((e, i) => `<tr><td>${i + 1}</td><td>${escapeHtml(e.name)}</td><td>${escapeHtml(e.lesson || "—")}</td><td>${e.time ? escapeHtml(e.time) : "—"}</td><td class="${e.done ? "pr-done" : "pr-pending"}">${e.done ? "✓ تم" : "—"}</td></tr>`).join("");
+        return `<tr class="pr-day-row"><td colspan="5">${nm}</td></tr>${body}`;
+      }).join("");
+      pa.innerHTML = `<div class="pr-head"><img src="${LOGO_URL}" alt=""><div><div class="pr-brand">منصة الشافعي الصغير</div><div class="pr-title">${escapeHtml(s.title)}</div></div></div>
+        <div class="pr-meta">تاريخ الإخراج: ${new Date().toLocaleDateString("ar-EG", { dateStyle: "full", timeZone: "Africa/Cairo" })}</div>
+        <table class="pr-table"><thead><tr><th>#</th><th>المادة</th><th>الدرس</th><th>الوقت</th><th>الحالة</th></tr></thead><tbody>${rows}</tbody></table>
+        <div class="pr-foot">منصة الشافعي الصغير — إعداد أ. أبو بكر الشافعي</div>`;
+      document.body.appendChild(pa);
+      const cleanup = () => { pa.remove(); window.removeEventListener("afterprint", cleanup); };
+      window.addEventListener("afterprint", cleanup);
+      window.print();
+      setTimeout(cleanup, 2000); }
+
+    // ---------- الربط بالمنصة ----------
+    function goSchedule() { try { sfxClick(); } catch (_) {} if (typeof view !== "undefined" && view !== "course") enterCourse(currentCourse); openSubject("scheduleTab"); renderSchedule(); }
+
+    // بطاقة الجدول ضمن شبكة المواد
+    SUBJECT_CARDS.splice(SUBJECT_CARDS.length - 1, 0,
+      { tab: "scheduleTab", title: "جدولي الأسبوعي", icon: "🗓️", short: "الجدول", subjects: [], schedule: true,
+        banner: "", grad: "linear-gradient(135deg,#1a237e,#3949ab)", desc: "نظّم مذاكرتك: خطط أسبوعك، علّم على إنجازك، واطبع جدولك PDF." });
+
+    // رسم الشبكة مع دعم بطاقة الجدول
+    const _renderSubjectGrid = window.renderSubjectGrid;
+    window.renderSubjectGrid = function () {
+      const g = document.getElementById("subjectGrid"); if (!g) return;
+      g.innerHTML = SUBJECT_CARDS.map((c, i) => {
+        const ls = subjectLectures(c), total = ls.length, done = ls.filter((l) => attendanceRecords[l.id]).length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        const bg = c.banner ? `url('${c.banner}') center/cover, ${c.grad}` : c.grad;
+        const meta = c.schedule ? "مخططك الأسبوعي 🗓️" : c.forum ? "نقاش مباشر" : `${total} محاضرة • أتممت ${done}`;
+        return `<article class="subject-card" role="button" tabindex="0" style="animation-delay:${i * 60}ms" onclick="openSubject('${c.tab}')" onkeydown="if(event.key==='Enter')openSubject('${c.tab}')">
+          <div class="subject-banner" style="background:${bg}"><span class="subject-icon">${c.icon}</span><h3 class="subject-title">${escapeHtml(c.title)}</h3><span class="subject-meta">${meta}</span></div>
+          <div class="subject-body"><p>${escapeHtml(c.desc)}</p>${c.forum || c.schedule ? "" : `<div class="sc-bar"><div class="sc-fill" style="width:${pct}%"></div></div>`}
+            <button type="button" class="btn-submit btn-3d subject-enter">الدخول</button></div></article>`; }).join(""); };
+
+    // تفعيل تبويب الجدول
+    const _switchTab = window.switchTab;
+    window.switchTab = function (tabId, btn) { _switchTab(tabId, btn); if (tabId === "scheduleTab") renderSchedule(); };
+
+    // تكامل مع renderAll: إشعار أول مرة يومياً + تذكير المحاضرات الجديدة + التذكير الذكي
+    let schedLecCount = -1;
+    const _renderAll = window.renderAll;
+    window.renderAll = function () {
+      _renderAll();
+      try {
+        if (!currentStudent || !isActivatedValue(currentStudent.code)) { if (schedPromptEl) schedPromptEl.classList.remove("show"); return; }
+        const n = (typeof lectureIndex !== "undefined" && lectureIndex) ? Object.keys(lectureIndex).length : 0;
+        if (schedLecCount >= 0 && n > schedLecCount)
+          pushNotif("🎓 تنبيه: نزلت محاضرة جديدة على المنصة + افتكر تكمل جدولك اليومي 📖", "lecture");
+        schedLecCount = n;
+        schedDailyNotify(false);
+        updateSchedPrompt();
+        if (view === "course" && document.getElementById("scheduleTab") && document.getElementById("scheduleTab").classList.contains("active")) renderSchedule();
+      } catch (e) { console.error("sched", e); } };
+
+    setInterval(updateSchedPrompt, 60000);
+  </script>
+
 </body>
 </html>
