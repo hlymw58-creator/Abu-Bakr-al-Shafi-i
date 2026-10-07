@@ -1793,7 +1793,7 @@
     // محاولة واحدة: ok (نجاح مؤكد) | fail (رد قاطع من السيرفر) | transient (لا نتيجة موثوقة)
     async function callScript(url, payload) {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), payload && payload.action === "uploadPdf" ? 90000 : REQUEST_TIMEOUT_MS); // رفع الـ PDF يحتاج وقتاً أطول
+      const timer = setTimeout(() => ctrl.abort(), payload && payload.action === "uploadPdf" ? 90000 : (payload && payload.token ? 30000 : REQUEST_TIMEOUT_MS)); // رفع الـ PDF يحتاج وقتاً أطول
       try {
         const res = await fetch(url, {
           method: "POST",
@@ -3543,6 +3543,23 @@
         </form>`;
     }
  
+    // بعد انقطاع الرد: نقرأ القائمة من السيرفر ونبحث عن المحاضرة التي أرسلناها
+    async function confirmSaved(lec) {
+      const t = new Date(lec.releaseAt).getTime();
+      for (let i = 0; i < 4; i++) {
+        await sleep(1500 * (i + 1));
+        const r = await callScript(LECTURES_SCRIPT_URL, { token: adminToken, action: "adminList" });
+        if (r.type === "ok" && Array.isArray(r.data.lectures)) {
+          const found = r.data.lectures.some((x) =>
+            (!lec.id || String(x.id) === String(lec.id)) &&
+            String(x.title).trim() === String(lec.title).replace(/[\u0000-\u001F\u007F]/g, " ").trim() &&
+            x.subject === lec.subject && Date.parse(x.releaseAt) === t);
+          if (found) return true;
+        }
+      }
+      return false;
+    }
+
     async function adminSave(e, id) {
       e.preventDefault();
       const btn = document.getElementById("admSaveBtn"), err = document.getElementById("admErr");
@@ -3560,16 +3577,21 @@
         if (!up.ok) { if (up.msg) showErr(up.msg); btn.disabled = false; btn.innerText = "حفظ"; return; }
         pdfLink = up.url;
       }
-      const r = await adminCall({ action: "save", lecture: {
+      const lecture = {
         id: id, title: document.getElementById("admTitle").value, subject: document.getElementById("admSubject").value,
-        youtubeUrl: document.getElementById("admYt").value, releaseAt: at.toISOString(), homeworkLink: document.getElementById("admHw").value, pdfLink: pdfLink, courses: courses, course: courses.join(",")
-      } });
+        youtubeUrl: document.getElementById("admYt").value, releaseAt: at.toISOString(), homeworkLink: document.getElementById("admHw").value,
+        pdfLink: pdfLink, courses: courses, course: courses.join(",")
+      };
+      const r = await adminCall({ action: "save", lecture: lecture });
       if (!r) return;
       if (r.type === "ok") { await loadAdminList(); fetchLectures(); return; }
       if (r.type === "fail") { showErr(safeMsg(r.message, "تعذر الحفظ، راجع البيانات.")); btn.disabled = false; btn.innerText = "حفظ"; return; }
-      // لم يصل الرد: لا نعيد الإرسال تلقائياً لتفادي التكرار، نعرض القائمة ليتأكد الأدمن
+      // لم يصل الرد: نتحقق من الجدول بأنفسنا (دون إعادة إرسال لتفادي التكرار)
+      btn.innerText = "جاري التأكد من الحفظ...";
+      const saved = await confirmSaved(lecture);
       await loadAdminList();
-      alert("لم يصلنا تأكيد الحفظ. راجع القائمة قبل إعادة المحاولة.");
+      if (saved) { fetchLectures(); return; }
+      alert("لم نتمكن من التأكد من الحفظ، والمحاضرة غير ظاهرة في القائمة. حاول الحفظ مرة أخرى.");
     }
  
     async function adminDelete(id) {
