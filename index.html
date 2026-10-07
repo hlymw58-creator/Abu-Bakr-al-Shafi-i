@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <!-- كود إثبات ملكية جوجل الخاص بك -->
   <meta name="google-site-verification" content="P6w0eE5r-E6qtThUBP6ESmQifa7jndXKVhY5QRpQVNU" />
 
@@ -1257,6 +1257,49 @@
       .pr-foot{margin-top:14px;font-size:8.5pt;color:#777;text-align:center;border-top:1px solid #ccc;padding-top:8px;}
     }
 
+
+    /* =====================================================================
+       طبقة التجاوب (Responsive layer) — مضافة فوق التصميم الحالي بدون تغيير الوظائف
+       Mobile: حتى 767px | Tablet: 768–1023px | Desktop: 1024px+ (الأساس)
+       ===================================================================== */
+    html { width: 100%; overflow-x: hidden; }
+    /* clip بدل hidden على body عشان الهيدر الـ sticky يفضل شغال */
+    body { width: 100%; max-width: 100%; overflow-x: clip; line-height: 1.7; }
+    img, video, iframe, canvas, svg { max-width: 100%; }
+    h1, h2, h3, h4 { line-height: 1.4; margin-bottom: 1.2rem; }
+    p, li, .brand-title, .subject-body, .notif-item { overflow-wrap: anywhere; }
+    .container, .header-container, .ft-inner { margin-left: auto; margin-right: auto; }
+    .header-container { justify-content: center; text-align: center; }
+    .user-info, .hdr-actions { flex-wrap: wrap; justify-content: center; }
+    .courses-grid, .subject-grid { gap: 24px; }
+
+    /* Desktop (الأساس) */
+    @media (min-width: 1024px) {
+      .container, .header-container, .ft-inner { max-width: 1280px; padding-left: 20px; padding-right: 20px; }
+      #accountPage { max-width: 760px; }
+      .courses-grid, .subject-grid { gap: 32px; }
+      .container { margin-top: 40px; margin-bottom: 40px; }
+    }
+    @media (min-width: 1440px) {
+      html { font-size: 106.25%; }
+    }
+
+    /* Tablet */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .container, .header-container, .ft-inner { max-width: 960px; padding-left: 24px; padding-right: 24px; }
+      .courses-grid, .subject-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+    }
+
+    /* Mobile */
+    @media (max-width: 767px) {
+      .header-container { flex-direction: column; align-items: center; gap: 16px; padding-left: 16px; padding-right: 16px; }
+      .brand-title { justify-content: center; font-size: 1.25rem; }
+      .user-info { width: 100%; max-width: 100%; gap: 12px; }
+      .container { padding-left: 16px; padding-right: 16px; margin-top: 20px; }
+      .courses-grid, .subject-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+      .sched-bottom { gap: 16px; }
+      .tab-btn { padding: 12px 18px; }
+    }
   </style>
 <base target="_blank">
 <base target="_blank">
