@@ -1300,6 +1300,40 @@
       .sched-bottom { gap: 16px; }
       .tab-btn { padding: 12px 18px; }
     }
+
+    /* ===== المعاينة العامة للكورس + الاختبارات + جودة الفيديو ===== */
+    .sub-banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#fff3e0;color:#7a4300;border:1px solid #ffb74d;border-radius:12px;padding:12px 16px;margin:0 0 16px;font-weight:700;font-size:14px}
+    .sub-banner .btn-submit{width:auto;margin:0;padding:8px 16px;background:#ef6c00}
+    [data-theme="dark"] .sub-banner{background:#3a2a10;color:#ffcc80;border-color:#8a5a1a}
+    .course-card .btn-submit + .btn-submit{margin-top:8px}
+    .qz-note{width:100%;text-align:center;font-size:13px;font-weight:700;color:#555;padding:4px 0}
+    .qz-note.ok{color:#2e7d32}.qz-note.bad{color:#c62828}
+    [data-theme="dark"] .qz-note{color:#b7c7bb}[data-theme="dark"] .qz-note.ok{color:#81c784}[data-theme="dark"] .qz-note.bad{color:#ef9a9a}
+    .qz-modal{max-width:680px;width:94%;max-height:90vh;overflow-y:auto;text-align:right}
+    .qz-info{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;background:rgba(0,131,143,.08);border-radius:10px;padding:10px 12px;font-size:14px;margin:8px 0}
+    .qz-rules{font-size:14px;line-height:1.9;padding-inline-start:20px;margin:8px 0 14px}
+    .qz-q{border:1px solid rgba(128,128,128,.35);border-radius:12px;padding:12px 14px;margin:0 0 12px}
+    .qz-q.missing{border-color:#c62828;box-shadow:0 0 0 2px rgba(198,40,40,.25)}
+    .qz-qt{font-weight:800;margin-bottom:8px;line-height:1.7}
+    .qz-opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:15px}
+    .qz-opt:hover{background:rgba(0,131,143,.08)}
+    .qz-opt input{width:auto;flex:none;margin:0}
+    .qz-score{font-size:46px;font-weight:900;text-align:center;margin:6px 0}
+    .qz-score.ok{color:#2e7d32}.qz-score.bad{color:#c62828}
+    .qz-msg{text-align:center;font-weight:700;line-height:1.8;margin:6px 0}
+    .adm-quiz{border:1px dashed #00838f;border-radius:12px;padding:12px;margin:12px 0}
+    .adm-quiz legend{font-weight:800;padding:0 8px;color:#00838f}
+    .aq{border:1px solid rgba(128,128,128,.35);border-radius:10px;padding:10px;margin:10px 0}
+    .aq-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .aq-text{width:100%;box-sizing:border-box;font-family:inherit;border-radius:8px;padding:8px;border:1px solid rgba(128,128,128,.5)}
+    .aq-opt{display:flex;align-items:center;gap:8px;margin:6px 0}
+    .aq-opt input[type=radio]{width:auto;flex:none;margin:0}
+    .aq-opt input[type=text]{flex:1;min-width:0}
+    .pv-q{position:relative;display:inline-block}
+    .pv-q-menu{position:absolute;bottom:100%;right:0;background:rgba(20,20,20,.95);border-radius:8px;padding:4px;min-width:110px;z-index:30}
+    .pv-q-menu[hidden]{display:none}
+    .pv-q-menu button{display:block;width:100%;background:none;border:0;color:#fff;padding:7px 10px;text-align:left;cursor:pointer;border-radius:6px;font-size:13px}
+    .pv-q-menu button.on{background:rgba(0,179,255,.35);font-weight:800}
   </style>
 <base target="_blank">
 <base target="_blank">
@@ -1338,6 +1372,7 @@
 
   <div class="container" id="mainContainer" style="display:none">
     <div class="course-bar"><button class="acc-back" id="courseBackBtn" type="button" style="margin:0" onclick="courseBack()">← الكورسات</button><h2 id="courseTitle"></h2></div>
+    <div id="subBanner"></div>
     <div id="progressBox"></div>
     <!-- شبكة المواد الكبيرة (تحل محل تبويبات الأعلى) -->
     <div class="subject-grid" id="subjectGrid"></div>
@@ -1545,6 +1580,10 @@
   </div>
  
   <!-- لوحة التحكم: تُبنى محتوياتها بعد تحقق السيرفر من الأدمن فقط -->
+  <div class="modal-overlay" id="quizOverlay" style="display: none;">
+    <div class="modal-content qz-modal" id="quizBody"></div>
+  </div>
+
   <div class="modal-overlay" id="adminModal" style="display: none;">
     <div class="modal-content adm-modal" id="adminBody"></div>
   </div>
@@ -1781,6 +1820,7 @@
     // بيانات الطالب تبقى محفوظة في المتصفح، ولا يُسجَّل الخروج إلا بضغط زر "تسجيل الخروج".
     function clearSession() {
       try { localStorage.removeItem("shafeei_student"); localStorage.removeItem("shafeei_session"); } catch (_) {}
+      try { Object.keys(localStorage).filter((k) => /^(shafeei_qt_|quiz_state_)/.test(k)).forEach((k) => localStorage.removeItem(k)); } catch (_) {}
     }
     function mergeUser(u) {
       if (!u || !currentStudent) return;
@@ -1793,7 +1833,7 @@
     // محاولة واحدة: ok (نجاح مؤكد) | fail (رد قاطع من السيرفر) | transient (لا نتيجة موثوقة)
     async function callScript(url, payload) {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), payload && payload.action === "uploadPdf" ? 90000 : (payload && payload.token ? 30000 : REQUEST_TIMEOUT_MS)); // رفع الـ PDF يحتاج وقتاً أطول
+      const timer = setTimeout(() => ctrl.abort(), payload && payload.action === "uploadPdf" ? 90000 : REQUEST_TIMEOUT_MS); // رفع الـ PDF يحتاج وقتاً أطول
       try {
         const res = await fetch(url, {
           method: "POST",
@@ -2212,6 +2252,7 @@
       Object.assign(currentStudent, { name, phone: finalPhone, parentPhone: parent, governorate: g("epGov"), nationality: g("epNat") });
       try { if (img) localStorage.setItem(avatarKey(), img); else localStorage.removeItem(avatarKey()); } catch (_) {}
       pendingAvatar = null;
+      if (finalPhone !== oldPhone) { quizResults = {}; try { qzSync(false); } catch (_) {} }
       saveStudentLocal(); setHeaderName(); renderNotifs(); renderProgress();
       renderAccountView();
       if (phoneChanged && !serverOk) alert("تم حفظ التعديلات، وتعذر تغيير رقم الهاتف الآن. برجاء المحاولة لاحقاً.");
@@ -2277,8 +2318,8 @@
         const on = c.isActive(currentStudent);
         return `<div class="course-card"><div class="course-cover">${c.icon}<span class="badge ${on ? "on" : ""}">${on ? "مُشترك" : "غير مشترك"}</span></div>
           <div class="course-body"><h3>${escapeHtml(c.title)}</h3><b style="font-size:14px">${escapeHtml(c.sub)}</b><p>${escapeHtml(c.desc)}</p>
-          ${on ? `<button class="btn-submit" onclick="enterCourse('${c.id}')">✅ دخول الكورس</button>`
-               : `<button class="btn-submit" style="background:#ef6c00" onclick="activatingCourse='${c.id}';openCodeModal()">🔑 اشترك الآن</button>`}</div></div>`;
+          <button class="btn-submit" onclick="enterCourse('${c.id}')">📖 عرض التفاصيل</button>
+          ${on ? "" : `<button class="btn-submit" style="background:#ef6c00" onclick="activatingCourse='${c.id}';openCodeModal()">🔑 اشترك الآن</button>`}</div></div>`;
       }).join("");
     }
     function goHome() {
@@ -2336,6 +2377,7 @@
         document.getElementById("authModal").style.display = "none";
         loadAttendance();
         loadForumPosts();
+        quizBootstrap();
       } else {
         document.getElementById("authModal").style.display = "flex";
       }
@@ -2434,6 +2476,7 @@
           loadAttendance();
           loadForumPosts();
           renderAll();
+          quizBootstrap();
           if (isRegisterMode) pushNotif(`تم إنشاء حسابك بنجاح، ${greetWord()} يا ${firstName()}، مرحباً بك في منصة الشافعي الصغير`);
           if (!isRegisterMode) pushNotif(`${greetWord()} يا ${firstName()}، سعدنا بعودتك إلى منصة الشافعي الصغير`);
           showWelcome();
@@ -2534,6 +2577,7 @@
       let html = "";
       const isCourseActivated = currentStudent && currentStudent.code && currentStudent.code !== "غير مفعل";
  
+      const lockMap = qzLockedMap(lecturesList);
       lecturesList.forEach(lecture => {
         // الروابط تُكتب مباشرة في الكود (في مصفوفات المحاضرات بالأعلى)
         const effectiveLink = lecture.link;
@@ -2545,16 +2589,20 @@
         let actionButtonHTML = "";
         if (!isCourseActivated) {
           actionButtonHTML = `
-            <button type="button" class="btn-open-lecture" style="background-color: #757575;" onclick="openCodeModal()">
-              🔒 المحاضرة مغلقة (اضغط هنا لتفعيل الكود)
+            <button type="button" class="btn-open-lecture" style="background-color: #757575;" onclick="requireSubscription()">
+              🔒 الاشتراك مطلوب لمشاهدة المحاضرة — اضغط هنا للاشتراك
             </button>
           `;
         } else {
-          actionButtonHTML = subButtonsHTML(lecture, homeworkLink, isAttended);
+          const lockedBy = lockMap[lecture.id];
+          actionButtonHTML = lockedBy
+            ? `<div class="qz-note bad">🔒 هذه المحاضرة مغلقة — اجتز اختبار «${escapeHtml(lockedBy.title)}» بنسبة ${quizPass}% أو أكثر لفتحها</div>
+               <button type="button" class="btn-open-lecture" style="background-color:#757575;" onclick="qzLockedAlert('${escapeHtml(lockedBy.id)}')">🔒 مغلقة حتى اجتياز الاختبار السابق</button>`
+            : subButtonsHTML(lecture, homeworkLink, isAttended) + qzButtonHTML(lecture);
         }
 
         html += `
-          <div class="lecture-card ${!isCourseActivated ? 'locked' : ''}" id="card-${lecture.id}">
+          <div class="lecture-card ${(!isCourseActivated || lockMap[lecture.id]) ? 'locked' : ''}" id="card-${lecture.id}">
             <div class="lecture-header">
               <h3 class="lecture-title">${escapeHtml(lecture.title)}${isAttended ? ' <span style="color:#2e7d32">✓</span>' : ''}</h3>
               <span class="attendance-badge ${isAttended ? 'attended' : ''}" id="badge-${lecture.id}">
@@ -2831,9 +2879,11 @@
           "settings", "fullscreen"
         ],
         seekTime: 10,
-        settings: ["speed"],
-        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
+        settings: isDrive ? ["speed"] : ["quality", "speed"],
+        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
+        i18n: { quality: "Video Quality" }
       };
+      if (!isDrive) plyrOptions.quality = { default: pvQuality, options: PV_QUALITIES, forced: true, onChange: (q) => pvApplyQuality(q) };
 
       if (isDrive) {
         // فيديو الدرايف: نشغّله في عنصر <video> عادي عشان يظهر بنفس تحكمات Plyr بتاعة يوتيوب
@@ -2864,6 +2914,8 @@
       }
 
       pvPlayerInstance = new Plyr(playerDiv, plyrOptions);
+      // اختيار الطالب من قائمة الجودة (حدث "qualityrequested" يصدر فقط عند اختياره هو، لا عند تغيّر يوتيوب التلقائي)
+      if (!isDrive) pvPlayerInstance.on("qualityrequested", (e) => { const q = e && e.detail && e.detail.quality; if (q != null) pvApplyQuality(q); });
 
       document.getElementById("pvFacade").style.display = "none";
       document.getElementById("pvTouchOverlay").style.display = "flex";
@@ -2885,6 +2937,7 @@
       pvPlayerInstance.on("ready", () => {
         attachWatermark();
         pvFitLayout();
+        if (!isDrive) { pvApplyQuality(pvQuality, true); setTimeout(pvEnsureQualityMenu, 1200); }
         if (isDrive) { try { const pr = pvPlayerInstance.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (_) {} }
       });
 
@@ -3343,6 +3396,8 @@
 
     async function openLectureById(id) {
       const l = lectureIndex[id]; if (!l) return;
+      if (!requireActivated()) return; // غير مشترك: عرض العناوين فقط ومنع التشغيل
+      const lockedBy = qzLockedFor(l); if (lockedBy) { qzLockedAlert(lockedBy.id); renderAll(); return; }
       if (SUBS_ON() && subState(id).st !== "active") { renderAll(); return; }
       try { sfxClick(); } catch (_) {}
       markAttendance(id, l.title, true);
@@ -3379,7 +3434,7 @@
         timeOffset = isFinite(off) ? off : 0;
         sheetLectures = r.data.lectures.map((l) => ({
           id: String(l.id), title: String(l.title || ""), subject: l.subject, link: l.link || "",
-          homeworkLink: l.homeworkLink || "", pdfLink: l.pdfLink || "", releaseAt: l.releaseAt, remote: true, courses: normCourses(l.courses)
+          homeworkLink: l.homeworkLink || "", pdfLink: l.pdfLink || "", releaseAt: l.releaseAt, remote: true, courses: normCourses(l.courses), quiz: l.quiz || null
         }));
         lastFetchAt = Date.now();
         try { localStorage.setItem(LECTURES_CACHE_KEY, JSON.stringify({ lectures: sheetLectures, offset: timeOffset })); } catch (_) {}
@@ -3504,7 +3559,7 @@
     function renderAdminList() {
       const rows = adminLectures.map((l) => `
         <div class="adm-row">
-          <div><b>${escapeHtml(l.title)}</b><small>${escapeHtml(l.subject)} — ${fmtDateTime(timeOf(l))}</small></div>
+          <div><b>${escapeHtml(l.title)}</b><small>${escapeHtml(l.subject)} — ${fmtDateTime(timeOf(l))}${l.quiz && l.quiz.questions ? " — 📝 " + l.quiz.questions.length + " سؤال" : ""}</small></div>
           <div><button class="adm-btn adm-edit" onclick="renderAdminForm('${escapeHtml(l.id)}')">تعديل</button>
                <button class="adm-btn adm-del" onclick="adminDelete('${escapeHtml(l.id)}')">حذف</button></div>
         </div>`).join("") || `<p style="text-align:center;color:#666;padding:16px">لا توجد محاضرات مضافة من لوحة التحكم بعد.</p>`;
@@ -3521,6 +3576,10 @@
     }
  
     function renderAdminForm(id) {
+      renderAdminFormBase(id);
+      admQInit(adminLectures.find((x) => x.id === id) || {}); admQRender();
+    }
+    function renderAdminFormBase(id) {
       const l = adminLectures.find((x) => x.id === id) || {};
       const mk = (list) => list.map((x) => `<option value="${x}" ${l.subject === x ? "selected" : ""}>${x}</option>`).join("");
       const opts = `<optgroup label="الأقسام الرئيسية">${mk(["الفقه", "التوحيد", "التفسير", "الحديث"])}</optgroup><optgroup label="المراجعات (قسم فرعي)">${mk(["مراجعة توحيد", "مراجعة تفسير", "مراجعة حديث", "مراجعة فقه"])}</optgroup>`;
@@ -3537,35 +3596,25 @@
           <div class="form-group"><label>رابط الواجب (اختياري):</label><input id="admHw" type="url" dir="ltr" value="${escapeHtml(l.homeworkLink || "")}"></div>
           <div class="form-group"><label>رابط ملف PDF (اختياري):</label><input id="admPdf" type="url" dir="ltr" placeholder="https://...pdf" value="${escapeHtml(l.pdfLink || "")}"></div>
           <div class="form-group"><label>أو ارفع ملف PDF مباشرة (اختياري، حتى 8 ميجا):</label><input id="admPdfFile" type="file" accept="application/pdf,.pdf"><small id="admPdfStatus" style="color:#666"></small></div>
+          <fieldset class="adm-quiz"><legend>📝 إضافة اختبار يدوي (اختياري)</legend>
+            <small style="display:block;color:#555;margin-bottom:6px">الاختبار يظهر للطلاب تلقائياً في نفس تاريخ وساعة نزول المحاضرة تماماً. الإجابات الصحيحة لا تصل للطلاب أبداً.</small>
+            <div id="admQuizList"></div>
+            <button type="button" class="adm-btn" style="background:#00838f" onclick="admQAdd('mcq')">➕ سؤال اختيار من متعدد</button>
+            <button type="button" class="adm-btn" style="background:#6a1b9a" onclick="admQAdd('tf')">➕ سؤال صح / خطأ</button>
+          </fieldset>
           <button class="btn-submit" type="submit" id="admSaveBtn">حفظ</button>
           <button class="btn-submit" type="button" style="background:#757575" onclick="renderAdminList()">رجوع</button>
           <div class="error-msg" id="admErr"></div>
         </form>`;
     }
  
-    // بعد انقطاع الرد: نقرأ القائمة من السيرفر ونبحث عن المحاضرة التي أرسلناها
-    async function confirmSaved(lec) {
-      const t = new Date(lec.releaseAt).getTime();
-      for (let i = 0; i < 4; i++) {
-        await sleep(1500 * (i + 1));
-        const r = await callScript(LECTURES_SCRIPT_URL, { token: adminToken, action: "adminList" });
-        if (r.type === "ok" && Array.isArray(r.data.lectures)) {
-          const found = r.data.lectures.some((x) =>
-            (!lec.id || String(x.id) === String(lec.id)) &&
-            String(x.title).trim() === String(lec.title).replace(/[\u0000-\u001F\u007F]/g, " ").trim() &&
-            x.subject === lec.subject && Date.parse(x.releaseAt) === t);
-          if (found) return true;
-        }
-      }
-      return false;
-    }
-
     async function adminSave(e, id) {
       e.preventDefault();
       const btn = document.getElementById("admSaveBtn"), err = document.getElementById("admErr");
       const showErr = (m) => { err.innerText = m; err.style.display = "block"; };
       const courses = Array.from(document.querySelectorAll(".admCourse:checked")).map((x) => x.value);
       if (!courses.length) { showErr("اختر كورساً واحداً على الأقل."); return; }
+      const quizPayload = admQCollect(showErr); if (quizPayload === false) return;
       const at = new Date(document.getElementById("admAt").value);
       if (isNaN(at)) { showErr("موعد النزول غير صحيح."); return; }
       btn.disabled = true; btn.innerText = "جاري الحفظ...";
@@ -3577,21 +3626,16 @@
         if (!up.ok) { if (up.msg) showErr(up.msg); btn.disabled = false; btn.innerText = "حفظ"; return; }
         pdfLink = up.url;
       }
-      const lecture = {
+      const r = await adminCall({ action: "save", lecture: {
         id: id, title: document.getElementById("admTitle").value, subject: document.getElementById("admSubject").value,
-        youtubeUrl: document.getElementById("admYt").value, releaseAt: at.toISOString(), homeworkLink: document.getElementById("admHw").value,
-        pdfLink: pdfLink, courses: courses, course: courses.join(",")
-      };
-      const r = await adminCall({ action: "save", lecture: lecture });
+        youtubeUrl: document.getElementById("admYt").value, releaseAt: at.toISOString(), homeworkLink: document.getElementById("admHw").value, pdfLink: pdfLink, courses: courses, course: courses.join(","), quiz: quizPayload
+      } });
       if (!r) return;
       if (r.type === "ok") { await loadAdminList(); fetchLectures(); return; }
       if (r.type === "fail") { showErr(safeMsg(r.message, "تعذر الحفظ، راجع البيانات.")); btn.disabled = false; btn.innerText = "حفظ"; return; }
-      // لم يصل الرد: نتحقق من الجدول بأنفسنا (دون إعادة إرسال لتفادي التكرار)
-      btn.innerText = "جاري التأكد من الحفظ...";
-      const saved = await confirmSaved(lecture);
+      // لم يصل الرد: لا نعيد الإرسال تلقائياً لتفادي التكرار، نعرض القائمة ليتأكد الأدمن
       await loadAdminList();
-      if (saved) { fetchLectures(); return; }
-      alert("لم نتمكن من التأكد من الحفظ، والمحاضرة غير ظاهرة في القائمة. حاول الحفظ مرة أخرى.");
+      alert("لم يصلنا تأكيد الحفظ. راجع القائمة قبل إعادة المحاولة.");
     }
  
     async function adminDelete(id) {
@@ -3613,6 +3657,7 @@
       renderProgress();
       renderNotifs();
       renderCourses();
+      renderSubBanner();
       if (typeof renderSubjectGrid === "function") { renderSubjectGrid(); checkStreakAlerts(); refreshProfileStats(); }
     }
  
@@ -3631,6 +3676,263 @@
       document.getElementById("mainSupportView").style.display = "flex";
     }
  
+
+    // ============================================================
+    // =====  الاشتراك / الاختبارات / قفل المحاضرات / جودة الفيديو  =====
+    // ============================================================
+    // ---------- (1) معاينة الكورس لغير المشتركين ----------
+    const isSubscribed = () => isAdminUser() || (!!currentStudent && isActivatedValue(currentStudent.code));
+    function showSubRequired() {
+      try { showNotifToast("🔒 هذا المحتوى للمشتركين فقط — اشترك في الكورس لمشاهدة المحاضرات والواجبات والملفات", "system"); } catch (_) { alert("هذا المحتوى للمشتركين فقط. اشترك في الكورس أولاً."); }
+    }
+    function requireSubscription() { showSubRequired(); activatingCourse = currentCourse; openCodeModal(); }
+    function requireActivated() { if (isSubscribed()) return true; requireSubscription(); return false; }
+    function renderSubBanner() {
+      const b = document.getElementById("subBanner"); if (!b) return;
+      const c = COURSES.find((x) => x.id === currentCourse), on = !!c && c.isActive(currentStudent);
+      b.innerHTML = on ? "" : `<div class="sub-banner"><span>👀 تستطيع تصفّح محتوى الكورس وعناوين المحاضرات، لكن مشاهدة الفيديوهات والواجبات والملفات تتطلب الاشتراك.</span><button type="button" class="btn-submit" onclick="requireSubscription()">🔑 اشترك الآن</button></div>`;
+    }
+
+    // ---------- (4) حالة الاختبارات (الخادم هو المرجع، والمتصفح نسخة مؤقتة فقط) ----------
+    let quizResults = {}, quizPass = 30, quizSyncing = false, quizLastSync = 0, quizOpenId = null, quizBusy = false, quizReq = "";
+    const qzKey = () => normalizePhone((currentStudent && currentStudent.phone) || "guest");
+    const qzTokKey = () => "shafeei_qt_" + qzKey(), qzStateKey = () => "quiz_state_" + qzKey();
+    const quizBody = () => document.getElementById("quizBody");
+    const qzHasQuiz = (l) => !!(l && l.quiz && Array.isArray(l.quiz.questions) && l.quiz.questions.length);
+    const qzPassed = (id) => { const r = quizResults[id]; return !!(r && (r.passed || Number(r.bestPercent) >= quizPass)); };
+    function qzLoadCache() { try { quizResults = JSON.parse(localStorage.getItem(qzStateKey()) || "{}") || {}; } catch (_) { quizResults = {}; } }
+    function qzSaveCache() { try { localStorage.setItem(qzStateKey(), JSON.stringify(quizResults)); } catch (_) {} }
+    function qzGetToken() { try { const t = JSON.parse(localStorage.getItem(qzTokKey()) || "null"); if (t && t.token && t.exp - Date.now() > 3600000) return t.token; } catch (_) {} return ""; }
+    function qzSaveToken(d) { try { localStorage.setItem(qzTokKey(), JSON.stringify({ token: d.token, exp: d.exp })); } catch (_) {} }
+    function qzDropToken() { try { localStorage.removeItem(qzTokKey()); } catch (_) {} }
+
+    // قفل التسلسل داخل المادة: المحاضرة التالية تبقى مغلقة حتى يجتاز الطالب اختبار كل محاضرة سابقة (30% أو أكثر)
+    function qzLockedMap(list) {
+      const m = {}, admin = isAdminUser(); let blocker = null;
+      list.forEach((l) => { m[l.id] = (!admin && blocker) ? blocker : null; if (!blocker && qzHasQuiz(l) && !qzPassed(l.id)) blocker = l; });
+      return m;
+    }
+    function qzLockedFor(l) {
+      const s = SUBJECTS.find((x) => x.name === l.subject); if (!s) return null;
+      return qzLockedMap(visibleFor(s))[l.id] || null;
+    }
+    function qzLockedAlert(blockerId) {
+      const b = lectureIndex[blockerId];
+      try { showNotifToast(`🔒 اجتز اختبار «${b ? b.title : "المحاضرة السابقة"}» بنسبة ${quizPass}% أو أكثر لفتح هذه المحاضرة`, "system"); } catch (_) {}
+    }
+    function qzButtonHTML(l) {
+      if (!qzHasQuiz(l) || isAdminUser()) return "";
+      const r = quizResults[l.id], n = l.quiz.questions.length;
+      let note, label = `📝 ابدأ اختبار المحاضرة (${n} سؤال)`;
+      if (r) {
+        label = "📝 إعادة الاختبار";
+        note = `<div class="qz-note ${qzPassed(l.id) ? "ok" : "bad"}">نتيجتك الأولى المسجّلة: ${Number(r.firstScore)}/${Number(r.total)} (${Number(r.firstPercent)}%)${qzPassed(l.id) ? " — تم فتح المحاضرة التالية ✅" : ` — أعد الاختبار وحقّق ${quizPass}% أو أكثر لفتح المحاضرة التالية`}</div>`;
+      } else note = `<div class="qz-note">اجتز الاختبار (${quizPass}% أو أكثر) لفتح المحاضرة التالية</div>`;
+      return `${note}<button type="button" class="btn-open-lecture" style="background:#00838f" onclick="openQuiz('${escapeHtml(l.id)}')">${label}</button>`;
+    }
+
+    // جلسة الاختبار: توكن موقّع من الخادم بعد التحقق من الطالب (الاسم/الرقم/رقم ولي الأمر تؤخذ من سجله هو، لا من المتصفح)
+    async function qzEnsureToken(interactive) {
+      if (!currentStudent || currentStudent.isAdmin || isAdminUser()) return "";
+      const t = qzGetToken(); if (t) return t;
+      if (sessionCreds) {
+        const r = await callScript(LECTURES_SCRIPT_URL, { action: "studentAuth", phone: sessionCreds.phone, password: sessionCreds.password });
+        if (r.type === "ok" && r.data.token) { qzSaveToken(r.data); return r.data.token; }
+      }
+      return interactive ? qzAskPassword() : "";
+    }
+    function qzAskPassword(msg) {
+      return new Promise((resolve) => {
+        showQuizOverlay();
+        quizBody().innerHTML = `<h3 class="modal-title">تأكيد الهوية</h3>
+          <p class="qz-msg" style="font-weight:600;font-size:14px">لحفظ نتيجتك على حسابك أدخل كلمة السر مرة واحدة (لن تُطلب منك على هذا الجهاز لمدة أسبوع تقريباً).</p>
+          <form id="qzPassForm"><div class="form-group"><label>كلمة السر:</label><input type="password" id="qzPass" required autocomplete="current-password"></div>
+          <div class="error-msg" id="qzPassErr" style="display:${msg ? "block" : "none"}">${escapeHtml(msg || "")}</div>
+          <button class="btn-submit" type="submit" id="qzPassBtn">تأكيد</button>
+          <button class="btn-submit" type="button" id="qzPassCancel" style="background:#757575">إلغاء</button></form>`;
+        document.getElementById("qzPassCancel").onclick = () => resolve("");
+        document.getElementById("qzPassForm").onsubmit = async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById("qzPassBtn"), err = document.getElementById("qzPassErr"), pw = document.getElementById("qzPass").value;
+          btn.disabled = true; btn.innerText = "جاري التحقق...";
+          const r = await callScript(LECTURES_SCRIPT_URL, { action: "studentAuth", phone: currentStudent.phone, password: pw });
+          if (r.type === "ok" && r.data.token) { qzSaveToken(r.data); sessionCreds = { phone: currentStudent.phone, password: pw }; resolve(r.data.token); return; }
+          err.innerText = r.type === "fail" ? safeMsg(r.message, "كلمة السر غير صحيحة.") : GENERIC_ERROR; err.style.display = "block";
+          btn.disabled = false; btn.innerText = "تأكيد";
+        };
+      });
+    }
+    async function qzSync(interactive) {
+      if (quizSyncing || !currentStudent || currentStudent.isAdmin || isAdminUser()) return;
+      quizSyncing = true; quizLastSync = Date.now();
+      try {
+        const tok = await qzEnsureToken(!!interactive); if (!tok) return;
+        const r = await callWithRetry(LECTURES_SCRIPT_URL, { action: "quizState", studentToken: tok }, 3);
+        if (r.type === "ok") { quizResults = r.data.results || {}; quizPass = Number(r.data.passPercent) || 30; qzSaveCache(); renderAll(); }
+        else if (r.type === "fail" && r.data && r.data.code === "QAUTH") qzDropToken();
+      } finally { quizSyncing = false; }
+    }
+    function quizBootstrap() { qzLoadCache(); renderAll(); qzSync(false); }
+    document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - quizLastSync > 60000) qzSync(false); });
+
+    // ---------- واجهة الاختبار ----------
+    function showQuizOverlay() { document.getElementById("quizOverlay").style.display = "flex"; }
+    function closeQuiz() { document.getElementById("quizOverlay").style.display = "none"; quizOpenId = null; quizBusy = false; }
+    async function openQuiz(id) {
+      const l = lectureIndex[id]; if (!qzHasQuiz(l)) return;
+      if (!requireActivated()) return;
+      const lockedBy = qzLockedFor(l); if (lockedBy) { qzLockedAlert(lockedBy.id); return; }
+      quizOpenId = id; showQuizOverlay();
+      quizBody().innerHTML = `<p style="text-align:center;padding:20px">جاري التحميل...</p>`;
+      const tok = await qzEnsureToken(true);
+      if (!tok) { closeQuiz(); return; }
+      renderQuizIntro(l);
+    }
+    function renderQuizIntro(l) {
+      const s = currentStudent || {}, n = l.quiz.questions.length;
+      quizBody().innerHTML = `<h3 class="modal-title">📝 اختبار: ${escapeHtml(l.title)}</h3>
+        <div class="qz-info"><div>عدد الأسئلة: <b>${n}</b></div><div>الطالب: <b>${escapeHtml(s.name || "")}</b></div>
+          <div>رقم الطالب: <b dir="ltr">${escapeHtml(s.phone || "")}</b></div><div>رقم ولي الأمر: <b dir="ltr">${escapeHtml(s.parentPhone || "—")}</b></div></div>
+        <ul class="qz-rules"><li>بياناتك تُسجَّل تلقائياً من حسابك، لا تحتاج لكتابة أي شيء.</li>
+          <li>تُحفظ <b>درجتك في أول محاولة</b> فقط بشكل نهائي ولا تتغير.</li>
+          <li>إذا حصلت على أقل من ${quizPass}% تبقى المحاضرة التالية مغلقة حتى تعيد الاختبار وتحقق ${quizPass}% أو أكثر.</li></ul>
+        <button class="btn-submit" type="button" onclick="startQuiz()">ابدأ الاختبار</button>
+        <button class="btn-submit" type="button" style="background:#757575" onclick="closeQuiz()">إغلاق</button>`;
+    }
+    function startQuiz() {
+      const l = lectureIndex[quizOpenId]; if (!qzHasQuiz(l)) return closeQuiz();
+      quizReq = Date.now().toString(36) + Math.random().toString(36).slice(2, 10); // يمنع احتساب نفس الإرسال مرتين لو أُعيد الطلب
+      const qs = l.quiz.questions.map((q, i) => `<div class="qz-q" id="qzq${i}"><div class="qz-qt">${i + 1}. ${escapeHtml(q.q)}</div>
+        ${q.o.map((o, j) => `<label class="qz-opt"><input type="radio" name="qz${i}" value="${j}"><span>${escapeHtml(o)}</span></label>`).join("")}</div>`).join("");
+      quizBody().innerHTML = `<h3 class="modal-title">📝 ${escapeHtml(l.title)}</h3>${qs}
+        <div class="error-msg" id="qzErr"></div>
+        <button class="btn-submit" type="button" id="qzSubmit" onclick="submitQuizNow()">تسليم الاختبار</button>
+        <button class="btn-submit" type="button" style="background:#757575" onclick="if(confirm('إغلاق الاختبار بدون تسليم؟'))closeQuiz()">إغلاق</button>`;
+      quizBody().scrollTop = 0;
+    }
+    async function submitQuizNow() {
+      if (quizBusy) return;
+      const l = lectureIndex[quizOpenId]; if (!qzHasQuiz(l)) return;
+      const err = document.getElementById("qzErr"), btn = document.getElementById("qzSubmit");
+      const showErr = (m) => { err.innerText = m; err.style.display = "block"; };
+      err.style.display = "none";
+      let firstMissing = -1;
+      const ans = l.quiz.questions.map((_, i) => {
+        const el = document.querySelector(`input[name="qz${i}"]:checked`), card = document.getElementById("qzq" + i);
+        card.classList.toggle("missing", !el); if (!el && firstMissing < 0) firstMissing = i;
+        return el ? Number(el.value) : -1;
+      });
+      if (firstMissing >= 0) { showErr("يرجى الإجابة على جميع الأسئلة قبل التسليم."); document.getElementById("qzq" + firstMissing).scrollIntoView({ block: "center", behavior: "smooth" }); return; }
+      if (!confirm("تأكيد تسليم الاختبار؟ لا يمكن تعديل الإجابات بعد التسليم.")) return;
+      quizBusy = true; btn.disabled = true; btn.innerText = "جاري التسليم...";
+      try {
+        let tok = await qzEnsureToken(false);
+        if (!tok) { tok = await qzEnsureToken(true); if (!tok) { closeQuiz(); return; } startQuizKeep(l, ans); }
+        let r = await callWithRetry(LECTURES_SCRIPT_URL, { action: "submitQuiz", studentToken: tok, lectureId: l.id, answers: ans, requestId: quizReq }, 3);
+        if (r.type === "fail" && r.data && r.data.code === "QAUTH") { // انتهت الجلسة: نطلب كلمة السر ثم نكمل بنفس الإجابات
+          qzDropToken(); tok = await qzEnsureToken(true); if (!tok) { closeQuiz(); return; }
+          r = await callWithRetry(LECTURES_SCRIPT_URL, { action: "submitQuiz", studentToken: tok, lectureId: l.id, answers: ans, requestId: quizReq }, 3);
+        }
+        if (r.type === "ok") {
+          const d = r.data;
+          quizResults[l.id] = { firstScore: d.firstScore, total: d.total, firstPercent: d.firstPercent, attempts: d.attempts, bestPercent: d.bestPercent, passed: !!d.unlocked };
+          qzSaveCache(); renderAll(); renderQuizResult(l, d); return;
+        }
+        // لم يظهر الاختبار بعد التسليم (خطأ أو انقطاع): نعيد عرض الأسئلة مع الإجابات المختارة
+        startQuizKeep(l, ans);
+        const e2 = document.getElementById("qzErr");
+        e2.innerText = r.type === "fail" ? safeMsg(r.message, GENERIC_ERROR) : "تعذر الاتصال بالخادم. تأكد من الإنترنت ثم اضغط تسليم مرة أخرى (لن تُحتسب مرتين).";
+        e2.style.display = "block";
+      } finally { quizBusy = false; }
+    }
+    // يعيد رسم الأسئلة مع الإجابات التي اختارها الطالب (بدون إنشاء requestId جديد)
+    function startQuizKeep(l, ans) {
+      const keep = quizReq; startQuiz(); quizReq = keep;
+      ans.forEach((a, i) => { if (a >= 0) { const el = document.querySelector(`input[name="qz${i}"][value="${a}"]`); if (el) el.checked = true; } });
+    }
+    function renderQuizResult(l, d) {
+      const ok = d.percent >= quizPass;
+      const first = d.isFirst
+        ? `✅ تم تسجيل هذه النتيجة كنتيجتك الأولى على حسابك (نهائية ولا تتغير).`
+        : `هذه محاولة إضافية — نتيجتك المسجّلة تبقى ${d.firstScore}/${d.total} (${d.firstPercent}%).`;
+      const unlock = d.unlocked
+        ? `🎉 المحاضرة التالية مفتوحة لك.`
+        : `🔒 لم تصل إلى ${quizPass}% — المحاضرة التالية ما زالت مغلقة. أعد الاختبار وحقّق ${quizPass}% أو أكثر.`;
+      quizBody().innerHTML = `<h3 class="modal-title">نتيجة الاختبار</h3>
+        <div class="qz-score ${ok ? "ok" : "bad"}">${d.score}/${d.total} — ${d.percent}%</div>
+        <p class="qz-msg">${first}</p><p class="qz-msg">${unlock}</p>
+        <button class="btn-submit" type="button" onclick="startQuiz()" style="background:${d.unlocked ? "#00838f" : "#ef6c00"}">🔄 إعادة الاختبار</button>
+        <button class="btn-submit" type="button" style="background:#757575" onclick="closeQuiz()">إغلاق</button>`;
+    }
+
+    // ---------- (3) بناء الاختبار اليدوي في لوحة التحكم ----------
+    let admQuiz = [];
+    function admQInit(l) {
+      admQuiz = (l && l.quiz && Array.isArray(l.quiz.questions)) ? l.quiz.questions.map((q) => ({ type: q.type, text: q.text, options: q.type === "tf" ? ["صح", "خطأ"] : q.options.slice(), answer: q.answer })) : [];
+    }
+    function admQAdd(type) { admQuiz.push(type === "tf" ? { type: "tf", text: "", options: ["صح", "خطأ"], answer: -1 } : { type: "mcq", text: "", options: ["", "", "", ""], answer: -1 }); admQRender(); }
+    function admQDel(i) { admQuiz.splice(i, 1); admQRender(); }
+    function admQText(i, v) { admQuiz[i].text = v; }
+    function admQOpt(i, j, v) { admQuiz[i].options[j] = v; }
+    function admQAns(i, j) { admQuiz[i].answer = j; }
+    function admQAddOpt(i) { if (admQuiz[i].options.length < 6) { admQuiz[i].options.push(""); admQRender(); } }
+    function admQDelOpt(i, j) {
+      const q = admQuiz[i]; if (q.options.length <= 2) return;
+      q.options.splice(j, 1); if (q.answer === j) q.answer = -1; else if (q.answer > j) q.answer--; admQRender();
+    }
+    function admQRender() {
+      const box = document.getElementById("admQuizList"); if (!box) return;
+      box.innerHTML = admQuiz.map((q, i) => `<div class="aq">
+        <div class="aq-head"><b>سؤال ${i + 1} — ${q.type === "tf" ? "صح / خطأ" : "اختيار من متعدد"}</b><button type="button" class="adm-btn adm-del" onclick="admQDel(${i})">حذف</button></div>
+        <textarea class="aq-text" rows="2" maxlength="400" placeholder="نص السؤال" oninput="admQText(${i}, this.value)">${escapeHtml(q.text)}</textarea>
+        ${q.options.map((o, j) => q.type === "tf"
+          ? `<label class="aq-opt"><input type="radio" name="aqa${i}" ${q.answer === j ? "checked" : ""} onchange="admQAns(${i},${j})"> ${escapeHtml(o)}</label>`
+          : `<div class="aq-opt"><input type="radio" name="aqa${i}" title="الإجابة الصحيحة" ${q.answer === j ? "checked" : ""} onchange="admQAns(${i},${j})"><input type="text" maxlength="200" placeholder="الاختيار ${j + 1}" value="${escapeHtml(o)}" oninput="admQOpt(${i},${j}, this.value)">${q.options.length > 2 ? `<button type="button" class="adm-btn adm-del" onclick="admQDelOpt(${i},${j})">✕</button>` : ""}</div>`).join("")}
+        ${q.type === "mcq" && q.options.length < 6 ? `<button type="button" class="adm-btn" style="background:#546e7a" onclick="admQAddOpt(${i})">➕ اختيار</button>` : ""}
+        <small style="display:block;color:#666;margin-top:4px">حدّد الدائرة بجوار الإجابة الصحيحة.</small></div>`).join("")
+        || `<p style="text-align:center;color:#666;margin:6px 0">لا توجد أسئلة — الاختبار اختياري.</p>`;
+    }
+    function admQCollect(showErr) {
+      if (!admQuiz.length) return null;
+      for (let i = 0; i < admQuiz.length; i++) {
+        const q = admQuiz[i], n = i + 1;
+        if (!String(q.text).trim()) { showErr(`اكتب نص السؤال ${n}.`); return false; }
+        if (q.type === "mcq" && q.options.some((o) => !String(o).trim())) { showErr(`أكمل كل اختيارات السؤال ${n} أو احذف الاختيار الفارغ.`); return false; }
+        if (!(q.answer >= 0 && q.answer < q.options.length)) { showErr(`حدّد الإجابة الصحيحة للسؤال ${n}.`); return false; }
+      }
+      return { questions: admQuiz.map((q) => ({ type: q.type, text: q.text.trim(), options: q.type === "tf" ? ["صح", "خطأ"] : q.options.map((o) => o.trim()), answer: q.answer })) };
+    }
+
+    // ---------- (2) جودة الفيديو داخل قائمة إعدادات المشغل ----------
+    // ملاحظة مهمة: يوتيوب أوقف رسمياً دعم setPlaybackQuality في الـ IFrame API (صارت لا تؤثر)، لذلك الاختيار
+    // يُرسَل لمشغل يوتيوب بأفضل جهد ويُحفظ كتفضيل للطالب، لكن يوتيوب قد يتجاهله ويختار الجودة تلقائياً.
+    const PV_QUALITIES = [0, 1080, 720, 480, 360]; // 0 = Auto
+    const PV_YT_Q = { 0: "default", 1080: "hd1080", 720: "hd720", 480: "large", 360: "medium" };
+    let pvQuality = (() => { try { const v = Number(localStorage.getItem("pv_quality")); return PV_QUALITIES.includes(v) ? v : 0; } catch (_) { return 0; } })();
+    function pvApplyQuality(q, silent) {
+      q = Number(q); if (!PV_QUALITIES.includes(q)) q = 0;
+      pvQuality = q;
+      if (!silent) { try { localStorage.setItem("pv_quality", String(q)); } catch (_) {} }
+      const emb = pvPlayerInstance && pvPlayerInstance.embed, name = PV_YT_Q[q];
+      if (!emb) return;
+      try { if (typeof emb.setPlaybackQualityRange === "function") emb.setPlaybackQualityRange(name, name); } catch (_) {}
+      try { if (typeof emb.setPlaybackQuality === "function") emb.setPlaybackQuality(name); } catch (_) {}
+      document.querySelectorAll("#pvVideoBox .pv-q-menu button").forEach((b) => b.classList.toggle("on", Number(b.dataset.q) === q));
+    }
+    // لو Plyr لم يرسم عنصر "الجودة" داخل قائمة الإعدادات (يختلف حسب النسخة/المزوّد) نضيف زر جودة بجوار الترس كاحتياطي
+    function pvEnsureQualityMenu() {
+      const box = document.getElementById("pvVideoBox"); if (!box || !pvPlayerInstance) return;
+      if (box.querySelector('[data-plyr-settings-type="quality"]') || box.querySelector(".pv-q")) return;
+      const bar = box.querySelector(".plyr__controls"); if (!bar) return;
+      const wrap = document.createElement("div"); wrap.className = "pv-q";
+      wrap.innerHTML = `<button type="button" class="plyr__control" title="Video Quality" aria-label="Video Quality">HD</button><div class="pv-q-menu" hidden>${PV_QUALITIES.map((q) => `<button type="button" data-q="${q}" class="${q === pvQuality ? "on" : ""}">${q ? q + "p" : "Auto"}</button>`).join("")}</div>`;
+      const menu = wrap.querySelector(".pv-q-menu");
+      wrap.querySelector(".plyr__control").onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; };
+      menu.onclick = (e) => { const b = e.target.closest("button[data-q]"); if (b) { pvApplyQuality(b.dataset.q); menu.hidden = true; } };
+      document.addEventListener("click", () => { menu.hidden = true; });
+      const settings = bar.querySelector(".plyr__menu"); settings ? bar.insertBefore(wrap, settings) : bar.appendChild(wrap);
+    }
+
     window.onload = function() {
       [warmUpServices, initFooter, initLectures, checkAuth, initVerseBanner, initSalatReminder, initPrayerSystem].forEach((fn) => {
         try { fn(); } catch (e) { console.error(fn.name, e); }
@@ -3868,14 +4170,93 @@
       el.innerHTML = `<span class="ni-ico">${NOTIF_ICONS[type] || "🔔"}</span><span></span>`;
       el.lastChild.textContent = text; // textContent: لا حقن HTML
       requestAnimationFrame(() => el.classList.add("show"));
-      clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 5500);
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), Math.min(14000, Math.max(5500, String(text).length * 70))); // الاقتباسات الطويلة تبقى وقتاً أطول
     }
     const MOTIVATION_MSGS = [
       "استمر يا بطل! العلم نور وخطوة جديدة تقربك من هدفك 🚀",
       "كل محاضرة تكملها بتقربك خطوة من التفوق 💪",
       "المذاكرة النهاردة هي فرحتك بكرة، كمّل بنشاط 🌟",
       "الاستمرارية أهم من السرعة، خطوة صغيرة كل يوم تصنع فرقاً كبيراً ✨",
-      "ربنا يفتح عليك ويبارك في وقتك، ابدأ بمحاضرة النهاردة 📖"
+      "ربنا يفتح عليك ويبارك في وقتك، ابدأ بمحاضرة النهاردة 📖",
+
+      // --- القرآن الكريم ---
+      "﴿يَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ﴾ [المجادلة: 11]",
+      "﴿وَقُل رَّبِّ زِدْنِي عِلْمًا﴾ [طه: 114]",
+      "﴿قُلْ هَلْ يَسْتَوِي الَّذِينَ يَعْلَمُونَ وَالَّذِينَ لَا يَعْلَمُونَ﴾ [الزمر: 9]",
+      "﴿إِنَّمَا يَخْشَى اللَّهَ مِنْ عِبَادِهِ الْعُلَمَاءُ﴾ [فاطر: 28]",
+      "﴿شَهِدَ اللَّهُ أَنَّهُ لَا إِلَٰهَ إِلَّا هُوَ وَالْمَلَائِكَةُ وَأُولُو الْعِلْمِ قَائِمًا بِالْقِسْطِ﴾ [آل عمران: 18]",
+      "﴿وَتِلْكَ الْأَمْثَالُ نَضْرِبُهَا لِلنَّاسِ وَمَا يَعْقِلُهَا إِلَّا الْعَالِمُونَ﴾ [العنكبوت: 43]",
+      "﴿بَلْ هُوَ آيَاتٌ بَيِّنَاتٌ فِي صُدُورِ الَّذِينَ أُوتُوا الْعِلْمَ﴾ [العنكبوت: 49]",
+      "﴿وَيَرَى الَّذِينَ أُوتُوا الْعِلْمَ الَّذِي أُنزِلَ إِلَيْكَ مِن رَّبِّكَ هُوَ الْحَقَّ﴾ [سبأ: 6]",
+      "﴿اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ * خَلَقَ الْإِنسَانَ مِنْ عَلَقٍ * اقْرَأْ وَرَبُّكَ الْأَكْرَمُ * الَّذِي عَلَّمَ بِالْقَلَمِ * عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ﴾ [العلق: 1-5]",
+      "﴿الرَّحْمَنُ * عَلَّمَ الْقُرْآنَ * خَلَقَ الْإِنسَانَ * عَلَّمَهُ الْبَيَانَ﴾ [الرحمن: 1-4]",
+      "﴿وَعَلَّمَ آدَمَ الْأَسْمَاءَ كُلَّهَا﴾ [البقرة: 31]",
+      "﴿فَوَجَدَا عَبْدًا مِّنْ عِبَادِنَا آتَيْنَاهُ رَحْمَةً مِّنْ عِندِنَا وَعَلَّمْنَاهُ مِن لَّدُنَّا عِلْمًا﴾ [الكهف: 65]",
+      "﴿قَالَ لَهُ مُوسَىٰ هَلْ أَتَّبِعُكَ عَلَىٰ أَن تُعَلِّمَنِ مِمَّا عُلِّمْتَ رُشْدًا﴾ [الكهف: 66]",
+      "﴿فَلَوْلَا نَفَرَ مِن كُلِّ فِرْقَةٍ مِّنْهُمْ طَائِفَةٌ لِّيَتَفَقَّهُوا فِي الدِّينِ﴾ [التوبة: 122]",
+      "﴿فَاسْأَلُوا أَهْلَ الذِّكْرِ إِن كُنتُمْ لَا تَعْلَمُونَ﴾ [النحل: 43]",
+
+      // --- الأحاديث النبوية الشريفة ---
+      "قال رسول الله ﷺ: «مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا، سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ» [صحيح مسلم]",
+      "قال رسول الله ﷺ: «مَنْ يُرِدِ اللَّهُ بِهِ خَيْرًا يُفَقِّهْهُ فِي الدِّينِ» [صحيح البخاري]",
+      "قال رسول الله ﷺ: «إِنَّ المَلَائِكَةَ لَتَضَعُ أَجْنِحَتَهَا لِطَالِبِ العِلْمِ رِضًا بِمَا يَصْنَعُ» [سنن الترمذي]",
+      "قال رسول الله ﷺ: «إِذَا مَاتَ الإِنْسَانُ انْقَطَعَ عَنْهُ عَمَلُهُ إِلاَّ مِنْ ثَلاَثٍ: إِلاَّ مِنْ صَدَقَةٍ جَارِيَةٍ، أَوْ عِلْمٍ يُنْتَفَعُ بِهِ، أَوْ وَلَدٍ صَالِحٍ يَدْعُو لَهُ» [صحيح مسلم]",
+      "قال رسول الله ﷺ: «خَيْرُكُمْ مَنْ تَعَلَّمَ القُرْآنَ وَعَلَّمَهُ» [صحيح البخاري]",
+      "قال رسول الله ﷺ: «فَضْلُ الْعَالِمِ عَلَى الْعَابِدِ كَفَضْلِي عَلَى أَدْنَاكُمْ» [سنن الترمذي]",
+      "قال رسول الله ﷺ: «الدُّنْيَا مَلْعُونَةٌ مَلْعُونٌ مَا فِيهَا إِلَّا ذِكْرُ اللَّهِ وَمَا وَالَاهُ وَعَالِمٌ أَوْ مُتَعَلِّمٌ» [سنن الترمذي]",
+      "قال معاذ بن جبل رضي الله عنه: «تَعَلَّمُوا العِلْمَ؛ فَإِنَّ تَعَلُّمَهُ لِلَّهِ خَشْيَةٌ، وَطَلَبَهُ عِبَادَةٌ، وَمُذَاكَرَتَهُ تَسْبِيحٌ» [جامع بيان العلم وفضله]",
+      "قال رسول الله ﷺ: «مَنْ خَرَجَ فِي طَلَبِ الْعِلْمِ فَهُوَ فِي سَبِيلِ اللَّهِ حَتَّى يَرْجِعَ» [سنن الترمذي]",
+      "قال رسول الله ﷺ: «لا حَسَدَ إِلاّ فِي اثْنَتَيْنِ: رَجُلٌ آتَاهُ اللَّهُ مالاً فَسَلَّطَهُ عَلَى هَلَكَتِهِ فِي الحَقِّ، وَرَجُلٌ آتَاهُ اللَّهُ الحِكْمَةَ فَهُوَ يَقْضِي بِها وَيُعَلِّمُها» [صحيح البخاري]",
+      "قال رسول الله ﷺ: «إِنَّ اللَّهَ وَمَلَائِكَتَهُ وَأَهْلَ السَّمَوَاتِ وَالأَرَضِينَ حَتَّى النَّمْلَةَ فِي جُحْرِهَا وَحَتَّى الحُوتَ لَيُصَلُّونَ عَلَى مُعَلِّمِ النَّاسِ الخَيْرَ» [سنن الترمذي]",
+      "قال رسول الله ﷺ: «نَضَّرَ اللَّهُ امْرَأً سَمِعَ مَقَالَتِي فَوَعَاهَا وَحَفِظَهَا وَبَلَّغَهَا» [سنن الترمذي]",
+      "قال رسول الله ﷺ: «مَنْ دَعا إِلى هُدًى كانَ لَهُ مِنَ الأَجْرِ مِثْلُ أُجُورِ مَنْ تَبِعَهُ» [صحيح مسلم]",
+      "قال رسول الله ﷺ: «إنَّ العُلَماءَ ورَثَةُ الأَنْبِياءِ، وإنَّ الأَنْبِياءَ لَمْ يُوَرِّثُوا دِينَارًا ولا دِرْهَمًا، وإنَّما ورَّثُوا العِلْمَ» [سنن أبي داود]",
+      "قال رسول الله ﷺ: «طلبُ العلمِ فريضةٌ على كلِّ مسلمٍ» [سنن ابن ماجه]",
+      "قال رسول الله ﷺ: «مَنْ جَاءَ مَسْجِدِي هَذَا لَمْ يَأْتِهِ إِلاَّ لِخَيْرٍ يَتَعَلَّمُهُ أَوْ يُعَلِّمُهُ فَهُوَ بِمَنْزِلَةِ الْمُجَاهِدِ فِي سَبِيلِ اللَّهِ» [سنن ابن ماجه]",
+      "قال رسول الله ﷺ: «الكَلِمَةُ الحِكْمَةُ ضَالَّةُ المُؤْمِنِ فَحَيْثُ وَجَدَهَا فَهُوَ أَحَقُّ بِهَا» [سنن الترمذي]",
+      "قال رسول الله ﷺ: «احْرِصْ عَلَى مَا يَنْفَعُكَ، وَاسْتَعِنْ بِاللَّهِ وَلاَ تَعْجَزْ» [صحيح مسلم]",
+
+      // --- أبيات شعرية ---
+      "تَعَلَّمْ فَلَيْسَ المَرْءُ يُولَدُ عَالِمًا ... وَلَيْسَ أَخُو عِلْمٍ كَمَنْ هُوَ جَاهِلُ (الإمام الشافعي)",
+      "اصْبِرْ عَلَى مُرِّ الجَفَا مِنْ مُعَلِّمٍ ... فَإِنَّ رُسُوبَ العِلْمِ فِي نَفَرَاتِهِ (الإمام الشافعي)",
+      "وَمَنْ لَمْ يَذُقْ مُرَّ التَّعَلُّمِ سَاعَةً ... تَجَرَّعَ ذُلَّ الجَهْلِ طُولَ حَيَاتِهِ (الإمام الشافعي)",
+      "وَمَنْ فَاتَهُ التَّعْلِيمُ وَقْتَ شَبَابِهِ ... فَكَبِّرْ عَلَيْهِ أَرْبَعًا لِوَفَاتِهِ (الإمام الشافعي)",
+      "مَا الفَخْرُ إِلا لِأَهْلِ العِلْمِ إِنَّهُمُ ... عَلَى الهُدَى لِمَنِ اسْتَهْدَى أَدِلَّاءُ (الإمام علي بن أبي طالب)",
+      "وَقَدْرُ كُلِّ امْرِئٍ مَا كَانَ يُحْسِنُهُ ... وَالجَاهِلُونَ لِأَهْلِ العِلْمِ أَعْدَاءُ (الإمام علي بن أبي طالب)",
+      "فَفُزْ بِعِلْمٍ ولا تَطْلُبْ بِهِ بَدَلًا ... فَالنَّاسُ مَوْتَى وَأَهْلُ العِلْمِ أَحْيَاءُ (الإمام علي بن أبي طالب)",
+      "قُمْ لِلْمُعَلِّمِ وَوفِّهِ التَّبْجِيلا ... كَادَ المُعَلِّمُ أَنْ يَكُونَ رَسُولا (أحمد شوقي)",
+      "أَعَلِمْتَ أَشْرَفَ أَوْ أَجَلَّ مِنَ الَّذِي ... يَبْنِي وَيُنْشِئُ أَنْفُسًا وَعُقُولا (أحمد شوقي)",
+      "العِلْمُ يَرْفَعُ بَيْتًا لا عِمَادَ لَهُ ... وَالجَهْلُ يَهْدِمُ بَيْتَ العِزِّ وَالْكَرَمِ (حافظ إبراهيم)",
+      "أَعَزُّ مَكَانٍ فِي الدُّنَى سَرْجُ سَابِحٍ ... وَخَيْرُ جَلِيسٍ فِي الزَّمَانِ كِتَابُ (المتنبي)",
+      "وَلَمْ أَرَ فِي عُيُوبِ النَّاسِ شَيْئًا ... كَنَقْصِ القَادِرِينَ عَلَى التَّمَامِ (المتنبي)",
+      "اطْلُبِ العِلْمَ ولا تَكْسَلْ فَمَا ... أَبْعَدَ الخَيْرَ عَلَى أَهْلِ الكَسَلْ (ابن الوردي)",
+      "فِي ازْدِيَادِ العِلْمِ إِرْغَامُ العِدَا ... وَجَمَالُ العِلْمِ إِصْلاحُ العَمَلْ (ابن الوردي)",
+      "لا يَعْرِفُ العِلْمَ إِلا مَنْ يُقَاسِيهِ ... ولا يَنَالُ الهُدَى إِلا مَنْ يُعَانِيهِ (الخليل بن أحمد الفراهيدي)",
+      "أَخِي لَنْ تَنَالَ العِلْمَ إِلا بِسِتَّةٍ ... ذَكَاءٌ وَحِرْصٌ وَاجْتِهَادٌ وَدِرْهَمٌ وَصُحْبَةُ أُسْتَاذٍ وَطُولُ زَمَانِ (الإمام الشافعي)",
+
+      // --- أقوال وحكم العلماء والمفكرين ---
+      "تَعَلَّمُوا العِلْمَ وَعَلِّمُوهُ النَّاسَ، وَتَعَلَّمُوا لَهُ الوَقَارَ وَالسَّكِينَةَ. (عمر بن الخطاب)",
+      "اغْدُ عَالِمًا أَوْ مُتَعَلِّمًا أَوْ مُسْتَمِعًا، وَلا تَكُنِ الرَّابِعَةَ فَتَهْلِكُ. (عبد الله بن مسعود)",
+      "لَوْلا العُلَمَاءُ لَصَارَ النَّاسُ مِثْلَ البَهَائِمِ. (الحسن البصري)",
+      "النَّاسُ إِلَى العِلْمِ أَحْوَجُ مِنْهُمْ إِلَى الطَّعَامِ وَالشَّرَابِ؛ لأنَّ الطَّعَامَ وَالشَّرَابَ يُحْتَاجُ إِلَيْهِ فِي اليَوْمِ مَرَّةً أَوْ مَرَّتَيْنِ، وَالعِلْمُ يُحْتَاجُ إِلَيْهِ بِعَدَدِ الأَنْفَاسِ. (الإمام أحمد بن حنبل)",
+      "العِلْمُ يَهْتِفُ بِالعَمَلِ، فَإِنْ أَجَابَهُ وَإِلَّا ارْتَحَلَ. (ابن القيم الجوزية)",
+      "العِلْمُ بِلا عَمَلٍ جُنُونٌ، وَالعَمَلُ بِغَيْرِ عِلْمٍ لا يَكُونُ. (أبو حامد الغزالي)",
+      "أَوَّلُ العِلْمِ النِّيَّةُ، ثُمَّ الاسْتِمَاعُ، ثُمَّ الفَهْمُ، ثُمَّ الحِفْظُ، ثُمَّ العَمَلُ، ثُمَّ النَّشْرُ. (عبد الله بن المبارك)",
+      "لا يَزَالُ الرَّجُلُ عَالِمًا مَا تَعَلَّمَ، فَإِذَا تَرَكَ التَّعَلُّمَ وَظَنَّ أَنَّهُ قَدِ اكْتَفَى فَهُوَ أَجْهَلُ مَا يَكُونُ. (سعيد بن جبير)",
+      "مَنْ عَرَفَ شَرَفَ العُمْرِ وَقِيمَةَ المَوَاقِيتِ لَمْ يَفْرُطْ فِي لَحْظَةٍ بِغَيْرِ عِلْمٍ أو عَمَلٍ. (ابن الجوزي)",
+      "التعليم هو أقوى سلاح يمكنك استخدامه لتغيير العالم. (نيلسون مانديلا)",
+      "جذور التربية والتعليم مريرة، ولكن ثمارها حلوة. (أرسطو)",
+      "التعليم ليس ملء الإناء، بل هو إيقاد لشعلة. (سقراط)",
+      "الاستثمار في المعرفة يمنح أفضل الفوائد والأرباح. (بنيامين فرانكلين)",
+      "التعليم ليس تعلم الحقائق، بل هو تدريب العقل على التفكير. (ألبرت أينشتاين)",
+      "المعرفة في حد ذاتها هي قوة. (فرنسيس بيكون)",
+      "التعلم بدون تفكير جهد ضائع، والتفكير بدون تعلم أمر خطير. (كونفوشيوس)",
+      "القراءة تضيف إلى عمر الإنسان أعماراً أخرى. (عباس محمود العقاد)",
+      "التعليم كالماء والهواء حق لكل إنسان. (طه حسين)",
+      "التعليم هو جواز سفرنا إلى المستقبل، لأن الغد ينتمي لأولئك الذين يستعدون له اليوم. (مالكوم إكس)",
+      "أي شخص يتوقف عن التعلم هو عجوز، سواء كان في العشرين أو الثمانين. (هنري فورد)",
+      "العبقرية عبارة عن 1% إلهام، و99% جهد وعرق. (توماس إديسون)",
+      "العلم الحقيقي ليس حشو الرأس بالمعلومات، بل هو الشغف الذي يدفعك للبحث الدائم. (مصطفى محمود)"
     ];
     function maybeMotivate() {
       if (!currentStudent || !isActivatedValue(currentStudent.code) || document.hidden) return;
