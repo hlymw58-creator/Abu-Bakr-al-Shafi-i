@@ -882,6 +882,33 @@
  
     /* ===== لوحة التحكم (الأدمن فقط) ===== */
     .btn-admin { background: #fff; color: var(--primary-color); border: none; padding: 6px 12px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 13px; }
+    /* ANNOUNCEMENTS:START — شريط التنبيهات العامة */
+    .ann-wrap { display: none; position: relative; z-index: 105; max-height: 42vh; overflow-y: auto; background: linear-gradient(135deg, #1a237e, #4a148c); box-shadow: 0 4px 14px rgba(26,35,126,.35); }
+    .ann-wrap.show { display: block; }
+    .ann-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #fff; overflow: hidden; animation: annIn .5s cubic-bezier(.2,.9,.3,1.1) both; }
+    .ann-item + .ann-item { border-top: 1px solid rgba(255,255,255,.18); }
+    .ann-item::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.14) 50%, transparent 70%); transform: translateX(-100%); animation: annShine 6s ease-in-out infinite; }
+    .ann-ico { flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; background: rgba(255,255,255,.16); animation: annPulse 2.2s infinite; }
+    .ann-text { flex: 1; min-width: 0; font-weight: 700; font-size: 15px; line-height: 1.7; overflow-wrap: anywhere; white-space: pre-line; }
+    .ann-cta { flex: 0 0 auto; background: linear-gradient(135deg, #ffd54f, #f9a825); color: #3b2a00; text-decoration: none; font-weight: 800; font-size: 13px; padding: 8px 16px; border-radius: 999px; box-shadow: 0 3px 8px rgba(0,0,0,.25); transition: transform .15s; white-space: nowrap; }
+    .ann-cta:hover { transform: translateY(-1px) scale(1.03); }
+    .ann-x { flex: 0 0 auto; background: rgba(255,255,255,.18); border: 0; color: #fff; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; }
+    .ann-x:hover { background: rgba(255,255,255,.3); }
+    @keyframes annIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+    @keyframes annShine { 0% { transform: translateX(-100%); } 45%, 100% { transform: translateX(100%); } }
+    @keyframes annPulse { 0% { box-shadow: 0 0 0 0 rgba(255,213,79,.6); } 70%, 100% { box-shadow: 0 0 0 10px rgba(255,213,79,0); } }
+    @media (max-width: 600px) {
+      .ann-item { flex-wrap: wrap; row-gap: 8px; }
+      .ann-text { flex: 1 1 calc(100% - 90px); font-size: 14px; }
+      .ann-cta { order: 3; flex: 1 1 100%; text-align: center; }
+    }
+    @media (prefers-reduced-motion: reduce) { .ann-item, .ann-item::before, .ann-ico { animation: none; } }
+    .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 15px; font-family: inherit; outline: none; resize: vertical; min-height: 80px; }
+    .ann-quick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .ann-quick button { border: 1px solid var(--border-color); background: transparent; color: inherit; border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: 12px; }
+    .ann-badge { display: inline-block; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 999px; color: #fff; margin-inline-start: 6px; }
+    .ann-badge.active { background: #2e7d32; } .ann-badge.scheduled { background: #ef6c00; } .ann-badge.expired { background: #757575; }
+    /* ANNOUNCEMENTS:END */
     .adm-modal { max-width: 720px; }
     .adm-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
     .adm-row small { display: block; color: #666; margin-top: 4px; }
@@ -1340,6 +1367,9 @@
 </head>
 <body>
  
+  <!-- ANNOUNCEMENTS: شريط التنبيهات العامة (يظهر أعلى الصفحة للطلاب) -->
+  <div class="ann-wrap" id="annWrap" aria-live="polite"></div>
+
   <!-- شريط تنبيه المحاضرات القريبة -->
   <div class="lecture-alert" id="lectureAlert" role="status">
     <div class="la-view"><span class="la-track" id="laTrack"></span></div>
@@ -1733,6 +1763,8 @@
     const SUBS_REMOTE = () => /^https:\/\/script\.google\.com\//.test(SUBS_SCRIPT_URL); // لو فاضي: يُحفظ الاشتراك في متصفح الطالب
     const SUB_HOURS = 168, EXT_HOURS = 12, MAX_TRIES = 6; // 168 ساعة = 7 أيام | المد = 12 ساعة | 6 محاولات
     const LECTURES_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXD3_GQi_GIlUJJG07gC5EwZwVctKY4m8q2Wc72tkPZ-54ytExl5EFVKHUF3uE1wmm/exec";
+    // رابط تطبيق الويب الخاص بالتنبيهات العامة (Code.gs) — ألصقه هنا بعد النشر. اتركه فارغاً لتعطيل الميزة.
+    const ANNOUNCEMENTS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuHORsfaJK1aaKfq8ll2R_EA_Rq0X7mjdfLnZuwwuwQeVoFWNGy8FqhsRdBnt_yxp0/exec";
     const ADMIN_PHONE = "01099442329"; // يظهر زر لوحة التحكم لهذا الرقم فقط، والتحقق الفعلي يتم في السيرفر
     
     // قائمة الحسابات الإدارية وفريق الدعم المسموح لها بالرد في المنتدى
@@ -1831,9 +1863,7 @@
     }
 
     // محاولة واحدة: ok (نجاح مؤكد) | fail (رد قاطع من السيرفر) | transient (لا نتيجة موثوقة)
-    let lastCallIssue = "";
     async function callScript(url, payload) {
-      lastCallIssue = "";
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), payload && payload.action === "uploadPdf" ? 90000 : (payload && payload.action === "save" ? 60000 : REQUEST_TIMEOUT_MS)); // رفع الـ PDF يحتاج وقتاً أطول
       try {
@@ -1843,16 +1873,15 @@
           body: JSON.stringify(payload),
           signal: ctrl.signal
         });
-        if (!res.ok) { lastCallIssue = "HTTP " + res.status; return { type: "transient" }; }
-        let data, txt = "";
-        try { txt = await res.text(); data = JSON.parse(txt); } catch (_) { lastCallIssue = "الرد ليس JSON (غالباً صفحة خطأ من جوجل): " + txt.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 140); return { type: "transient" }; }
+        if (!res.ok) return { type: "transient" };
+        let data;
+        try { data = JSON.parse(await res.text()); } catch (_) { return { type: "transient" }; }
         if (!data || typeof data !== "object") return { type: "transient" };
         if (data.status === "success") return { type: "ok", data };
         const msg = String(data.message || "");
         if (TRANSIENT_RE.test(msg)) return { type: "transient" };
         return { type: "fail", data, message: msg };
-      } catch (e) {
-        lastCallIssue = (e && e.name === "AbortError") ? "انتهت مهلة الانتظار (السكريبت لم يرد)" : "انقطع الاتصال بالسكريبت";
+      } catch (_) {
         return { type: "transient" };
       } finally {
         clearTimeout(timer);
@@ -3457,6 +3486,163 @@
       updateAlert();
     }
  
+    // ANNOUNCEMENTS:START ======================= التنبيهات العامة =======================
+    const ANN_DISMISS_KEY = "shafeei_ann_dismissed";
+    const ANN_POLL_MS = 90000;
+    const annConfigured = () => /^https:\/\/script\.google\.com\//.test(ANNOUNCEMENTS_SCRIPT_URL);
+    let annItems = [], annOffset = 0, annLastFetch = 0, annFetching = false, annKey = "", annPass = "", annNeedPass = false;
+    const annNow = () => Date.now() + annOffset;
+    const annDismissed = () => { try { return JSON.parse(sessionStorage.getItem(ANN_DISMISS_KEY) || "{}"); } catch (_) { return {}; } };
+
+    // ---------- واجهة الطلاب ----------
+    async function annFetch() {
+      if (annFetching || !annConfigured()) return;
+      annFetching = true; annLastFetch = Date.now();
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 15000);
+      try {
+        const t0 = Date.now();
+        const res = await fetch(ANNOUNCEMENTS_SCRIPT_URL + "?action=active&_=" + t0, { cache: "no-store", signal: ctrl.signal });
+        if (!res.ok) return;
+        const data = JSON.parse(await res.text());
+        if (!data || data.status !== "success" || !Array.isArray(data.announcements)) return;
+        const off = Number(data.serverNow) - (t0 + Date.now()) / 2;
+        annOffset = isFinite(off) ? off : 0;
+        annItems = data.announcements
+          .map((a) => ({ id: String(a.id), message: String(a.message || ""), link: String(a.link || ""), startMs: Date.parse(a.startAt), endMs: Date.parse(a.endAt) }))
+          .filter((a) => a.message && !isNaN(a.endMs));
+        annRender(true);
+      } catch (_) { /* صامت: نكمل بآخر بيانات */ }
+      finally { clearTimeout(timer); annFetching = false; }
+    }
+
+    function annRender(force) {
+      const wrap = document.getElementById("annWrap");
+      if (!wrap) return;
+      const now = annNow(), dis = annDismissed();
+      const list = annItems.filter((a) => (isNaN(a.startMs) || a.startMs <= now) && now < a.endMs && !dis[a.id]);
+      const key = list.map((a) => a.id).join(",");
+      if (key === annKey && !force) return;
+      annKey = key;
+      if (!list.length) { wrap.classList.remove("show"); wrap.innerHTML = ""; return; }
+      wrap.innerHTML = list.map((a) => {
+        const cta = /^https?:\/\//i.test(a.link)
+          ? `<a class="ann-cta" href="${escapeHtml(a.link)}" target="_blank" rel="noopener noreferrer">للدخول اضغط هنا ←</a>` : "";
+        return `<div class="ann-item" role="status">
+          <span class="ann-ico" aria-hidden="true">📢</span>
+          <div class="ann-text">${escapeHtml(a.message)}</div>
+          ${cta}
+          <button type="button" class="ann-x" title="إخفاء" aria-label="إخفاء التنبيه" onclick="annDismiss('${escapeHtml(a.id)}')">✕</button>
+        </div>`;
+      }).join("");
+      wrap.classList.add("show");
+    }
+
+    function annDismiss(id) {
+      const dis = annDismissed(); dis[id] = 1;
+      try { sessionStorage.setItem(ANN_DISMISS_KEY, JSON.stringify(dis)); } catch (_) {}
+      annRender(true);
+    }
+
+    function annTick() {
+      try {
+        if (!annConfigured()) return;
+        const logged = typeof currentStudent !== "undefined" && !!currentStudent;
+        if (!logged) { if (annItems.length || annKey) { annItems = []; annLastFetch = 0; annRender(true); } return; }
+        if (!document.hidden && Date.now() - annLastFetch > ANN_POLL_MS + Math.random() * 15000) annFetch();
+        annRender(false); // يخفي المنتهي تلقائياً حسب وقت السيرفر
+      } catch (_) {}
+    }
+    setInterval(annTick, 3000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - annLastFetch > 30000) annTick(); });
+
+    // ---------- لوحة الإدارة ----------
+    const annAdminPassword = () => annPass || (!annNeedPass && sessionCreds && sessionCreds.password) || "";
+    const annErr = (m) => { const el = document.getElementById("annErr"); if (el) { el.textContent = m || ""; el.style.display = m ? "block" : "none"; } };
+
+    function annQuickEnd(h) {
+      const el = document.getElementById("annEnd");
+      if (el) el.value = toLocalInput(Date.now() + h * 3600000);
+    }
+
+    function renderAnnouncementsAdmin() {
+      if (!annConfigured()) {
+        adminBody().innerHTML = `<h3 class="modal-title">📣 التنبيهات العامة</h3>
+          <p style="line-height:1.9">لم يتم ربط الميزة بعد. ضع رابط الـ Web App في المتغير <b dir="ltr">ANNOUNCEMENTS_SCRIPT_URL</b> داخل index.html.</p>
+          <button class="btn-submit" style="background:#757575" onclick="renderAdminList()">رجوع</button>`;
+        return;
+      }
+      const needPass = annNeedPass || !annAdminPassword();
+      adminBody().innerHTML = `
+        <h3 class="modal-title">📣 التنبيهات العامة</h3>
+        <form onsubmit="annAdd(event)">
+          <div class="form-group"><label>نص الرسالة:</label><textarea id="annMsg" maxlength="300" required placeholder="مثال: يوجد بث مباشر الليلة مراجعة عامة"></textarea></div>
+          <div class="form-group"><label>رابط إضافي (اختياري):</label><input id="annLink" type="url" dir="ltr" placeholder="https://..."></div>
+          <div class="form-group"><label>وقت البداية (اتركه فارغاً ليبدأ فوراً):</label><input id="annStart" type="datetime-local"></div>
+          <div class="form-group"><label>تاريخ ووقت الانتهاء:</label><input id="annEnd" type="datetime-local" required>
+            <div class="ann-quick"><button type="button" onclick="annQuickEnd(1)">بعد ساعة</button><button type="button" onclick="annQuickEnd(3)">بعد 3 ساعات</button><button type="button" onclick="annQuickEnd(24)">بعد 24 ساعة</button><button type="button" onclick="annQuickEnd(72)">بعد 3 أيام</button></div></div>
+          ${needPass ? `<div class="form-group"><label>الرقم السري للإدارة:</label><input id="annPassField" type="password" required autocomplete="current-password"></div>` : ""}
+          <button class="btn-submit" type="submit" id="annAddBtn">➕ إضافة التنبيه</button>
+          <div class="error-msg" id="annErr" style="display:none"></div>
+        </form>
+        <h4 style="margin:18px 0 8px">التنبيهات المسجلة</h4>
+        <div id="annAdminList"><p style="text-align:center;color:#666">جاري التحميل...</p></div>
+        <button class="btn-submit" style="background:#757575" onclick="renderAdminList()">رجوع</button>`;
+      annLoadAdminList();
+    }
+
+    async function annCall(payload) {
+      const fld = document.getElementById("annPassField");
+      if (fld && fld.value) annPass = fld.value;
+      return callWithRetry(ANNOUNCEMENTS_SCRIPT_URL, Object.assign({ password: annAdminPassword() }, payload), 3);
+    }
+
+    async function annLoadAdminList() {
+      const box = document.getElementById("annAdminList");
+      if (!box) return;
+      if (!annAdminPassword()) { box.innerHTML = `<p style="text-align:center;color:#666">أدخل الرقم السري في النموذج أعلاه عند أول إضافة لعرض القائمة.</p>`; return; }
+      const r = await annCall({ action: "list" });
+      if (!document.getElementById("annAdminList")) return;
+      if (r.type === "fail" && r.data && r.data.code === "AUTH") { annPass = ""; annNeedPass = true; box.innerHTML = `<p style="color:#c62828;text-align:center">${escapeHtml(safeMsg(r.message, "الرقم السري غير صحيح."))} أدخل الرقم السري ثم أعد المحاولة.</p>`; return; }
+      if (r.type !== "ok") { box.innerHTML = `<p style="color:#c62828;text-align:center">${GENERIC_ERROR}</p>`; return; }
+      const label = { active: "نشط", scheduled: "مجدول", expired: "منتهي" };
+      const rows = (r.data.announcements || []).map((a) => `
+        <div class="adm-row">
+          <div><b>${escapeHtml(a.message)}</b><span class="ann-badge ${escapeHtml(a.state)}">${label[a.state] || ""}</span>
+            <small>من ${fmtDateTime(Date.parse(a.startAt))}<br>إلى ${fmtDateTime(Date.parse(a.endAt))}${a.link ? "<br>🔗 " + escapeHtml(a.link) : ""}</small></div>
+          <div><button class="adm-btn adm-del" onclick="annDelete('${escapeHtml(a.id)}')">حذف</button></div>
+        </div>`).join("");
+      box.innerHTML = rows || `<p style="text-align:center;color:#666;padding:10px">لا توجد تنبيهات مسجلة.</p>`;
+    }
+
+    async function annAdd(e) {
+      e.preventDefault(); annErr("");
+      const g = (id) => (document.getElementById(id) || {}).value || "";
+      const message = g("annMsg").trim(), link = g("annLink").trim(), startV = g("annStart"), endV = g("annEnd");
+      if (!message) return annErr("اكتب نص التنبيه.");
+      if (link && !/^https?:\/\//i.test(link)) return annErr("الرابط يجب أن يبدأ بـ http:// أو https://");
+      const endMs = new Date(endV).getTime(), startMs = startV ? new Date(startV).getTime() : Date.now();
+      if (isNaN(endMs)) return annErr("حدد تاريخ ووقت الانتهاء.");
+      if (endMs <= startMs) return annErr("وقت الانتهاء يجب أن يكون بعد وقت البداية.");
+      if (endMs <= Date.now()) return annErr("وقت الانتهاء مضى بالفعل.");
+      const btn = document.getElementById("annAddBtn");
+      btn.disabled = true; btn.innerText = "جاري الحفظ...";
+      // id ثابت لهذه العملية: لو أُعيد الإرسال بعد انقطاع لن يُحفظ التنبيه مرتين
+      const id = "a_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      const r = await annCall({ action: "add", id, message, link, startAt: startV ? new Date(startMs).toISOString() : "", endAt: new Date(endMs).toISOString() });
+      if (r.type === "ok") { annNeedPass = false; renderAnnouncementsAdmin(); annFetch(); return; }
+      btn.disabled = false; btn.innerText = "➕ إضافة التنبيه";
+      if (r.type === "fail" && r.data && r.data.code === "AUTH") { annPass = ""; annNeedPass = true; renderAnnouncementsAdmin(); setTimeout(() => annErr(safeMsg(r.message, "الرقم السري غير صحيح.")), 0); return; }
+      annErr(r.type === "fail" ? safeMsg(r.message, GENERIC_ERROR) : GENERIC_ERROR);
+    }
+
+    async function annDelete(id) {
+      if (!confirm("حذف هذا التنبيه نهائياً؟")) return;
+      const r = await annCall({ action: "delete", id });
+      if (r.type === "ok") { annLoadAdminList(); annFetch(); } else alert(GENERIC_ERROR);
+    }
+    // ANNOUNCEMENTS:END
+
     // ---------- شريط التنبيه (قبل الموعد بساعتين) ----------
     const dismissedAlerts = () => { try { return JSON.parse(sessionStorage.getItem("shafeei_dismissed") || "{}"); } catch (_) { return {}; } };
     const setAlertH = (h) => document.documentElement.style.setProperty("--alert-h", h + "px");
@@ -3499,7 +3685,7 @@
       let r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: phone, password: password });
       if (r.type === "transient") r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: phone, password: password });
       if (r.type === "ok") {
-        adminToken = r.data.token;
+        adminToken = r.data.token; annPass = password;
         return { type: "ok", data: { user: { name: r.data.name, phone: phone, code: "ADMIN", isAdmin: true } } };
       }
       if (r.type === "fail") return { type: "fail", message: safeMsg(r.message, "بيانات الدخول غير صحيحة.") };
@@ -3537,7 +3723,7 @@
       const btn = document.getElementById("admUnlockBtn");
       btn.disabled = true; btn.innerText = "جاري التحقق...";
       const r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: currentStudent.phone, password: document.getElementById("admPass").value });
-      if (r.type === "ok") { adminToken = r.data.token; loadAdminList(); }
+      if (r.type === "ok") { adminToken = r.data.token; annPass = (document.getElementById("admPass") || {}).value || annPass; annNeedPass = false; loadAdminList(); }
       else renderAdminLogin(r.type === "fail" ? safeMsg(r.message, "بيانات الدخول غير صحيحة.") : GENERIC_ERROR);
     }
  
@@ -3569,6 +3755,7 @@
       adminBody().innerHTML = `
         <h3 class="modal-title">إدارة المحاضرات</h3>
         <button class="btn-submit" onclick="renderAdminForm()">➕ إضافة محاضرة</button>
+        <button class="btn-submit" style="background:#4a148c" onclick="renderAnnouncementsAdmin()">📣 التنبيهات العامة</button>
         <div style="margin-top:14px">${rows}</div>
         <button class="btn-submit" style="background:#757575" onclick="closeAdminPanel()">إغلاق</button>`;
     }
@@ -3636,24 +3823,16 @@
       if (!r) return;
       if (r.type === "ok") { admQDraftClear(id); await loadAdminList(); fetchLectures(); return; }
       if (r.type === "fail") { showErr(safeMsg(r.message, "تعذر الحفظ، راجع البيانات.")); btn.disabled = false; btn.innerText = "حفظ"; return; }
-      // لم يصل الرد: قد يكون الحفظ تم فعلاً. نتحقق بصمت، ولا نمسح النموذج ولا الاختبار أبداً
-      const issue = lastCallIssue;
+      // لم يصل الرد: قد يكون الحفظ تم فعلاً. نتحقق بصمت من القائمة، ولا نمسح النموذج ولا الاختبار أبداً
       btn.innerText = "جاري التأكد من الحفظ...";
-      const png = await callScript(LECTURES_SCRIPT_URL, { action: "ping" });
-      const oldScript = png.type === "fail";            // السكريبت المنشور لا يعرف أمر ping = نسخة قديمة
       const chk = await adminCall({ action: "adminList" });
       if (chk && chk.type === "ok") {
-        const want = at.toISOString(), title = document.getElementById("admTitle").value.trim(), nq = (quizPayload && quizPayload.questions.length) || 0;
-        const same = (x) => (id ? x.id === id : true) && String(x.title).trim() === title && String(x.releaseAt) === want;
-        const hit = (chk.data.lectures || []).find((x) => same(x) && (((x.quiz && x.quiz.questions && x.quiz.questions.length) || 0) === nq));
+        const want = at.toISOString(), title = document.getElementById("admTitle").value.trim();
+        const hit = (chk.data.lectures || []).find((x) => (id ? x.id === id : true) && String(x.title).trim() === title && String(x.releaseAt) === want
+          && (((x.quiz && x.quiz.questions && x.quiz.questions.length) || 0) === ((quizPayload && quizPayload.questions.length) || 0)));
         if (hit) { admQDraftClear(id); await loadAdminList(); fetchLectures(); alert("تم الحفظ بنجاح ✅"); return; }
-        if (nq && (chk.data.lectures || []).find(same)) {
-          showErr("⚠️ حُفظت المحاضرة لكن بدون الاختبار، لأن السكريبت المنشور على جوجل نسخة قديمة لا تدعم الاختبارات. الصق Code.gs الجديد ثم Deploy > Manage deployments > Edit > New version، وبعدها اضغط «حفظ» هنا مرة أخرى (اختبارك محفوظ في هذه الصفحة).");
-          btn.disabled = false; btn.innerText = "حفظ"; return;
-        }
       }
-      showErr((oldScript ? "⚠️ السكريبت المنشور على جوجل نسخة قديمة (لا يعرف أوامر الاختبارات): الصق Code.gs الجديد ثم اعمل New version. " : "")
-        + "لم يُحفظ شيء بعد. السبب: " + (issue || "غير معروف") + ". ما كتبته (بما فيه الاختبار) ما زال محفوظاً هنا — اضغط «حفظ» مرة أخرى.");
+      showErr("لم يصلنا تأكيد الحفظ، ولم يُحفظ شيء بعد. ما كتبته (بما فيه الاختبار) ما زال محفوظاً هنا — اضغط «حفظ» مرة أخرى. وحتى لو أغلقت الصفحة سيُسترجع الاختبار تلقائياً.");
       btn.disabled = false; btn.innerText = "حفظ";
     }
  
