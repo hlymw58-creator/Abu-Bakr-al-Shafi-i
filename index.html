@@ -5375,10 +5375,47 @@
     }
     const dot = document.querySelector("#sideNav .sb-dot"); if (dot) dot.className = "sb-dot " + (subscribed() ? w.st : "");
   }
+  /* ---- طلب كلمة السر مرة واحدة للطلاب الذين دخلوا بجلسة محفوظة (بدون كلمة سر في الذاكرة) ---- */
+  let authAsked = false;
+  const needAuth = () => tracked() && subscribed() && on() && !cachedToken() && !(sessionCreds && normalizePhone(sessionCreds.phone) === phoneOf());
+  function askAuth() {
+    if (authAsked || !needAuth()) return;
+    authAsked = true;
+    setTimeout(() => {
+      if (!needAuth()) return;
+      let m = $("trkAuthModal");
+      if (!m) {
+        m = document.createElement("div"); m.id = "trkAuthModal"; m.className = "modal-overlay"; m.style.zIndex = 3000;
+        m.innerHTML = `<div class="modal-content"><h3 class="modal-title">🔐 تأكيد الدخول</h3>
+          <p style="line-height:1.9;text-align:center;margin-bottom:12px">لتفعيل متابعة تقدمك الدراسي أدخل كلمة السر مرة واحدة (مرة واحدة فقط، ولن تُطلب منك بعد ذلك).</p>
+          <form id="trkAuthForm"><div class="form-group"><input type="password" id="trkAuthPass" required autocomplete="current-password" placeholder="كلمة السر"></div>
+          <div class="error-msg" id="trkAuthErr"></div>
+          <button class="btn-submit" type="submit" id="trkAuthBtn">تأكيد</button>
+          <button class="btn-submit" type="button" id="trkAuthLater" style="background:#757575">لاحقاً</button></form></div>`;
+        document.body.appendChild(m);
+        $("trkAuthLater").onclick = () => { m.style.display = "none"; };
+        $("trkAuthForm").onsubmit = async (e) => {
+          e.preventDefault();
+          const b = $("trkAuthBtn"), err = $("trkAuthErr"), pw = $("trkAuthPass").value;
+          b.disabled = true; b.textContent = "جاري التحقق...";
+          const r = await callScript(TRK_URL, { action: "auth", phone: phoneOf(), password: pw });
+          if (r.type === "ok" && r.data.token) {
+            try { localStorage.setItem(tokKey(), JSON.stringify({ token: r.data.token, exp: r.data.exp })); } catch (_) {}
+            sessionCreds = { phone: currentStudent.phone, password: pw };
+            m.style.display = "none"; $("trkAuthPass").value = ""; err.style.display = "none"; tokFailAt = 0;
+            sync(false, true, true);
+          } else { err.textContent = r.type === "fail" ? "كلمة السر غير صحيحة." : "تعذر الاتصال الآن، حاول مرة أخرى."; err.style.display = "block"; }
+          b.disabled = false; b.textContent = "تأكيد";
+        };
+      }
+      m.style.display = "flex";
+    }, 2500);
+  }
   const started = {};
   function onState() {
     chrome(); sbSync();
     if (tracked() && subscribed() && !started[phoneOf()]) { started[phoneOf()] = 1; load(); sync(false, true, true); }
+    try { askAuth(); } catch (_) {}
   }
 
   /* ============ ربط الدوال الموجودة (بدون تعديل كودك الأصلي) ============ */
