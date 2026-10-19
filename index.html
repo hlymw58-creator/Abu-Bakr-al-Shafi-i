@@ -4986,10 +4986,17 @@
   function save() { if (T) { try { localStorage.setItem(key(), JSON.stringify(T)); } catch (_) {} } }
   function rec(id) { return (T.lec[id] = T.lec[id] || { title: "", subject: "", dur: 0, last: 0, ranges: [], done: false, updated: 0, first: 0 }); }
   const pctOf = (id) => { const r = T.lec[id]; if (!r) return 0; if (r.legacy) return 100; return r.dur ? Math.min(100, rSum(r.ranges) / r.dur * 100) : (r.done ? 100 : 0); };
-  const isDone = (id) => { if (T.srv && T.srv.base && T.srv.base.indexOf(id) >= 0) return true; const r = T.lec[id]; return !!r && (r.done || pctOf(id) >= COMPLETE_PCT); };
+  const isDone = (id) => { if (!oldReady) released(); if (oldIds[id]) return true; if (T.srv && T.srv.base && T.srv.base.indexOf(id) >= 0) return true; const r = T.lec[id]; return !!r && (r.done || pctOf(id) >= COMPLETE_PCT); };
 
   /* ============ المحاضرات المتأخرة والحالة ============ */
-  function released() { const out = []; SUBJECTS.forEach((s) => visibleFor(s).forEach((l) => out.push({ id: l.id, title: l.title, subject: s.name }))); return out; }
+  // تاريخ البداية: أي محاضرة موعدها قبل هذا التاريخ (أو بدون موعد) تُحسب مكتملة للجميع، والمتابعة تبدأ من المحاضرات بعده
+  const TRK_BASELINE_TS = Date.parse("2026-10-19T23:59:59+03:00");
+  let oldIds = {}, oldReady = false;
+  function released() {
+    const out = [], old = {};
+    SUBJECTS.forEach((s) => visibleFor(s).forEach((l) => { out.push({ id: l.id, title: l.title, subject: s.name }); if (!(Date.parse(l.releaseAt) > TRK_BASELINE_TS)) old[l.id] = 1; }));
+    oldIds = old; oldReady = true; return out;
+  }
   function backlogInfo() {
     const rel = released(), late = rel.filter((x) => !isDone(x.id)), n = late.length;
     return { rel, late, n, days: graceDays(n), st: n >= 3 ? "red" : n === 2 ? "yellow" : "green" };
