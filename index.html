@@ -4929,7 +4929,7 @@
   "use strict";
 
   /* ============ الإعدادات ============ */
-  const TRK_URL = "https://script.google.com/macros/s/AKfycbypExog6VGxQE0yyndwxR1cIu5beS3DEraGaLH34ZncbXRO3MNQY0Akn4Im3wC5fKIJvg/exec"; // رابط Tracking.gs
+  const TRK_URL = "https://script.google.com/macros/s/AKfycbwMtCg1od__f13XQOTgqatfxraY4I6dIHrxXQ_9w_ktYPhiXoZJDPweLvS8lbQ1AzFKqg/exec"; // رابط Tracking.gs
   const TEACHER_WA = "201101662590";  // واتساب المستر
   const COMPLETE_PCT = 90;            // نسبة المشاهدة لاعتبار المحاضرة "مكتملة"
   const WARN_DAYS = 3;                // أيام استمرار التأخر قبل التواصل مع ولي الأمر
@@ -5364,6 +5364,24 @@
     dashNote = ok ? "" : (on() ? "تعذر التحديث الآن — يتم عرض آخر بيانات محفوظة على جهازك." : "يتم عرض بيانات هذا الجهاز حالياً.");
     if (view === "dash") renderDash();
   }
+
+  /* ============ مراجعة تلقائية كل 30 ثانية (تقييم / شهادات / مهلة) ============ */
+  let pulling = false;
+  async function pull() {
+    if (pulling || document.hidden || !on() || !tracked() || !subscribed()) return;
+    pulling = true;
+    try {
+      const tok = await token(); if (!tok) return;
+      const r = await callScript(TRK_URL, { action: "pull", token: tok });
+      if (r.type === "ok" && r.data && r.data.status === "success") {
+        load(); const before = JSON.stringify(T.srv || {});
+        merge(r.data); save();
+        if (JSON.stringify(T.srv || {}) !== before) { chrome(); try { decorateBadges(); if (view === "dash") renderDash(); } catch (_) {} }
+      } else if (r.type === "fail" && r.data && r.data.code === "TAUTH") { try { localStorage.removeItem(tokKey()); } catch (_) {} }
+    } catch (_) {} finally { pulling = false; }
+  }
+  setInterval(pull, 30000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) pull(); });
 
   /* ============ الشريط العلوي + الحالة العامة ============ */
   function chrome() {
