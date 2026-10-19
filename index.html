@@ -4986,7 +4986,7 @@
   function save() { if (T) { try { localStorage.setItem(key(), JSON.stringify(T)); } catch (_) {} } }
   function rec(id) { return (T.lec[id] = T.lec[id] || { title: "", subject: "", dur: 0, last: 0, ranges: [], done: false, updated: 0, first: 0 }); }
   const pctOf = (id) => { const r = T.lec[id]; if (!r) return 0; if (r.legacy) return 100; return r.dur ? Math.min(100, rSum(r.ranges) / r.dur * 100) : (r.done ? 100 : 0); };
-  const isDone = (id) => { const r = T.lec[id]; return !!r && (r.done || pctOf(id) >= COMPLETE_PCT); };
+  const isDone = (id) => { if (T.srv && T.srv.base && T.srv.base.indexOf(id) >= 0) return true; const r = T.lec[id]; return !!r && (r.done || pctOf(id) >= COMPLETE_PCT); };
 
   /* ============ المحاضرات المتأخرة والحالة ============ */
   function released() { const out = []; SUBJECTS.forEach((s) => visibleFor(s).forEach((l) => out.push({ id: l.id, title: l.title, subject: s.name }))); return out; }
@@ -5074,6 +5074,7 @@
       d.activity.forEach((a) => { const x = m[a.uid]; if (!x) m[a.uid] = a; else x.secs = Math.max(x.secs, a.secs); });
       T.act = Object.values(m).sort((a, b) => b.at - a.at).slice(0, 200);
     }
+    if (d.base) T.srv.base = d.base;
     if (d.certs) T.srv.certs = d.certs;
     if ("eval" in d) T.srv.eval = d.eval;
     if (d.subs) applySubs(d.subs);
