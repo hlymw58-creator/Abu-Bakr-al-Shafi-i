@@ -4929,7 +4929,7 @@
   "use strict";
 
   /* ============ الإعدادات ============ */
-  const TRK_URL = "https://script.google.com/macros/s/AKfycbzePVzaigfK_7ziGYK7J2HaPhLUsVccCBLF00N2xYaAZWPQm74g_j9rW2sIhmQuThnmeA/exec"; // رابط Tracking.gs
+  const TRK_URL = "https://script.google.com/macros/s/AKfycbwbxp96XhC0CPIFoycUhvroDDg3eOv-t27tVaZnLrofCeb5LzfPjCgRUKrG2drgLFcYZA/exec"; // رابط Tracking.gs
   const TEACHER_WA = "201101662590";  // واتساب المستر
   const COMPLETE_PCT = 90;            // نسبة المشاهدة لاعتبار المحاضرة "مكتملة"
   const WARN_DAYS = 3;                // أيام استمرار التأخر قبل التواصل مع ولي الأمر
@@ -5025,12 +5025,13 @@
     const acts = T.act.filter((a) => T.dirtyAct[a.uid]).slice(0, 40);
     acts.forEach((a) => { snapA[a.uid] = a.secs; });
     let logged = false; try { logged = !!sessionStorage.getItem(sessKey()); } catch (_) {}
-    return { snapU, snapA, body: {
+    const pl = { snapU, snapA, body: {
       action: "sync", token: tok, full: !!full, withLec: !!withLec, login: !logged,
       name: (currentStudent && currentStudent.name) || "", parentPhone: (currentStudent && currentStudent.parentPhone) || "",
       released: released().map((x) => ({ id: x.id, title: x.title })),
       lectures, activity: acts.map((a) => ({ uid: a.uid, id: a.id, title: a.title, at: a.at, secs: a.secs })), addSec: T.pend
     } };
+    extras(pl); return pl;
   }
   async function sync(full, force, withLec) {
     if (!on() || !tracked() || !subscribed()) return false;
@@ -5048,7 +5049,8 @@
         T.pend = Math.max(0, T.pend - sentSec);
         Object.keys(pl.snapU).forEach((id) => { if (T.lec[id] && T.lec[id].updated === pl.snapU[id]) delete T.dirty[id]; });
         Object.keys(pl.snapA).forEach((uid) => { const a = T.act.find((x) => x.uid === uid); if (a && a.secs === pl.snapA[uid]) delete T.dirtyAct[uid]; });
-        merge(r.data); save(); chrome();
+        if (pl.sSub) T.subsSent = pl.sSub; if (pl.sSch) T.schedSent = pl.sSch; if (pl.sMk) T.marksSent = pl.sMk; if (pl.sSub || pl.sSch || pl.sMk) xDirty = false;
+        merge(r.data); save(); chrome(); try { decorateBadges(); if (view === "dash") renderDash(); } catch (_) {}
         return true;
       }
       if (r.type === "fail" && r.data && r.data.code === "TAUTH") { try { localStorage.removeItem(tokKey()); } catch (_) {} }
@@ -5073,6 +5075,9 @@
     }
     if (d.certs) T.srv.certs = d.certs;
     if ("eval" in d) T.srv.eval = d.eval;
+    if (d.subs) applySubs(d.subs);
+    if (d.sched) applySched(d.sched);
+    if (d.marks) applyMarks(d.marks);
   }
 
   /* ============ واجهة المشغل (شريط التقدم + اسأل المستر + الجودة) ============ */
@@ -5122,7 +5127,7 @@
     r.title = title || l.title || r.title; r.subject = l.subject || r.subject; if (!r.first) r.first = Date.now();
     cur = { id, uid, p: null, secs: 0, lastSec: -1, resumed: false, resuming: false, target: 0, resumeAt: 0, retried: false, segAt: 0, saveAt: 0 };
     T.act.unshift({ uid, id, title: r.title, at: Date.now(), secs: 0 }); T.act = T.act.slice(0, 200);
-    T.dirty[id] = 1; T.dirtyAct[uid] = 1; r.updated = Date.now(); save();
+    T.dirtyAct[uid] = 1; save();
     ensureUI(); const q = $("trkAskText"); if (q) q.value = "";
     draw(true);
     setNote(r.last >= 5 ? `آخر موضع وصلت إليه: ${mmss(r.last)} — سيُستأنف تلقائياً عند التشغيل` : "", r.last >= 5);
@@ -5411,6 +5416,74 @@
       m.style.display = "flex";
     }, 2500);
   }
+  /* ---- حفظ الاشتراكات والجدول والعلامات على الحساب (تظهر على أي جهاز) ---- */
+  let xDirty = false, soonT = null;
+  const cKey = (c) => "sched_" + currentStudent.phone + (c.id !== COURSES[0].id ? "_" + c.id : "");
+  function soon() { if (!tracked() || !subscribed()) return; xDirty = true; clearTimeout(soonT); soonT = setTimeout(() => sync(false, true), 800); }
+  function localSched() {
+    const o = {}; if (!currentStudent) return o;
+    COURSES.forEach((c) => {
+      let sc = null, a = []; try { sc = JSON.parse(localStorage.getItem(cKey(c)) || "null"); a = JSON.parse(localStorage.getItem(cKey(c) + "_archive") || "[]"); } catch (_) {}
+      if (sc) o[c.id] = { s: sc, arch: a.slice(0, 15) };
+    });
+    return o;
+  }
+  function extras(pl) {
+    try {
+      const sub = JSON.stringify(subsMap || {}), sc = localSched(), scs = JSON.stringify(sc), mk = {};
+      Object.keys(attendanceRecords || {}).forEach((k) => { if (attendanceRecords[k]) mk[k] = 1; });
+      const mks = JSON.stringify(mk);
+      if (currentStudent && subsFor === currentStudent.phone && sub !== "{}" && sub !== T.subsSent) { pl.body.subs = subsMap; pl.sSub = sub; }
+      if (scs !== "{}" && scs !== T.schedSent) { pl.body.sched = sc; pl.sSch = scs; }
+      if (mks !== "{}" && mks !== T.marksSent) { pl.body.marks = mk; pl.sMk = mks; }
+    } catch (_) {}
+  }
+  function mergeSubsC(a, b) {
+    const o = {};
+    [a || {}, b || {}].forEach((m) => Object.keys(m).forEach((id) => {
+      const x = o[id], y = m[id];
+      if (!x) { o[id] = y; return; }
+      o[id] = ((y.tries || 0) > (x.tries || 0) || ((y.tries || 0) === (x.tries || 0) && y.at < x.at)) ? y : x;
+    }));
+    return o;
+  }
+  function mergeSchedC(a, b) {
+    const o = {};
+    [a || {}, b || {}].forEach((m) => Object.keys(m).forEach((c) => {
+      const x = o[c], y = m[c] || {};
+      if (!x) { o[c] = { s: y.s || null, arch: y.arch || [] }; return; }
+      if (y.s && (!x.s || (y.s.updatedAt || 0) > (x.s.updatedAt || 0))) x.s = y.s;
+      const seen = {}; x.arch = (x.arch || []).concat(y.arch || []).filter((v) => !seen[v.at] && (seen[v.at] = 1)).sort((p, q) => q.at - p.at).slice(0, 15);
+    }));
+    return o;
+  }
+  function applySubs(srv) {
+    if (!currentStudent || subsFor !== currentStudent.phone) return;
+    const m = mergeSubsC(subsMap, srv);
+    if (JSON.stringify(m) === JSON.stringify(subsMap)) return;
+    Object.keys(m).forEach((id) => { subsMap[id] = m[id]; });
+    _saveSubs(); try { renderAll(); } catch (_) {}
+  }
+  function applySched(srv) {
+    if (!currentStudent) return;
+    let changed = false;
+    COURSES.forEach((c) => {
+      const sv = srv[c.id]; if (!sv) return;
+      let ls = null, la = []; try { ls = JSON.parse(localStorage.getItem(cKey(c)) || "null"); la = JSON.parse(localStorage.getItem(cKey(c) + "_archive") || "[]"); } catch (_) {}
+      const m = mergeSchedC({ x: { s: ls, arch: la } }, { x: sv }).x;
+      if (JSON.stringify(m.s) !== JSON.stringify(ls) || JSON.stringify(m.arch) !== JSON.stringify(la)) {
+        try { if (m.s) localStorage.setItem(cKey(c), JSON.stringify(m.s)); localStorage.setItem(cKey(c) + "_archive", JSON.stringify(m.arch)); changed = true; } catch (_) {}
+      }
+    });
+    if (changed) { try { renderSchedule(); updateSchedPrompt(); } catch (_) {} }
+  }
+  function applyMarks(srv) {
+    if (!currentStudent) return;
+    let add = false;
+    Object.keys(srv).forEach((k) => { if (srv[k] && !attendanceRecords[k]) { attendanceRecords[k] = true; add = true; } });
+    if (add) { try { localStorage.setItem("attendance_" + currentStudent.phone, JSON.stringify(attendanceRecords)); } catch (_) {} try { renderAll(); } catch (_) {} }
+  }
+
   /* ---- إتمام محاضرة: رسالة للطالب + تحديث فوري للشيت + تحديث شارات المحاضرات ---- */
   function announceDone(id) {
     const r = rec(id), b = backlogInfo();
@@ -5493,7 +5566,7 @@
     load();
     if (!document.hidden && ((typeof pvPlayerInstance !== "undefined" && pvPlayerInstance && pvPlayerInstance.playing) || Date.now() - lastAct < 300000)) T.pend += 5;
     save();
-    if (Date.now() - lastSync > 60000 && (T.pend >= 60 || Object.keys(T.dirty).length)) sync(false);
+    if (Date.now() - lastSync > 60000 && (T.pend >= 60 || xDirty || Object.keys(T.dirty).length)) sync(false);
   }, 1000);
   document.addEventListener("visibilitychange", () => { if (document.hidden && tracked() && T) { save(); sync(false, true); } });
   addEventListener("pagehide", () => {
@@ -5509,6 +5582,11 @@
   $("verseBanner").insertAdjacentElement("afterend", wb);
   buildSidebar();
   try { chrome(); sbSync(); } catch (_) {}
+
+  const _saveSubs = window.saveSubs;
+  window.saveSubs = function () { _saveSubs.apply(this, arguments); soon(); };
+  const _saveSched = window.saveSchedule;
+  window.saveSchedule = function () { _saveSched.apply(this, arguments); soon(); };
 
   window.TRK = {
     nav, open: openDash, sbToggle, refresh, askToggle, askMode: setAskMode, askSend,
