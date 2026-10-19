@@ -4933,7 +4933,8 @@
   const TEACHER_WA = "201101662590";  // واتساب المستر
   const COMPLETE_PCT = 90;            // نسبة المشاهدة لاعتبار المحاضرة "مكتملة"
   const WARN_DAYS = 3;                // أيام استمرار التأخر قبل التواصل مع ولي الأمر
-  const GRACE_H = WARN_DAYS * 24;
+  const GRACE_MIN = 3, GRACE_MAX = 10; // مهلة التعويض: من 3 إلى 10 أيام حسب عدد المحاضرات المتأخرة
+  const graceDays = (n) => Math.min(GRACE_MAX, Math.max(GRACE_MIN, n));
   const WARN_FROM = 2;                // يبدأ التحذير من الحالة الصفراء (محاضرتان متأخرتان)
   const SYNC_EVERY = 45000;           // مزامنة التقدم مع السيرفر أثناء المشاهدة (مللي ثانية)
   const MOVED_CARDS = ["scheduleTab", "forumTab"]; // بطاقات تنتقل من شبكة المواد إلى القائمة الجانبية
@@ -4991,14 +4992,14 @@
   function released() { const out = []; SUBJECTS.forEach((s) => visibleFor(s).forEach((l) => out.push({ id: l.id, title: l.title, subject: s.name }))); return out; }
   function backlogInfo() {
     const rel = released(), late = rel.filter((x) => !isDone(x.id)), n = late.length;
-    return { rel, late, n, st: n >= 3 ? "red" : n === 2 ? "yellow" : "green" };
+    return { rel, late, n, days: graceDays(n), st: n >= 3 ? "red" : n === 2 ? "yellow" : "green" };
   }
   function warnState() {
     load();
     const b = backlogInfo(), now = nowMs();
     if (!subscribed() || b.n < WARN_FROM) { if (T.warn) { T.warn = 0; save(); } return Object.assign(b, { warn: false }); }
     if (!T.warn) { T.warn = (T.srv && T.srv.warnSince) || now; save(); }
-    const end = T.warn + GRACE_H * 3600000, left = end - now;
+    const end = T.warn + b.days * 86400000, left = end - now;
     return Object.assign(b, { warn: true, end, left, expired: left <= 0 });
   }
 
@@ -5008,10 +5009,10 @@
   async function token() {
     const c = cachedToken(); if (c) return c;
     if (Date.now() - tokFailAt < 60000) return "";
-    if (sessionCreds && normalizePhone(sessionCreds.phone) === phoneOf()) {
-      const r = await callScript(TRK_URL, { action: "auth", phone: phoneOf(), password: sessionCreds.password });
-      if (r.type === "ok" && r.data.token) { try { localStorage.setItem(tokKey(), JSON.stringify({ token: r.data.token, exp: r.data.exp })); } catch (_) {} return r.data.token; }
-    }
+    const body = { action: "auth", phone: phoneOf(), parentPhone: (currentStudent && currentStudent.parentPhone) || "" };
+    if (sessionCreds && normalizePhone(sessionCreds.phone) === phoneOf()) body.password = sessionCreds.password;
+    const r = await callScript(TRK_URL, body);
+    if (r.type === "ok" && r.data.token) { try { localStorage.setItem(tokKey(), JSON.stringify({ token: r.data.token, exp: r.data.exp })); } catch (_) {} return r.data.token; }
     tokFailAt = Date.now(); return "";
   }
   const sessKey = () => "trk_sess_" + phoneOf();
@@ -5028,7 +5029,7 @@
     const pl = { snapU, snapA, body: {
       action: "sync", token: tok, full: !!full, withLec: !!withLec, login: !logged,
       name: (currentStudent && currentStudent.name) || "", parentPhone: (currentStudent && currentStudent.parentPhone) || "",
-      released: released().map((x) => ({ id: x.id, title: x.title })),
+      released: released().map((x) => ({ id: x.id, title: x.title, subject: x.subject })),
       lectures, activity: acts.map((a) => ({ uid: a.uid, id: a.id, title: a.title, at: a.at, secs: a.secs })), addSec: T.pend
     } };
     extras(pl); return pl;
@@ -5292,11 +5293,11 @@
     const label = { green: w.n === 0 ? "ممتاز — أنت كده تمام وفل الفل 👏" : "أنت منتظم — كمّل 👍", yellow: "تنبيه — لديك محاضرتان متأخرتان", red: "خطر — تراكمت عليك المحاضرات" }[w.st];
     const msg = w.n === 0 ? "🌟 ما شاء الله! شاهدت كل المحاضرات المتاحة. استمر على هذا المستوى، ربنا يوفقك ويفتح عليك 💚"
       : w.n === 1 ? "📌 باقي لك محاضرة واحدة لم تشاهدها — شاهدها النهاردة قبل ما تتراكم عليك المحاضرات."
-      : `⚠️ لم تشاهد ${w.n} محاضرات — لو استمر التأخر ${WARN_DAYS} أيام سيتم التواصل مع ولي أمرك.`;
+      : `⚠️ لم تشاهد ${w.n} محاضرات — لو استمر التأخر ${w.days} أيام سيتم التواصل مع ولي أمرك.`;
     const lights = ["red", "yellow", "green"].map((c) => `<span class="trk-light ${c} ${w.st === c ? "on" : ""}"></span>`).join("");
     const urgent = w.warn ? `<div class="trk-urgent ${w.expired ? "expired" : ""}" role="alert"><div class="trk-urgent-ico">🚨</div><div>
         <b>تنبيه عاجل!</b> لديك ${w.n} ${w.n === 1 ? "محاضرة متأخرة" : "محاضرات متأخرة"}.
-        ${w.expired ? "انتهت المهلة، وسيتم التواصل مع ولي أمرك." : `أمامك مهلة <b>${WARN_DAYS} أيام</b> لتعويضها، وإلا سيتم التواصل مع ولي أمرك.<br><span class="trk-cd" data-pre="⏳ " data-end="${w.end}">⏳ ${fmtDhms(w.left)}</span>`}
+        ${w.expired ? "انتهت المهلة، وسيتم التواصل مع ولي أمرك." : `أمامك مهلة <b>${w.days} أيام</b> لتعويضها، وإلا سيتم التواصل مع ولي أمرك.<br><span class="trk-cd" data-pre="⏳ " data-end="${w.end}">⏳ ${fmtDhms(w.left)}</span>`}
         <ul>${w.late.slice(0, 6).map((x) => `<li>${escapeHtml(x.title)} — ${escapeHtml(x.subject)}</li>`).join("")}${w.n > 6 ? `<li>و ${w.n - 6} أخرى...</li>` : ""}</ul></div></div>` : "";
     const platformSec = (sv.platformSec || 0) + T.pend;
     const watchedSec = Object.values(T.lec).reduce((s, r) => s + rSum(r.ranges), 0);
@@ -5373,16 +5374,16 @@
     const w = warnState(), bar = $("trkWarnBar");
     if (bar) {
       if (subscribed() && w.warn) {
-        bar.innerHTML = `<span>🚨 تنبيه عاجل: لديك ${w.n} ${w.n === 1 ? "محاضرة متأخرة" : "محاضرات متأخرة"} — ${w.expired ? "انتهت المهلة وسيتم التواصل مع ولي أمرك" : `أمامك ${WARN_DAYS} أيام <b class="trk-cd" data-end="${w.end}" dir="ltr">${fmtDhms(w.left)}</b> لتعويضها وإلا سيتم التواصل مع ولي أمرك`}</span><button type="button" onclick="TRK.open('status')">التفاصيل</button>`;
+        bar.innerHTML = `<span>🚨 تنبيه عاجل: لديك ${w.n} ${w.n === 1 ? "محاضرة متأخرة" : "محاضرات متأخرة"} — ${w.expired ? "انتهت المهلة وسيتم التواصل مع ولي أمرك" : `أمامك ${w.days} أيام <b class="trk-cd" data-end="${w.end}" dir="ltr">${fmtDhms(w.left)}</b> لتعويضها وإلا سيتم التواصل مع ولي أمرك`}</span><button type="button" onclick="TRK.open('status')">التفاصيل</button>`;
         bar.classList.add("show");
-        if (T.notified !== T.warn) { T.notified = T.warn; save(); try { pushNotif(`🚨 لديك ${w.n} محاضرات متأخرة — أمامك ${WARN_DAYS} أيام لتعويضها وإلا سيتم التواصل مع ولي أمرك.`, "streak"); } catch (_) {} }
+        if (T.notified !== T.warn) { T.notified = T.warn; save(); try { pushNotif(`🚨 لديك ${w.n} محاضرات متأخرة — أمامك ${w.days} أيام لتعويضها وإلا سيتم التواصل مع ولي أمرك.`, "streak"); } catch (_) {} }
       } else bar.classList.remove("show");
     }
     const dot = document.querySelector("#sideNav .sb-dot"); if (dot) dot.className = "sb-dot " + (subscribed() ? w.st : "");
   }
   /* ---- طلب كلمة السر مرة واحدة للطلاب الذين دخلوا بجلسة محفوظة (بدون كلمة سر في الذاكرة) ---- */
   let authAsked = false;
-  const needAuth = () => tracked() && subscribed() && on() && !cachedToken() && !(sessionCreds && normalizePhone(sessionCreds.phone) === phoneOf());
+  const needAuth = () => false; // التحقق تلقائي من سجل الطلاب — لا يُطلب من الطالب كتابة كلمة السر
   function askAuth() {
     if (authAsked || !needAuth()) return;
     authAsked = true;
