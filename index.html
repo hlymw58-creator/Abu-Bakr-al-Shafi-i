@@ -5173,7 +5173,7 @@
     if (p.playing && s !== c.lastSec) {
       r.ranges = rAdd(r.ranges, s, s + 1); c.lastSec = s; c.secs++;
       const a = T.act.find((x) => x.uid === c.uid); if (a) { a.secs = c.secs; T.dirtyAct[c.uid] = 1; }
-      if (!r.done && pctOf(c.id) >= COMPLETE_PCT) { r.done = true; try { pushNotif(`أحسنت! أتممت محاضرة «${r.title}» ✅`, "streak"); } catch (_) {} chrome(); }
+      if (!r.done && pctOf(c.id) >= COMPLETE_PCT) { r.done = true; announceDone(c.id); }
     }
     if (t > 1) r.last = s;
     r.updated = Date.now(); T.dirty[c.id] = 1;
@@ -5411,9 +5411,36 @@
       m.style.display = "flex";
     }, 2500);
   }
+  /* ---- إتمام محاضرة: رسالة للطالب + تحديث فوري للشيت + تحديث شارات المحاضرات ---- */
+  function announceDone(id) {
+    const r = rec(id), b = backlogInfo();
+    const txt = b.n === 0 ? `🎉 ما شاء الله! أتممت محاضرة «${r.title}» وخلصت كل المحاضرات المتراكمة. أنت كده تمام وفل الفل 💚`
+      : `✅ أحسنت! أتممت محاضرة «${r.title}» — فاضل لك ${b.n} ${b.n === 1 ? "محاضرة" : "محاضرات"}.`;
+    try { pushNotif(txt, "streak"); } catch (_) {}
+    T.dirty[id] = 1; save(); chrome(); decorateBadges(); sync(false, true);
+    if (view === "dash") renderDash();
+  }
+  // شارة المحاضرة ومؤشر التقدم يعتمدان على المشاهدة الفعلية (90%) وليس على مجرد فتح المحاضرة
+  function decorateBadges() {
+    if (!tracked() || !subscribed()) return;
+    load();
+    Object.keys(lectureIndex).forEach((id) => {
+      const b = document.getElementById("badge-" + id); if (!b) return;
+      const d = isDone(id), p = pctOf(id);
+      b.textContent = d ? "✅ حضرت المحاضرة" : p > 0 ? "⏳ شاهدت " + fmtP(p) : "لم يتم الحضور";
+      b.classList.toggle("attended", d);
+      const t = b.parentElement && b.parentElement.querySelector(".lecture-title span");
+      if (t) t.style.display = d ? "" : "none";
+    });
+    const box = $("progressBox");
+    if (box && box.style.display !== "none") {
+      const rel = released(), done = rel.filter((x) => isDone(x.id)).length, pct = rel.length ? Math.round(done / rel.length * 100) : 0;
+      box.innerHTML = `<b>📈 مدى تقدمك الدراسي: ${pct}%</b> <span style="color:#666;font-size:13px">(أتممت ${done} من ${rel.length} محاضرة متاحة)</span><div class="pg-bar"><div class="pg-fill" style="width:${pct}%"></div></div>`;
+    }
+  }
   const started = {};
   function onState() {
-    chrome(); sbSync();
+    chrome(); sbSync(); try { decorateBadges(); } catch (_) {}
     if (tracked() && subscribed() && !started[phoneOf()]) { started[phoneOf()] = 1; load(); sync(false, true, true); }
     try { askAuth(); } catch (_) {}
   }
