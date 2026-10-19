@@ -4801,5 +4801,657 @@
     setInterval(updateSchedPrompt, 60000);
   </script>
 
+<!-- ===================================================================
+     كود واحد مدمج (CSS + JS): نظام المتابعة + القائمة الجانبية
+     =================================================================== -->
+<style id="trk-style">
+  /* ---------- القائمة الجانبية ---------- */
+  :root { --sb-open: 236px; --sb-closed: 68px; }
+  #sideNav { position: fixed; top: 0; right: 0; bottom: 0; width: var(--sb-open); z-index: 150; display: none; flex-direction: column; gap: 6px; padding: 10px 8px; background: linear-gradient(180deg, #0d3b12, #14532d); border-left: 3px solid #f9a825; box-shadow: -6px 0 20px rgba(0,0,0,.28); overflow-y: auto; overflow-x: hidden; transition: width .25s ease, transform .25s ease, visibility 0s; }
+  body.sb-on #sideNav { display: flex; }
+  .sb-hamb, .sb-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 10px 12px; border: 0; border-radius: 12px; background: transparent; color: #fff; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; text-align: right; position: relative; }
+  .sb-hamb { background: rgba(255,255,255,.1); margin-bottom: 8px; }
+  .sb-item:hover, .sb-hamb:hover { background: rgba(255,255,255,.16); }
+  .sb-item.active { background: rgba(255,179,0,.2); box-shadow: inset -4px 0 0 #ffb300; }
+  .sb-item:focus-visible, .sb-hamb:focus-visible { outline: 3px solid #ffb300; outline-offset: 2px; }
+  .sb-ico { font-size: 22px; width: 28px; text-align: center; flex: none; }
+  .sb-dot { position: absolute; left: 12px; top: 50%; width: 11px; height: 11px; margin-top: -5px; border-radius: 50%; background: transparent; }
+  .sb-dot.green { background: #43a047; box-shadow: 0 0 8px #43a047; }
+  .sb-dot.yellow { background: #fdd835; box-shadow: 0 0 8px #fdd835; }
+  .sb-dot.red { background: #e53935; box-shadow: 0 0 8px #e53935; }
+  .trk-hamb { display: none; }
+  body.sb-on .trk-hamb { display: inline-flex; align-items: center; justify-content: center; }
+  #sbBackdrop { display: none; }
+  @media (min-width: 900px) {
+    body.sb-on { padding-right: var(--sb-open); transition: padding-right .25s ease; }
+    body.sb-on.sb-collapsed { padding-right: var(--sb-closed); }
+    body.sb-collapsed #sideNav { width: var(--sb-closed); }
+    body.sb-collapsed .sb-lbl { display: none; }
+    body.sb-collapsed .sb-item, body.sb-collapsed .sb-hamb { justify-content: center; padding-inline: 0; }
+    body.sb-collapsed .sb-dot { left: 8px; top: 8px; margin: 0; }
+    body.sb-on .trk-hamb { display: none; }
+  }
+  @media (max-width: 899px) {
+    #sideNav { width: min(80vw, 270px); transform: translateX(100%); visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s; }
+    body.sb-open #sideNav { transform: none; visibility: visible; transition: transform .25s ease, visibility 0s; }
+    body.sb-open #sbBackdrop { display: block; position: fixed; inset: 0; z-index: 140; background: rgba(0,0,0,.5); }
+  }
+  @media (prefers-reduced-motion: reduce) { #sideNav, body.sb-on { transition: none !important; } }
+
+  /* ---------- شريط التحذير العاجل ---------- */
+  .trk-warn-bar { display: none; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; background: linear-gradient(90deg, #b71c1c, #e65100); color: #fff; padding: 9px 14px; font-weight: 700; font-size: 14px; text-align: center; line-height: 1.8; }
+  .trk-warn-bar.show { display: flex; }
+  .trk-warn-bar button { border: 0; border-radius: 999px; padding: 5px 14px; font-weight: 800; cursor: pointer; background: #ffd54f; color: #3b2a00; }
+
+  /* ---------- صفحات اللوحة (حالة الطالب / تقييمك / شهاداتي) ---------- */
+  #dashPage { max-width: 900px; }
+  .trk-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+  .trk-tabs button { border: 2px solid var(--primary-color); background: var(--card-bg); color: var(--primary-color); border-radius: 999px; padding: 8px 16px; font-weight: 800; cursor: pointer; }
+  .trk-tabs button.on { background: var(--primary-color); color: #fff; }
+  .trk-card { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+  .trk-card h3 { margin: 0 0 12px; color: var(--primary-color); font-size: 18px; }
+  .trk-note { font-size: 12px; opacity: .7; margin: 0 0 10px; min-height: 16px; }
+  .trk-status { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .trk-lights { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; background: #1c1c1c; }
+  .trk-light { width: 34px; height: 34px; border-radius: 50%; opacity: .22; background: #777; transition: opacity .3s, box-shadow .3s; }
+  .trk-light.red { background: #e53935; } .trk-light.yellow { background: #fdd835; } .trk-light.green { background: #43a047; }
+  .trk-light.on { opacity: 1; box-shadow: 0 0 18px 4px currentColor; }
+  .trk-light.red.on { color: #e53935; } .trk-light.yellow.on { color: #fdd835; } .trk-light.green.on { color: #43a047; }
+  .trk-status-txt { flex: 1; min-width: 220px; }
+  .trk-status-txt b { font-size: 22px; display: block; margin-bottom: 4px; }
+  .trk-urgent { display: flex; gap: 12px; align-items: flex-start; background: #fff3e0; color: #7a1f00; border: 2px solid #e65100; border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; line-height: 1.9; animation: trkPulse 2.2s infinite; }
+  .trk-urgent.expired { background: #ffebee; border-color: #c62828; color: #7f0000; animation: none; }
+  .trk-urgent-ico { font-size: 30px; }
+  .trk-urgent ul { margin: 6px 0 0; padding-inline-start: 20px; font-size: 13px; }
+  .trk-cd { display: inline-block; margin-top: 4px; font-weight: 800; font-size: 20px; direction: ltr; }
+  @keyframes trkPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(230,81,0,.45); } 50% { box-shadow: 0 0 0 10px rgba(230,81,0,0); } }
+  .trk-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .trk-stat { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 12px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+  .trk-stat .v { display: block; font-size: 24px; font-weight: 900; color: var(--primary-color); margin: 4px 0; }
+  .trk-stat .l { font-size: 12px; opacity: .75; }
+  .trk-table-wrap { overflow-x: auto; }
+  .trk-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 520px; }
+  .trk-table th { background: rgba(46,125,50,.14); color: var(--primary-color); padding: 9px 8px; text-align: right; }
+  .trk-table td { padding: 9px 8px; border-bottom: 1px solid var(--border-color); text-align: right; }
+  .trk-stars { font-size: 28px; letter-spacing: 3px; color: #f9a825; direction: ltr; }
+  .trk-stars .off { color: #bdbdbd; }
+  .trk-group { margin: 14px 0 6px; font-weight: 800; color: var(--primary-color); }
+  .trk-lrow { padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+  .trk-lrow-t { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .trk-badge { font-size: 12px; font-weight: 800; border-radius: 999px; padding: 3px 10px; }
+  .trk-badge.done { background: var(--success-bg); color: var(--success-color); }
+  .trk-badge.part { background: #fff3e0; color: #e65100; }
+  .trk-badge.none { background: rgba(128,128,128,.18); }
+  .trk-mini { height: 8px; border-radius: 6px; background: rgba(128,128,128,.25); overflow: hidden; margin: 8px 0 4px; }
+  .trk-mini i { display: block; height: 100%; background: linear-gradient(90deg, #66bb6a, #1b5e20); }
+  .trk-lrow small { opacity: .7; }
+  .trk-teacher { background: rgba(46,125,50,.1); border-right: 4px solid var(--primary-color); border-radius: 8px; padding: 10px 14px; margin-top: 12px; line-height: 1.9; }
+  .trk-cert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .trk-cert { margin: 0; background: var(--card-bg); border: 2px solid #d4af37; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 22px rgba(0,0,0,.16); }
+  .trk-cert img { display: block; width: 100%; height: auto; background: #f5f5f5; }
+  .trk-cert figcaption { padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; color: var(--text-color); }
+  .trk-cert small { opacity: .7; }
+  .trk-empty { text-align: center; padding: 34px 18px; }
+  .trk-empty-ico { font-size: 54px; }
+  .trk-refresh { border: 0; background: transparent; color: var(--accent-color); cursor: pointer; font-weight: 800; padding: 0; }
+
+  /* ---------- داخل مشغل الفيديو ---------- */
+  .trk-pbar { flex-shrink: 0; padding: 2px 4px; color: #f4e285; font-size: 12px; font-weight: 700; }
+  .trk-phead { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+  .trk-phead .trk-done { color: #81c784; }
+  .trk-track { position: relative; height: 12px; border-radius: 6px; background: rgba(255,255,255,.16); direction: ltr; overflow: hidden; }
+  .trk-seg { position: absolute; top: 0; bottom: 0; background: linear-gradient(90deg, #66bb6a, #d4af37); }
+  .trk-head { position: absolute; top: 0; bottom: 0; width: 3px; background: #fff; box-shadow: 0 0 4px #000; }
+  .trk-resume { margin-top: 4px; font-size: 12px; color: #c8e6c9; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .trk-resume button { border: 1px solid #d4af37; background: transparent; color: #f4e285; border-radius: 999px; padding: 2px 10px; cursor: pointer; font-size: 12px; }
+  .trk-q { position: absolute; top: 8px; left: 8px; z-index: 98; }
+  .trk-q-btn { background: rgba(0,0,0,.6); color: #fff; border: 1px solid #d4af37; border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 12px; cursor: pointer; }
+  .trk-q-menu { position: absolute; top: 100%; left: 0; margin-top: 4px; background: rgba(20,20,20,.96); border-radius: 10px; padding: 4px; min-width: 96px; }
+  .trk-q-menu[hidden] { display: none; }
+  .trk-q-menu button { display: block; width: 100%; background: none; border: 0; color: #fff; padding: 7px 10px; text-align: right; cursor: pointer; border-radius: 6px; font-size: 13px; }
+  .trk-q-menu button.on { background: rgba(212,175,55,.4); font-weight: 800; }
+  .trk-ask { flex-shrink: 0; }
+  .trk-ask-toggle { width: 100%; background: #0b2b1a; color: #fff; border: 1.5px solid #25d366; border-radius: 30px; padding: 8px; font-weight: 800; font-size: 13px; cursor: pointer; }
+  .trk-ask-body { margin-top: 6px; background: rgba(255,255,255,.06); border-radius: 12px; padding: 8px; }
+  .trk-ask-body[hidden] { display: none; }
+  .trk-ask-modes { display: flex; gap: 6px; margin-bottom: 6px; }
+  .trk-ask-modes button { flex: 1; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #fff; border-radius: 999px; padding: 6px 4px; font-size: 12px; cursor: pointer; }
+  .trk-ask-modes button.on { background: #25d366; border-color: #25d366; color: #05130e; font-weight: 800; }
+  .trk-ask textarea { width: 100%; min-height: 56px; border-radius: 8px; border: 1px solid #d4af37; background: rgba(0,0,0,.45); color: #fff; padding: 8px; font-family: inherit; font-size: 14px; resize: vertical; }
+  .trk-ask-hint { font-size: 11px; color: #f4e285; margin: 4px 0; min-height: 14px; }
+  .trk-ask-send { width: 100%; border: 0; border-radius: 10px; padding: 9px; font-weight: 800; cursor: pointer; background: #25d366; color: #05130e; }
+  .pv-overlay.pv-full .trk-pbar, .pv-overlay.pv-full .trk-ask { display: none; }
+  @media (orientation: landscape) and (max-height: 520px) { .trk-pbar, .trk-ask { display: none; } }
+</style>
+
+<script id="trk-script">
+(function () {
+  "use strict";
+
+  /* ============ الإعدادات ============ */
+  const TRK_URL = "https://script.google.com/macros/s/AKfycbzePVzaigfK_7ziGYK7J2HaPhLUsVccCBLF00N2xYaAZWPQm74g_j9rW2sIhmQuThnmeA/exec"; // رابط Tracking.gs
+  const TEACHER_WA = "201101662590";  // واتساب المستر
+  const COMPLETE_PCT = 90;            // نسبة المشاهدة لاعتبار المحاضرة "مكتملة"
+  const WARN_DAYS = 3;                // أيام استمرار التأخر قبل التواصل مع ولي الأمر
+  const GRACE_H = WARN_DAYS * 24;
+  const WARN_FROM = 2;                // يبدأ التحذير من الحالة الصفراء (محاضرتان متأخرتان)
+  const SYNC_EVERY = 45000;           // مزامنة التقدم مع السيرفر أثناء المشاهدة (مللي ثانية)
+  const MOVED_CARDS = ["scheduleTab", "forumTab"]; // بطاقات تنتقل من شبكة المواد إلى القائمة الجانبية
+
+  /* ============ أدوات ============ */
+  const on = () => /^https:\/\/script\.google\.com\//.test(TRK_URL);
+  const $ = (id) => document.getElementById(id);
+  const phoneOf = () => normalizePhone((currentStudent && currentStudent.phone) || "");
+  const tracked = () => !!currentStudent && !currentStudent.isAdmin && !isAdminUser();
+  const subscribed = () => !!currentStudent && isActivatedValue(currentStudent.code);
+  const pad = (n) => String(n).padStart(2, "0");
+  const mmss = (s) => { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return (h ? h + ":" + pad(m) : m) + ":" + pad(s % 60); };
+  const fmtP = (x) => (Math.round(x * 10) / 10) + "%";
+  const fmtHM = (sec) => { const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60); return h ? `${h} ساعة و ${m} دقيقة` : `${m} دقيقة`; };
+  const fmtDT = (t) => new Date(t).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "medium", timeZone: "Africa/Cairo" });
+
+  function rAdd(r, a, b) {
+    r.push([a, b]); r.sort((x, y) => x[0] - y[0]);
+    const out = [];
+    r.forEach((x) => { const l = out[out.length - 1]; if (l && x[0] <= l[1]) l[1] = Math.max(l[1], x[1]); else out.push([x[0], x[1]]); });
+    return out;
+  }
+  const rSum = (r) => (r || []).reduce((s, x) => s + Math.max(0, x[1] - x[0]), 0);
+  const rUnion = (a, b) => (b || []).reduce((acc, x) => rAdd(acc, x[0], x[1]), (a || []).map((x) => [x[0], x[1]]));
+
+  /* ============ التخزين المحلي (لكل طالب) ============ */
+  let T = null, cur = null, busy = false, lastSync = 0, tokFailAt = 0, pendingId = null;
+  let dashTab = "status", dashNote = "", lastAct = Date.now(), qTimer = null, askMode = "text";
+  const key = () => "trk_v1_" + phoneOf();
+  function load() {
+    const ph = phoneOf();
+    if (T && T.phone === ph) return T;
+    let s = null; try { s = JSON.parse(localStorage.getItem(key()) || "null"); } catch (_) {}
+    T = Object.assign({ lec: {}, act: [], pend: 0, dirty: {}, dirtyAct: {}, warn: 0, srv: null, notified: 0 }, s || {});
+    T.phone = ph; migrateLegacy(); return T;
+  }
+  // نقل الحضور القديم المحفوظ محلياً (attendance_*) إلى نظام المتابعة مرة واحدة، ليُرسل للسيرفر
+  function migrateLegacy() {
+    if (T.migrated || !currentStudent) return;
+    let att = null; try { att = JSON.parse(localStorage.getItem("attendance_" + currentStudent.phone) || "null"); } catch (_) {}
+    if (att) Object.keys(att).forEach((id) => {
+      if (!att[id] || /^(hw_|pdf_|exam_)/.test(id) || T.lec[id]) return;
+      const l = (typeof lectureIndex !== "undefined" && lectureIndex[id]) || {}, now = Date.now();
+      T.lec[id] = { title: l.title || "", subject: l.subject || "", dur: 0, last: 0, ranges: [], done: true, legacy: true, updated: now, first: now };
+      T.dirty[id] = 1;
+    });
+    T.migrated = 1; save();
+  }
+  function save() { if (T) { try { localStorage.setItem(key(), JSON.stringify(T)); } catch (_) {} } }
+  function rec(id) { return (T.lec[id] = T.lec[id] || { title: "", subject: "", dur: 0, last: 0, ranges: [], done: false, updated: 0, first: 0 }); }
+  const pctOf = (id) => { const r = T.lec[id]; if (!r) return 0; if (r.legacy) return 100; return r.dur ? Math.min(100, rSum(r.ranges) / r.dur * 100) : (r.done ? 100 : 0); };
+  const isDone = (id) => { const r = T.lec[id]; return !!r && (r.done || pctOf(id) >= COMPLETE_PCT); };
+
+  /* ============ المحاضرات المتأخرة والحالة ============ */
+  function released() { const out = []; SUBJECTS.forEach((s) => visibleFor(s).forEach((l) => out.push({ id: l.id, title: l.title, subject: s.name }))); return out; }
+  function backlogInfo() {
+    const rel = released(), late = rel.filter((x) => !isDone(x.id)), n = late.length;
+    return { rel, late, n, st: n >= 3 ? "red" : n === 2 ? "yellow" : "green" };
+  }
+  function warnState() {
+    load();
+    const b = backlogInfo(), now = nowMs();
+    if (!subscribed() || b.n < WARN_FROM) { if (T.warn) { T.warn = 0; save(); } return Object.assign(b, { warn: false }); }
+    if (!T.warn) { T.warn = (T.srv && T.srv.warnSince) || now; save(); }
+    const end = T.warn + GRACE_H * 3600000, left = end - now;
+    return Object.assign(b, { warn: true, end, left, expired: left <= 0 });
+  }
+
+  /* ============ الاتصال بالسيرفر ============ */
+  const tokKey = () => "trk_tok_" + phoneOf();
+  function cachedToken() { try { const t = JSON.parse(localStorage.getItem(tokKey()) || "null"); if (t && t.token && t.exp - Date.now() > 3600000) return t.token; } catch (_) {} return ""; }
+  async function token() {
+    const c = cachedToken(); if (c) return c;
+    if (Date.now() - tokFailAt < 60000) return "";
+    if (sessionCreds && normalizePhone(sessionCreds.phone) === phoneOf()) {
+      const r = await callScript(TRK_URL, { action: "auth", phone: phoneOf(), password: sessionCreds.password });
+      if (r.type === "ok" && r.data.token) { try { localStorage.setItem(tokKey(), JSON.stringify({ token: r.data.token, exp: r.data.exp })); } catch (_) {} return r.data.token; }
+    }
+    tokFailAt = Date.now(); return "";
+  }
+  const sessKey = () => "trk_sess_" + phoneOf();
+  function payload(full, withLec, tok) {
+    const lectures = {}, snapU = {}, snapA = {};
+    Object.keys(T.dirty).slice(0, 60).forEach((id) => {
+      const r = T.lec[id]; if (!r) return;
+      snapU[id] = r.updated;
+      lectures[id] = { title: r.title, subject: r.subject, dur: r.dur, last: r.last, ranges: r.ranges, updated: r.updated, first: r.first, done: !!r.done };
+    });
+    const acts = T.act.filter((a) => T.dirtyAct[a.uid]).slice(0, 40);
+    acts.forEach((a) => { snapA[a.uid] = a.secs; });
+    let logged = false; try { logged = !!sessionStorage.getItem(sessKey()); } catch (_) {}
+    return { snapU, snapA, body: {
+      action: "sync", token: tok, full: !!full, withLec: !!withLec, login: !logged,
+      name: (currentStudent && currentStudent.name) || "", parentPhone: (currentStudent && currentStudent.parentPhone) || "",
+      released: released().map((x) => ({ id: x.id, title: x.title })),
+      lectures, activity: acts.map((a) => ({ uid: a.uid, id: a.id, title: a.title, at: a.at, secs: a.secs })), addSec: T.pend
+    } };
+  }
+  async function sync(full, force, withLec) {
+    if (!on() || !tracked() || !subscribed()) return false;
+    load();
+    if (busy) return false;
+    if (!full && !force && Date.now() - lastSync < 15000) return false;
+    busy = true;
+    try {
+      const tok = await token(); if (!tok) return false;
+      const pl = payload(full, withLec, tok), sentSec = pl.body.addSec;
+      const r = await callScript(TRK_URL, pl.body);
+      if (r.type === "ok") {
+        lastSync = Date.now();
+        try { sessionStorage.setItem(sessKey(), "1"); } catch (_) {}
+        T.pend = Math.max(0, T.pend - sentSec);
+        Object.keys(pl.snapU).forEach((id) => { if (T.lec[id] && T.lec[id].updated === pl.snapU[id]) delete T.dirty[id]; });
+        Object.keys(pl.snapA).forEach((uid) => { const a = T.act.find((x) => x.uid === uid); if (a && a.secs === pl.snapA[uid]) delete T.dirtyAct[uid]; });
+        merge(r.data); save(); chrome();
+        return true;
+      }
+      if (r.type === "fail" && r.data && r.data.code === "TAUTH") { try { localStorage.removeItem(tokKey()); } catch (_) {} }
+      return false;
+    } finally { busy = false; }
+  }
+  function merge(d) {
+    if (!d) return;
+    T.srv = T.srv || {};
+    if (d.srv) { Object.assign(T.srv, d.srv); if (d.srv.warnSince) T.warn = d.srv.warnSince; }
+    if (d.lectures) Object.keys(d.lectures).forEach((id) => {
+      const s = d.lectures[id], r = rec(id);
+      r.ranges = rUnion(r.ranges, s.ranges);
+      r.dur = r.dur || s.dur || 0; r.title = r.title || s.title || ""; r.done = r.done || !!s.done;
+      if (!r.first || (s.first && s.first < r.first)) r.first = s.first || r.first;
+      if ((s.lastAt || 0) > (r.updated || 0) && !T.dirty[id]) { r.last = s.last; r.updated = s.lastAt; }
+    });
+    if (d.activity) {
+      const m = {}; T.act.forEach((a) => { m[a.uid] = a; });
+      d.activity.forEach((a) => { const x = m[a.uid]; if (!x) m[a.uid] = a; else x.secs = Math.max(x.secs, a.secs); });
+      T.act = Object.values(m).sort((a, b) => b.at - a.at).slice(0, 200);
+    }
+    if (d.certs) T.srv.certs = d.certs;
+    if ("eval" in d) T.srv.eval = d.eval;
+  }
+
+  /* ============ واجهة المشغل (شريط التقدم + اسأل المستر + الجودة) ============ */
+  function ensureUI() {
+    if ($("trkPbar")) return;
+    const wrap = $("pvVideoWrap"); if (!wrap) return;
+    const bar = document.createElement("div"); bar.className = "trk-pbar"; bar.id = "trkPbar";
+    bar.innerHTML = `<div class="trk-phead"><span id="trkPct">شاهدت 0%</span><span id="trkWatched" dir="ltr"></span><span class="trk-done" id="trkDone" hidden>✅ محاضرة مكتملة</span></div>
+      <div class="trk-track"><span id="trkSegs"></span><i class="trk-head" id="trkHead"></i></div>
+      <div class="trk-resume" id="trkResume" hidden></div>`;
+    const ask = document.createElement("div"); ask.className = "trk-ask"; ask.id = "trkAsk";
+    ask.innerHTML = `<button type="button" class="trk-ask-toggle" onclick="TRK.askToggle()">❓ اسأل المستر عن هذه المحاضرة</button>
+      <div class="trk-ask-body" id="trkAskBody" hidden>
+        <div class="trk-ask-modes">
+          <button type="button" data-m="text" class="on" onclick="TRK.askMode('text')">✍️ نص</button>
+          <button type="button" data-m="image" onclick="TRK.askMode('image')">🖼️ صورة</button>
+          <button type="button" data-m="voice" onclick="TRK.askMode('voice')">🎙️ صوت</button>
+        </div>
+        <textarea id="trkAskText" maxlength="600" placeholder="اكتب سؤالك للمستر هنا..."></textarea>
+        <div class="trk-ask-hint" id="trkAskHint"></div>
+        <button type="button" class="trk-ask-send" onclick="TRK.askSend()">📲 إرسال عبر واتساب</button>
+      </div>`;
+    wrap.insertAdjacentElement("afterend", bar);
+    bar.insertAdjacentElement("afterend", ask);
+  }
+  function setNote(html, show, withRestart) {
+    const el = $("trkResume"); if (!el) return;
+    el.hidden = !show; if (!show) { el.textContent = ""; return; }
+    el.innerHTML = `<span>${html}</span>` + (withRestart ? `<button type="button" onclick="TRK.restart()">ابدأ من البداية</button>` : "");
+  }
+  function draw(forceSeg) {
+    if (!cur || !$("trkPbar")) return;
+    const r = rec(cur.id), d = r.dur || 0, sec = rSum(r.ranges), p = d ? Math.min(100, sec / d * 100) : 0;
+    $("trkPct").textContent = "شاهدت " + fmtP(p);
+    $("trkWatched").textContent = d ? mmss(sec) + " / " + mmss(d) : "";
+    const t = cur.p ? (cur.p.currentTime || 0) : 0;
+    $("trkHead").style.left = (d ? Math.min(100, t / d * 100) : 0) + "%";
+    if (forceSeg || Date.now() - cur.segAt > 2000) {
+      cur.segAt = Date.now();
+      $("trkSegs").innerHTML = d ? r.ranges.map((x) => `<i class="trk-seg" style="left:${x[0] / d * 100}%;width:${Math.max(.3, (x[1] - x[0]) / d * 100)}%"></i>`).join("") : "";
+    }
+    $("trkDone").hidden = !isDone(cur.id);
+  }
+  function beginSession(id, title) {
+    load();
+    const l = lectureIndex[id] || {}, r = rec(id), uid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    r.title = title || l.title || r.title; r.subject = l.subject || r.subject; if (!r.first) r.first = Date.now();
+    cur = { id, uid, p: null, secs: 0, lastSec: -1, resumed: false, resuming: false, target: 0, resumeAt: 0, retried: false, segAt: 0, saveAt: 0 };
+    T.act.unshift({ uid, id, title: r.title, at: Date.now(), secs: 0 }); T.act = T.act.slice(0, 200);
+    T.dirty[id] = 1; T.dirtyAct[uid] = 1; r.updated = Date.now(); save();
+    ensureUI(); const q = $("trkAskText"); if (q) q.value = "";
+    draw(true);
+    setNote(r.last >= 5 ? `آخر موضع وصلت إليه: ${mmss(r.last)} — سيُستأنف تلقائياً عند التشغيل` : "", r.last >= 5);
+    sync(false, true, true).then(() => { if (cur && cur.id === id) { if (cur.p) tryResume(); draw(true); } });
+  }
+  function endSession() {
+    const c = cur; if (!c) return;
+    try { if (c.p && !c.resuming && c.p.currentTime > 1) rec(c.id).last = Math.floor(c.p.currentTime); } catch (_) {}
+    if (T) { rec(c.id).updated = Date.now(); T.dirty[c.id] = 1; save(); }
+    cur = null; clearInterval(qTimer);
+    sync(false, true);
+  }
+  function attach() {
+    const p = pvPlayerInstance;
+    if (!cur) return;
+    if (!p) { setNote("⚠️ تتبع التقدم غير متاح في وضع المعاينة البديل", true); return; }
+    if (cur.p === p) return;
+    cur.p = p;
+    const onMeta = () => { const d = p.duration; if (d && isFinite(d) && cur && cur.p === p) { const r = rec(cur.id); r.dur = Math.round(d); draw(true); tryResume(); } };
+    p.on("ready", () => { onMeta(); injectQuality(); });
+    p.on("loadedmetadata", onMeta);
+    p.on("timeupdate", onTime);
+    p.on("playing", () => {
+      if (cur && cur.resuming && !cur.retried && Math.abs(p.currentTime - cur.target) > 3) { cur.retried = true; try { p.currentTime = cur.target; } catch (_) {} }
+    });
+    p.on("pause", () => { if (cur && cur.p === p) { try { if (!cur.resuming && p.currentTime > 1) rec(cur.id).last = Math.floor(p.currentTime); } catch (_) {} save(); sync(false, true); } });
+    p.on("ended", () => { if (cur && cur.p === p) { const r = rec(cur.id); r.last = 0; r.updated = Date.now(); T.dirty[cur.id] = 1; save(); draw(true); sync(false, true); } });
+    setTimeout(injectQuality, 1500);
+    onMeta();
+  }
+  function tryResume() {
+    const c = cur, p = c && c.p; if (!c || !p || c.resumed) return;
+    const d = p.duration; if (!d || !isFinite(d)) return;
+    c.resumed = true;
+    const r = rec(c.id); if (!r.dur) r.dur = Math.round(d);
+    const last = r.last || 0;
+    if (last >= 5 && d - last >= 10) {
+      c.resuming = true; c.target = last; c.resumeAt = Date.now();
+      try { p.currentTime = last; } catch (_) {}
+      setNote(`▶ تم استئناف المحاضرة من ${mmss(last)}`, true, true);
+    } else setNote("", false);
+  }
+  function onTime() {
+    const p = pvPlayerInstance, c = cur; if (!p || !c || c.p !== p || !T) return;
+    const t = p.currentTime || 0, s = Math.floor(t), r = rec(c.id);
+    if (c.resuming) { if (Math.abs(t - c.target) < 3 || Date.now() - c.resumeAt > 8000) c.resuming = false; else return; }
+    if (!r.dur && p.duration && isFinite(p.duration)) r.dur = Math.round(p.duration);
+    if (p.playing && s !== c.lastSec) {
+      r.ranges = rAdd(r.ranges, s, s + 1); c.lastSec = s; c.secs++;
+      const a = T.act.find((x) => x.uid === c.uid); if (a) { a.secs = c.secs; T.dirtyAct[c.uid] = 1; }
+      if (!r.done && pctOf(c.id) >= COMPLETE_PCT) { r.done = true; try { pushNotif(`أحسنت! أتممت محاضرة «${r.title}» ✅`, "streak"); } catch (_) {} chrome(); }
+    }
+    if (t > 1) r.last = s;
+    r.updated = Date.now(); T.dirty[c.id] = 1;
+    if (Date.now() - c.saveAt > 4000) { c.saveAt = Date.now(); save(); if (Date.now() - lastSync > SYNC_EVERY) sync(false, true); }
+    draw(false);
+  }
+
+  /* ---- زر الجودة داخل المشغل ---- */
+  const QNAME = { tiny: "144p", small: "240p", medium: "360p", large: "480p", hd720: "720p", hd1080: "1080p", hd1440: "1440p", hd2160: "2160p", highres: "عالية" };
+  function qualityLabel() {
+    if (pvPendingDriveId) return "الأصلية";
+    try { const q = pvPlayerInstance.embed.getPlaybackQuality(); return QNAME[q] || "تلقائي"; } catch (_) { return "تلقائي"; }
+  }
+  function injectQuality() {
+    const pl = document.querySelector("#pvVideoBox .plyr"); if (!pl || pl.querySelector(".trk-q")) return;
+    const drive = !!pvPendingDriveId, box = document.createElement("div"); box.className = "trk-q";
+    box.innerHTML = `<button type="button" class="trk-q-btn" aria-haspopup="true" aria-label="جودة الفيديو">⚙ <span class="trk-q-lbl">…</span></button>` +
+      (drive ? "" : `<div class="trk-q-menu" hidden>${PV_QUALITIES.map((q) => `<button type="button" data-q="${q}">${q ? q + "p" : "تلقائي"}</button>`).join("")}</div>`);
+    pl.appendChild(box);
+    const lbl = box.querySelector(".trk-q-lbl"), menu = box.querySelector(".trk-q-menu"), btn = box.querySelector(".trk-q-btn");
+    const upd = () => { lbl.textContent = qualityLabel(); if (menu) menu.querySelectorAll("button").forEach((b) => b.classList.toggle("on", Number(b.dataset.q) === pvQuality)); };
+    upd();
+    if (menu) {
+      btn.onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; };
+      menu.onclick = (e) => { const b = e.target.closest("button[data-q]"); if (!b) return; pvApplyQuality(Number(b.dataset.q)); menu.hidden = true; setTimeout(upd, 800); setTimeout(upd, 2500); };
+    }
+    clearInterval(qTimer);
+    qTimer = setInterval(() => { if (!box.isConnected) { clearInterval(qTimer); return; } upd(); }, 2500);
+  }
+
+  /* ---- اسأل المستر (واتساب) ---- */
+  const ASK_HINTS = { text: "", image: "سيفتح واتساب برسالة جاهزة — بعدها اضغط 📎 وأرفق صورة سؤالك.", voice: "سيفتح واتساب برسالة جاهزة — بعدها اضغط مطولاً على 🎙️ لتسجيل سؤالك." };
+  function askToggle() { const b = $("trkAskBody"); if (b) b.hidden = !b.hidden; }
+  function setAskMode(m) {
+    askMode = m;
+    document.querySelectorAll(".trk-ask-modes button").forEach((b) => b.classList.toggle("on", b.dataset.m === m));
+    const h = $("trkAskHint"); if (h) h.textContent = ASK_HINTS[m] || "";
+  }
+  function askSend() {
+    const q = ($("trkAskText").value || "").trim();
+    if (!q && askMode === "text") { alert("اكتب سؤالك أولاً."); return; }
+    const title = (cur && rec(cur.id).title) || ($("pvLectureTitle") && $("pvLectureTitle").textContent) || "المحاضرة";
+    const name = (currentStudent && currentStudent.name) || "طالب";
+    const t = cur && cur.p ? cur.p.currentTime || 0 : 0;
+    let msg = `السلام عليكم يا مستر 👋\n📚 المحاضرة: ${title}\n👤 الطالب: ${name}`;
+    if (t > 5) msg += `\n⏱️ عند الدقيقة: ${mmss(t)}`;
+    msg += `\n❓ سؤالي: ${q || "(سأرسل سؤالي في الرسالة التالية)"}`;
+    if (askMode === "image") msg += "\n🖼️ سأرفق صورة مع سؤالي.";
+    if (askMode === "voice") msg += "\n🎙️ سأرسل تسجيلاً صوتياً بسؤالي.";
+    const url = "https://wa.me/" + TEACHER_WA + "?text=" + encodeURIComponent(msg);
+    if (!window.open(url, "_blank")) location.href = url;
+  }
+
+  /* ============ القائمة الجانبية ============ */
+  const SB_ITEMS = [
+    ["courses", "📚", "كورساتك"], ["eval", "⭐", "تقييمك"], ["status", "🚦", "حالة الطالب"],
+    ["certs", "🏆", "شهاداتي"], ["schedule", "🗓️", "الجدول"], ["forum", "💬", "المنتدى"]
+  ];
+  const isDesktop = () => window.matchMedia("(min-width: 900px)").matches;
+  function buildSidebar() {
+    if ($("sideNav")) return;
+    const nav = document.createElement("nav"); nav.id = "sideNav"; nav.setAttribute("aria-label", "القائمة الرئيسية");
+    nav.innerHTML = `<button type="button" class="sb-hamb" id="sbToggle" aria-label="فتح أو إغلاق القائمة" onclick="TRK.sbToggle()"><span class="sb-ico">☰</span><span class="sb-lbl">القائمة</span></button>` +
+      SB_ITEMS.map((i) => `<button type="button" class="sb-item" data-k="${i[0]}" title="${i[2]}" onclick="TRK.nav('${i[0]}')"><span class="sb-ico">${i[1]}</span><span class="sb-lbl">${i[2]}</span>${i[0] === "status" ? '<span class="sb-dot"></span>' : ""}</button>`).join("");
+    const bd = document.createElement("div"); bd.id = "sbBackdrop"; bd.onclick = () => closeMobile();
+    document.body.appendChild(nav); document.body.appendChild(bd);
+    const hdr = document.querySelector(".hdr-actions");
+    if (hdr) { const b = document.createElement("button"); b.type = "button"; b.className = "icon-btn trk-hamb"; b.setAttribute("aria-label", "فتح القائمة"); b.textContent = "☰"; b.onclick = () => TRK.sbToggle(); hdr.insertBefore(b, hdr.firstChild); }
+    let c = false; try { c = localStorage.getItem("sb_collapsed") === "1"; } catch (_) {}
+    document.body.classList.toggle("sb-collapsed", c);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMobile(); });
+  }
+  function sbToggle() {
+    if (isDesktop()) { const c = document.body.classList.toggle("sb-collapsed"); try { localStorage.setItem("sb_collapsed", c ? "1" : "0"); } catch (_) {} }
+    else document.body.classList.toggle("sb-open");
+  }
+  function closeMobile() { document.body.classList.remove("sb-open"); }
+  function sbKey() {
+    if (view === "dash") return dashTab;
+    if (view === "course") { if (currentSubjectTab === "scheduleTab") return "schedule"; if (currentSubjectTab === "forumTab") return "forum"; }
+    return (view === "courses" || view === "course") ? "courses" : "";
+  }
+  function sbSync() {
+    const k = sbKey();
+    document.querySelectorAll("#sideNav .sb-item").forEach((b) => b.classList.toggle("active", b.dataset.k === k));
+  }
+  function requireLogin() { if (currentStudent) return true; $("authModal").style.display = "flex"; return false; }
+  function goForum() { if (view !== "course") enterCourse(currentCourse); openSubject("forumTab"); }
+  function nav(k) {
+    if (!requireLogin()) return;
+    try { sfxClick(); } catch (_) {}
+    if (k === "courses") goHome();
+    else if (k === "schedule") goSchedule();
+    else if (k === "forum") goForum();
+    else openDash(k);
+    closeMobile(); sbSync();
+  }
+
+  /* ============ صفحات: حالة الطالب / تقييمك / شهاداتي ============ */
+  function openDash(tab) {
+    if (!requireLogin()) return;
+    dashTab = tab; if (view === "dash") renderDash(); else setView("dash");
+  }
+  const lockedHTML = (t) => `<div class="trk-card trk-empty"><div class="trk-empty-ico">🔒</div><h3>${t}</h3><p style="margin:10px 0 14px">اشترك في الكورس أولاً لتظهر لك بيانات متابعتك.</p><button type="button" class="btn-activate-code" onclick="openCodeModal()">🔑 تفعيل كود الآن</button></div>`;
+  const noteHTML = () => `<p class="trk-note">${dashNote ? escapeHtml(dashNote) : ""} <button type="button" class="trk-refresh" onclick="TRK.refresh()">🔄 تحديث</button></p>`;
+
+  function statusHTML() {
+    if (!subscribed()) return lockedHTML("حالة الطالب");
+    const w = warnState(), sv = T.srv || {};
+    const done = w.rel.length - w.n;
+    const label = { green: w.n === 0 ? "ممتاز — أنت كده تمام وفل الفل 👏" : "أنت منتظم — كمّل 👍", yellow: "تنبيه — لديك محاضرتان متأخرتان", red: "خطر — تراكمت عليك المحاضرات" }[w.st];
+    const msg = w.n === 0 ? "🌟 ما شاء الله! شاهدت كل المحاضرات المتاحة. استمر على هذا المستوى، ربنا يوفقك ويفتح عليك 💚"
+      : w.n === 1 ? "📌 باقي لك محاضرة واحدة لم تشاهدها — شاهدها النهاردة قبل ما تتراكم عليك المحاضرات."
+      : `⚠️ لم تشاهد ${w.n} محاضرات — لو استمر التأخر ${WARN_DAYS} أيام سيتم التواصل مع ولي أمرك.`;
+    const lights = ["red", "yellow", "green"].map((c) => `<span class="trk-light ${c} ${w.st === c ? "on" : ""}"></span>`).join("");
+    const urgent = w.warn ? `<div class="trk-urgent ${w.expired ? "expired" : ""}" role="alert"><div class="trk-urgent-ico">🚨</div><div>
+        <b>تنبيه عاجل!</b> لديك ${w.n} ${w.n === 1 ? "محاضرة متأخرة" : "محاضرات متأخرة"}.
+        ${w.expired ? "انتهت المهلة، وسيتم التواصل مع ولي أمرك." : `أمامك مهلة <b>${WARN_DAYS} أيام</b> لتعويضها، وإلا سيتم التواصل مع ولي أمرك.<br><span class="trk-cd" data-pre="⏳ " data-end="${w.end}">⏳ ${fmtDhms(w.left)}</span>`}
+        <ul>${w.late.slice(0, 6).map((x) => `<li>${escapeHtml(x.title)} — ${escapeHtml(x.subject)}</li>`).join("")}${w.n > 6 ? `<li>و ${w.n - 6} أخرى...</li>` : ""}</ul></div></div>` : "";
+    const platformSec = (sv.platformSec || 0) + T.pend;
+    const watchedSec = Object.values(T.lec).reduce((s, r) => s + rSum(r.ranges), 0);
+    const watchedCount = Object.keys(T.lec).filter((id) => rSum(T.lec[id].ranges) > 0).length;
+    const lastLogin = sv.lastLogin || 0;
+    const rows = T.act.slice(0, 60).map((a) => `<tr><td dir="ltr" style="text-align:right">${fmtDT(a.at)}</td><td>${escapeHtml(a.title)}</td><td>${mmss(a.secs)}</td><td>${fmtP(pctOf(a.id))}</td></tr>`).join("");
+    return `${urgent}
+      <div class="trk-card"><h3>🚦 حالة الطالب</h3><div class="trk-status"><div class="trk-lights" aria-hidden="true">${lights}</div>
+        <div class="trk-status-txt"><b>${label}</b><span>حضرت ${done} من ${w.rel.length} • فاضل لك ${w.n}</span><p style="margin-top:8px;font-weight:700;line-height:1.9">${msg}</p></div></div></div>
+      <div class="trk-stats">
+        <div class="trk-stat"><span>🕒</span><span class="v">${fmtHM(platformSec)}</span><span class="l">إجمالي الوقت على المنصة</span></div>
+        <div class="trk-stat"><span>🎬</span><span class="v">${fmtHM(watchedSec)}</span><span class="l">وقت المشاهدة الفعلي</span></div>
+        <div class="trk-stat"><span>📚</span><span class="v">${watchedCount}</span><span class="l">محاضرات شاهدتها</span></div>
+        <div class="trk-stat"><span>📅</span><span class="v" style="font-size:14px">${lastLogin ? fmtDT(lastLogin) : "—"}</span><span class="l">آخر دخول</span></div>
+      </div>
+      <div class="trk-card"><h3>🗂️ سجل نشاطك</h3>
+        ${rows ? `<div class="trk-table-wrap"><table class="trk-table"><thead><tr><th>تاريخ ووقت الدخول</th><th>المحاضرة</th><th>مدة الجلسة</th><th>نسبة المشاهدة</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p style="text-align:center;opacity:.7;padding:14px">لا يوجد نشاط مسجّل بعد — افتح أي محاضرة وسيظهر سجلك هنا.</p>`}</div>`;
+  }
+  function evalHTML() {
+    if (!subscribed()) return lockedHTML("تقييمك");
+    const b = backlogInfo(), rel = b.rel, total = rel.length, done = rel.filter((x) => isDone(x.id)).length;
+    const overall = total ? done / total * 100 : 0, avg = total ? rel.reduce((s, x) => s + pctOf(x.id), 0) / total : 0;
+    const anyWatched = rel.some((x) => pctOf(x.id) > 0);
+    const auto = total ? Math.max(1, Math.min(5, Math.round(1 + 4 * (0.6 * overall + 0.4 * avg) / 100))) : 0;
+    const stars = (n) => `<span class="trk-stars">${[1, 2, 3, 4, 5].map((i) => `<span class="${i <= n ? "" : "off"}">★</span>`).join("")}</span>`;
+    const fb = overall >= 80 ? "ما شاء الله! التزامك ممتاز وأداؤك يدعو للفخر، واصل بنفس الهمة 🌟"
+      : overall >= 50 ? "أداء جيد جداً! أنت في الطريق الصحيح، قليل من الجهد ونصل للقمة 💪"
+      : anyWatched ? "بداية موفقة! كل محاضرة تكملها تقرّبك خطوة من التفوق، استمر 🚀"
+      : "ابدأ أولى محاضراتك اليوم — ونحن واثقون أنك قادر على التميز ✨";
+    const ev = T.srv && T.srv.eval;
+    const groups = {}; rel.forEach((x) => { (groups[x.subject] = groups[x.subject] || []).push(x); });
+    const list = Object.keys(groups).map((sub) => `<div class="trk-group">${escapeHtml(sub)}</div>` + groups[sub].map((x) => {
+      const p = pctOf(x.id), d = isDone(x.id), r = T.lec[x.id];
+      return `<div class="trk-lrow"><div class="trk-lrow-t"><b>${escapeHtml(x.title)}</b><span class="trk-badge ${d ? "done" : p > 0 ? "part" : "none"}">${d ? "✅ حضور مكتمل" : p > 0 ? "⏳ جارية" : "لم تبدأ"}</span></div>
+        <div class="trk-mini"><i style="width:${p}%"></i></div><small>${fmtP(p)}${r && r.updated ? " • آخر مشاهدة: " + fmtDT(r.updated) : ""}</small></div>`;
+    }).join("")).join("");
+    return `<div class="trk-card"><h3>⭐ تقييمك</h3>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center"><div>${stars(auto)}<div class="trk-note">التقييم التلقائي حسب تقدمك</div></div>
+        ${ev && ev.rating ? `<div>${stars(ev.rating)}<div class="trk-note">تقييم المستر</div></div>` : ""}</div>
+        <p style="margin-top:8px;font-weight:700;line-height:1.9">${fb}</p>
+        ${ev && ev.note ? `<div class="trk-teacher">💬 <b>رسالة من المستر:</b> ${escapeHtml(ev.note)}</div>` : ""}</div>
+      <div class="trk-card"><h3>✅ سجل الحضور</h3><p style="margin-bottom:6px">أتممت <b>${done}</b> من <b>${total}</b> محاضرة (المحاضرة تُحسب مكتملة عند مشاهدة ${COMPLETE_PCT}% منها).</p>
+        ${list || '<p style="opacity:.7">لا توجد محاضرات متاحة بعد.</p>'}</div>`;
+  }
+  function certsHTML() {
+    const list = ((T.srv && T.srv.certs) || []).filter((c) => /^https:\/\//i.test(c.img));
+    if (!list.length) return `<div class="trk-card trk-empty"><div class="trk-empty-ico">🏆</div><h3>لا توجد شهادات حتى الآن</h3><p>واصل التفوق، وستظهر شهاداتك هنا فور اعتمادها من المستر.</p></div>`;
+    return `<div class="trk-cert-grid">${list.map((c) => `<figure class="trk-cert"><a href="${escapeHtml(c.img)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHtml(c.img)}" alt="${escapeHtml(c.title)}" loading="lazy" referrerpolicy="no-referrer"></a>
+      <figcaption><b>🏆 ${escapeHtml(c.title)}</b>${c.date ? `<small>${new Date(c.date).toLocaleDateString("ar-EG", { dateStyle: "long", timeZone: "Africa/Cairo" })}</small>` : ""}</figcaption></figure>`).join("")}</div>`;
+  }
+  function renderDash() {
+    const el = $("dashPage"); if (!el) return;
+    if (!tracked()) { el.innerHTML = `<button class="acc-back" onclick="goHome()">← الكورسات</button><div class="trk-card trk-empty"><div class="trk-empty-ico">🛠️</div><h3>هذه الصفحة تظهر لحسابات الطلاب فقط</h3><p>سجّل الدخول بحساب طالب لمعاينتها.</p></div>`; return; }
+    load();
+    const tabs = [["status", "🚦 حالة الطالب"], ["eval", "⭐ تقييمك"], ["certs", "🏆 شهاداتي"]];
+    el.innerHTML = `<button class="acc-back" onclick="goHome()">← الكورسات</button>
+      <div class="trk-tabs">${tabs.map((t) => `<button type="button" class="${t[0] === dashTab ? "on" : ""}" onclick="TRK.open('${t[0]}')">${t[1]}</button>`).join("")}</div>
+      ${noteHTML()}${dashTab === "eval" ? evalHTML() : dashTab === "certs" ? certsHTML() : statusHTML()}`;
+    sbSync();
+  }
+  async function refresh() {
+    dashNote = "جاري تحديث بياناتك..."; if (view === "dash") renderDash();
+    const ok = await sync(true, true, true);
+    dashNote = ok ? "" : (on() ? "تعذر التحديث الآن — يتم عرض آخر بيانات محفوظة على جهازك." : "يتم عرض بيانات هذا الجهاز حالياً.");
+    if (view === "dash") renderDash();
+  }
+
+  /* ============ الشريط العلوي + الحالة العامة ============ */
+  function chrome() {
+    const logged = tracked();
+    document.body.classList.toggle("sb-on", !!currentStudent);
+    if (!logged) return;
+    load();
+    const w = warnState(), bar = $("trkWarnBar");
+    if (bar) {
+      if (subscribed() && w.warn) {
+        bar.innerHTML = `<span>🚨 تنبيه عاجل: لديك ${w.n} ${w.n === 1 ? "محاضرة متأخرة" : "محاضرات متأخرة"} — ${w.expired ? "انتهت المهلة وسيتم التواصل مع ولي أمرك" : `أمامك ${WARN_DAYS} أيام <b class="trk-cd" data-end="${w.end}" dir="ltr">${fmtDhms(w.left)}</b> لتعويضها وإلا سيتم التواصل مع ولي أمرك`}</span><button type="button" onclick="TRK.open('status')">التفاصيل</button>`;
+        bar.classList.add("show");
+        if (T.notified !== T.warn) { T.notified = T.warn; save(); try { pushNotif(`🚨 لديك ${w.n} محاضرات متأخرة — أمامك ${WARN_DAYS} أيام لتعويضها وإلا سيتم التواصل مع ولي أمرك.`, "streak"); } catch (_) {} }
+      } else bar.classList.remove("show");
+    }
+    const dot = document.querySelector("#sideNav .sb-dot"); if (dot) dot.className = "sb-dot " + (subscribed() ? w.st : "");
+  }
+  const started = {};
+  function onState() {
+    chrome(); sbSync();
+    if (tracked() && subscribed() && !started[phoneOf()]) { started[phoneOf()] = 1; load(); sync(false, true, true); }
+  }
+
+  /* ============ ربط الدوال الموجودة (بدون تعديل كودك الأصلي) ============ */
+  const _setView = window.setView;
+  window.setView = function (v) {
+    _setView.apply(this, arguments);
+    const d = $("dashPage"); if (d) d.style.display = v === "dash" ? "block" : "none";
+    if (v === "dash") { renderDash(); refresh(); }
+    closeMobile(); sbSync();
+  };
+  const _oLec = window.openLectureById;
+  window.openLectureById = async function (id) { pendingId = id; try { return await _oLec.apply(this, arguments); } finally { pendingId = null; } };
+  const _opp = window.openProtectedPlayer;
+  window.openProtectedPlayer = function () {
+    const id = pendingId; pendingId = null;
+    endSession();
+    _opp.apply(this, arguments);
+    if (id && tracked() && $("pvOverlay").classList.contains("active")) beginSession(id, arguments[1]);
+    else { cur = null; }
+  };
+  const _psp = window.pvStartPlayback;
+  window.pvStartPlayback = async function () { await _psp.apply(this, arguments); try { attach(); } catch (e) { console.error("trk", e); } };
+  const _cpp = window.closeProtectedPlayer;
+  window.closeProtectedPlayer = function () { endSession(); _cpp.apply(this, arguments); };
+  const _ra = window.renderAll;
+  window.renderAll = function () { _ra.apply(this, arguments); try { onState(); } catch (e) { console.error("trk", e); } };
+  const _os = window.openSubject; window.openSubject = function () { _os.apply(this, arguments); sbSync(); };
+  const _sg = window.showSubjectGrid; window.showSubjectGrid = function () { _sg.apply(this, arguments); sbSync(); };
+  // نقل بطاقتي الجدول والمنتدى من شبكة المواد إلى القائمة الجانبية
+  const _rsg = window.renderSubjectGrid;
+  window.renderSubjectGrid = function () {
+    const all = SUBJECT_CARDS.slice();
+    SUBJECT_CARDS.length = 0; all.filter((c) => !MOVED_CARDS.includes(c.tab)).forEach((c) => SUBJECT_CARDS.push(c));
+    try { _rsg.apply(this, arguments); } finally { SUBJECT_CARDS.length = 0; all.forEach((c) => SUBJECT_CARDS.push(c)); }
+  };
+
+  /* ============ وقت النشاط على المنصة + الحفظ عند المغادرة ============ */
+  ["click", "keydown", "touchstart", "scroll", "mousemove"].forEach((ev) => addEventListener(ev, () => { lastAct = Date.now(); }, { passive: true, capture: true }));
+  let n = 0;
+  setInterval(() => {
+    n++;
+    document.querySelectorAll(".trk-cd[data-end]").forEach((el) => {
+      const l = Number(el.dataset.end) - nowMs();
+      if (l > 0) el.textContent = (el.dataset.pre || "") + fmtDhms(l);
+      else if (!el.dataset.done) { el.dataset.done = "1"; chrome(); if (view === "dash") renderDash(); }
+    });
+    if (n % 5 || !tracked() || !subscribed()) return;
+    load();
+    if (!document.hidden && ((typeof pvPlayerInstance !== "undefined" && pvPlayerInstance && pvPlayerInstance.playing) || Date.now() - lastAct < 300000)) T.pend += 5;
+    save();
+    if (Date.now() - lastSync > 60000 && (T.pend >= 60 || Object.keys(T.dirty).length)) sync(false);
+  }, 1000);
+  document.addEventListener("visibilitychange", () => { if (document.hidden && tracked() && T) { save(); sync(false, true); } });
+  addEventListener("pagehide", () => {
+    if (!on() || !tracked() || !T) return;
+    save(); const tok = cachedToken(); if (!tok || (!T.pend && !Object.keys(T.dirty).length)) return;
+    try { const pl = payload(false, false, tok); fetch(TRK_URL, { method: "POST", keepalive: true, headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(pl.body) }); T.pend = 0; save(); } catch (_) {}
+  });
+
+  /* ============ تهيئة ============ */
+  const dp = document.createElement("div"); dp.className = "container"; dp.id = "dashPage"; dp.style.display = "none";
+  $("accountPage").insertAdjacentElement("afterend", dp);
+  const wb = document.createElement("div"); wb.className = "trk-warn-bar"; wb.id = "trkWarnBar"; wb.setAttribute("role", "alert");
+  $("verseBanner").insertAdjacentElement("afterend", wb);
+  buildSidebar();
+  try { chrome(); sbSync(); } catch (_) {}
+
+  window.TRK = {
+    nav, open: openDash, sbToggle, refresh, askToggle, askMode: setAskMode, askSend,
+    restart: function () { if (cur && cur.p) { cur.resuming = false; try { cur.p.currentTime = 0; } catch (_) {} setNote("", false); } }
+  };
+})();
+</script>
+
 </body>
 </html>
