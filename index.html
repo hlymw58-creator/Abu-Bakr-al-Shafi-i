@@ -5027,7 +5027,7 @@
     acts.forEach((a) => { snapA[a.uid] = a.secs; });
     let logged = false; try { logged = !!sessionStorage.getItem(sessKey()); } catch (_) {}
     const pl = { snapU, snapA, body: {
-      action: "sync", token: tok, full: !!full, withLec: !!withLec, login: !logged,
+      action: "sync", token: tok, full: !!full, withLec: !!withLec, login: !logged, sub: subscribed(),
       name: (currentStudent && currentStudent.name) || "", parentPhone: (currentStudent && currentStudent.parentPhone) || "",
       released: released().map((x) => ({ id: x.id, title: x.title, subject: x.subject })),
       lectures, activity: acts.map((a) => ({ uid: a.uid, id: a.id, title: a.title, at: a.at, secs: a.secs })), addSec: T.pend
@@ -5035,7 +5035,7 @@
     extras(pl); return pl;
   }
   async function sync(full, force, withLec) {
-    if (!on() || !tracked() || !subscribed()) return false;
+    if (!on() || !tracked()) return false;
     load();
     if (busy) return false;
     if (!full && !force && Date.now() - lastSync < 15000) return false;
@@ -5368,7 +5368,7 @@
   /* ============ مراجعة تلقائية كل 30 ثانية (تقييم / شهادات / مهلة) ============ */
   let pulling = false;
   async function pull() {
-    if (pulling || document.hidden || !on() || !tracked() || !subscribed()) return;
+    if (pulling || document.hidden || !on() || !tracked()) return;
     pulling = true;
     try {
       const tok = await token(); if (!tok) return;
@@ -5533,7 +5533,7 @@
   const started = {};
   function onState() {
     chrome(); sbSync(); try { decorateBadges(); } catch (_) {}
-    if (tracked() && subscribed() && !started[phoneOf()]) { started[phoneOf()] = 1; load(); sync(false, true, true); }
+    if (tracked() && !started[phoneOf()]) { started[phoneOf()] = 1; load(); sync(false, true, true); }
     try { askAuth(); } catch (_) {}
   }
 
