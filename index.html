@@ -2360,7 +2360,10 @@
     function setEnr(o) { try { localStorage.setItem(enrKey(), JSON.stringify(o || {})); } catch (_) {} }
     const isEnrolled = (id) => !!getEnr()[id];
     // صور أغلفة الكورسات: ضع رابط الصورة بين العلامتين (رابط جوجل درايف العادي يتحوّل تلقائياً — لازم الصورة تكون "أي شخص لديه الرابط يمكنه العرض"). فاضي = تظهر الأيقونة.
-    const COURSE_COVERS = { term1: "", final: "" };
+    const COURSE_COVERS = {
+      term1: "https://drive.google.com/file/d/14QBRj4vGPXEm680xSuNkWY-OI43q8L45/view?usp=sharing",
+      final: "https://drive.google.com/file/d/1hK27-xLTzCEqJ5y-kclW58s7SZr1-V15/view?usp=sharing"
+    };
     function coverUrl(u) {
       u = String(u || "").trim(); if (!u) return "";
       if (/drive\.google\.com/.test(u)) { const m = u.match(/\/d\/([\w-]{10,})/) || u.match(/[?&]id=([\w-]{10,})/); if (m) return "https://lh3.googleusercontent.com/d/" + m[1]; }
