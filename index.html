@@ -1364,6 +1364,33 @@
   </style>
 <base target="_blank">
 <base target="_blank">
+<style id="hlStyles">
+/* ===== أنيميشن المنصة (hairline + ضغطات) ===== */
+@keyframes hlPop{0%{scale:1}40%{scale:.95}100%{scale:1}}
+.hl-pop{animation:hlPop .28s ease-out}
+.hl-rip{position:fixed;z-index:99998;pointer-events:none;border-radius:50%;width:14px;height:14px;margin:-7px 0 0 -7px;background:rgba(255,179,0,.38);animation:hlRip .55s ease-out forwards}
+@keyframes hlRip{to{transform:scale(11);opacity:0}}
+.hl-bar{position:fixed;top:0;left:0;right:0;z-index:99997;background:#c62828;color:#fff;text-align:center;font-weight:bold;font-size:13px;padding:6px 10px;transform:translateY(-110%);transition:transform .35s ease}
+.hl-bar.show{transform:none}
+.hl-bar.ok{background:#2e7d32}
+.hl-back{position:fixed;inset:0;z-index:99996;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px}
+.hl-back.show{display:flex;animation:hlFade .25s ease-out}
+@keyframes hlFade{from{opacity:0}to{opacity:1}}
+.hl-box,.hl-empty{--hairline-plate:#ffffff;background:#ffffff;color:#222;border-radius:18px;text-align:center}
+[data-theme="dark"] .hl-box,[data-theme="dark"] .hl-empty{--hairline-plate:#16221b;background:#16221b;color:#e6eee8}
+.hl-box{width:min(360px,100%);padding:22px 18px 18px;box-shadow:0 18px 50px rgba(0,0,0,.35);animation:hlUp .35s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes hlUp{from{transform:translateY(24px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+.hl-box h3{margin:6px 0 4px;font-size:18px}
+.hl-box p{margin:0 0 12px;font-size:13px;opacity:.75;line-height:1.7}
+.hl-fig{width:min(210px,70%);margin:0 auto}
+.hl-fig svg{display:block;width:100%;height:auto}
+.hl-empty{margin:14px auto;padding:18px 14px;max-width:340px;border:1px dashed rgba(120,120,120,.35)}
+.hl-empty h4{margin:6px 0 2px;font-size:16px}
+.hl-empty p{margin:0;font-size:13px;opacity:.7}
+.hl-fb{font-size:64px;animation:hlBob 1.6s ease-in-out infinite}
+@keyframes hlBob{50%{transform:translateY(-8px)}}
+@media (prefers-reduced-motion:reduce){.hl-pop,.hl-rip,.hl-fb,.hl-box{animation:none!important}.hl-rip{display:none}}
+</style>
 </head>
 <body>
  
@@ -1430,10 +1457,10 @@
     <div id="reviewTab" class="tab-content">
       <h2 class="section-title">المراجعات</h2>
       <div class="sub-tabs">
-        <button class="sub-btn active" onclick="switchSub('revTawheed', this)">مراجعة توحيد</button>
-        <button class="sub-btn" onclick="switchSub('revTafseer', this)">مراجعة تفسير</button>
-        <button class="sub-btn" onclick="switchSub('revHadith', this)">مراجعة حديث</button>
-        <button class="sub-btn" onclick="switchSub('revFiqh', this)">مراجعة فقه</button>
+        <button class="sub-btn active" onclick="switchSub('revTawheed', this)">مراجعة التوحيد</button>
+        <button class="sub-btn" onclick="switchSub('revTafseer', this)">مراجعة التفسير</button>
+        <button class="sub-btn" onclick="switchSub('revHadith', this)">مراجعة الحديث</button>
+        <button class="sub-btn" onclick="switchSub('revFiqh', this)">مراجعة الفقه الشافعي</button>
       </div>
       <div id="revTawheed" class="sub-content active"><div id="revTawheedContainer"></div></div>
       <div id="revTafseer" class="sub-content"><div id="revTafseerContainer"></div></div>
@@ -2327,19 +2354,29 @@
     // ======================= الكورسات والعرض والوضع الليلي =======================
     // لإضافة كورس جديد: أضف عنصراً هنا (بطاقة «جدولي الأسبوعي» تظهر تلقائياً داخل أي كورس جديد ولها جدول مستقل لكل كورس). isActive يحدد هل الطالب مشترك (يمكن ربطه بحقل آخر مستقبلاً).
     // ولجعل محاضرة خاصة بكورس معيّن اكتب في المحاضرة اليدوية: courses: ["term1"]  (بدونها تظهر في كل الكورسات)
+    // الاشتراك المجاني: يُحفظ على الجهاز ويُسجَّل في شيت المتابعة (شيت «مشتركو المراجعة النهائية»)
+    const enrKey = () => "enr_" + (currentStudent ? normalizePhone(currentStudent.phone) : "");
+    function getEnr() { try { return JSON.parse(localStorage.getItem(enrKey()) || "{}") || {}; } catch (_) { return {}; } }
+    function setEnr(o) { try { localStorage.setItem(enrKey(), JSON.stringify(o || {})); } catch (_) {} }
+    const isEnrolled = (id) => !!getEnr()[id];
+    // صور أغلفة الكورسات: ضع رابط الصورة بين العلامتين (رابط جوجل درايف العادي يتحوّل تلقائياً — لازم الصورة تكون "أي شخص لديه الرابط يمكنه العرض"). فاضي = تظهر الأيقونة.
+    const COURSE_COVERS = { term1: "", final: "" };
+    function coverUrl(u) {
+      u = String(u || "").trim(); if (!u) return "";
+      if (/drive\.google\.com/.test(u)) { const m = u.match(/\/d\/([\w-]{10,})/) || u.match(/[?&]id=([\w-]{10,})/); if (m) return "https://lh3.googleusercontent.com/d/" + m[1]; }
+      return u;
+    }
+    // الكورسات المجانية المقفولة على محاضراتها فقط: لا يظهر فيها إلا ما تم تحديد كورسه صراحةً من لوحة التحكم
+    const STRICT_COURSES = ["final"];
     const COURSES = [
       { id: "term1", icon: "📖", title: "كورس الترم الأول", sub: "منصة الشافعي الصغير", desc: "التوحيد • التفسير • الفقه • الحديث • المراجعات • المنتدى",
         isActive: (u) => !!u && isActivatedValue(u.code) },
-      // كورس مجاني للجميع: أي طالب عنده حساب يظهر له «مُشترك» تلقائياً. onlyTagged: لا تظهر فيه إلا المحاضرات المحدّد فيها هذا الكورس صراحةً.
-      // لتغيير صورته: من حساب الأدمن اضغط «🖼️ تغيير صورة الكورس» (رابط جوجل درايف يكفي) أو ضع الرابط هنا في cover.
-      { id: "final", icon: "🎯", title: "المراجعة النهائية", sub: "كورس مجاني للجميع", desc: "مراجعة التوحيد • التفسير • الحديث • الفقه الشافعي", free: true, onlyTagged: true, cover: "",
-        grad: "linear-gradient(135deg,#004d40,#00897b 60%,#26a69a)", isActive: (u) => !!u }
+      { id: "final", icon: "🎯", title: "المراجعة النهائية", sub: "كورس مجاني للجميع", desc: "مراجعة التوحيد • التفسير • الحديث • الفقه الشافعي — ومعاك جدولك ونظام المتابعة", free: true,
+        isActive: (u) => !!u && (isEnrolled("final") || normalizePhone(u.phone) === ADMIN_PHONE) }
     ];
+    COURSES.forEach((c) => { Object.defineProperty(c, "cover", { get: () => coverUrl(COURSE_COVERS[c.id]) }); });
     let currentCourse = COURSES[0].id, view = "courses", prevView = "courses", activatingCourse = COURSES[0].id;
-    const inCourseId = (l, id) => (l.courses && l.courses.length) ? l.courses.includes(id) : !((COURSES.find((c) => c.id === id) || {}).onlyTagged);
-    const inCourse = (l) => inCourseId(l, currentCourse);
-    function courseOn() { const c = COURSES.find((x) => x.id === currentCourse); return !!c && c.isActive(currentStudent); }
-    const safeCoverUrl = (u) => /^https:\/\/[^\s'"()<>]+$/i.test(String(u || "")) ? String(u) : "";
+    const inCourse = (l) => STRICT_COURSES.includes(currentCourse) ? !!(l.courses && l.courses.includes(currentCourse)) : (!l.courses || !l.courses.length || l.courses.includes(currentCourse));
 
     function setView(v) {
       view = v;
@@ -2353,18 +2390,13 @@
     }
     function renderCourses() {
       const g = document.getElementById("coursesGrid"); if (!g) return;
-      g.innerHTML = COURSES.map((c, i) => {
-        const on = c.isActive(currentStudent), cov = safeCoverUrl(c.cover);
-        const coverStyle = cov ? `background:linear-gradient(rgba(0,0,0,.12),rgba(0,0,0,.48)),url('${cov}') center/cover no-repeat;min-height:170px;display:flex;align-items:center;justify-content:center` : (c.grad ? `background:${c.grad}` : "");
-        const badge = c.free ? (on ? "مُشترك • مجاني 🆓" : "مجاني 🆓") : (on ? "مُشترك" : "غير مشترك");
-        const subBtn = on ? "" : c.free
-          ? `<button class="btn-submit" style="background:#00897b" onclick="activatingCourse='${c.id}';document.getElementById('authModal').style.display='flex'">🆓 اشترك مجاناً — سجّل حسابك</button>`
-          : `<button class="btn-submit" style="background:#ef6c00" onclick="activatingCourse='${c.id}';openCodeModal()">🔑 اشترك الآن</button>`;
-        const adm = isAdminUser() ? `<button class="btn-submit" style="background:#455a64" onclick="changeCourseCover('${c.id}')">🖼️ تغيير صورة الكورس</button>` : "";
-        return `<div class="course-card" style="animation-delay:${i * 80}ms"><div class="course-cover" style="${coverStyle}">${cov ? "" : c.icon}<span class="badge ${on ? "on" : ""}">${badge}</span></div>
+      g.innerHTML = COURSES.map((c) => {
+        const on = c.isActive(currentStudent);
+        const cov = c.cover ? `style="background:linear-gradient(rgba(0,0,0,.22),rgba(0,0,0,.5)),url('${escapeHtml(c.cover).replace(/'/g, "%27")}') center/cover;min-height:170px"` : "";
+        return `<div class="course-card"><div class="course-cover" ${cov}>${c.cover ? "" : c.icon}<span class="badge ${on ? "on" : ""}">${on ? (c.free ? "مجاني • مُشترك" : "مُشترك") : (c.free ? "مجاني — اشترك الآن" : "غير مشترك")}</span></div>
           <div class="course-body"><h3>${escapeHtml(c.title)}</h3><b style="font-size:14px">${escapeHtml(c.sub)}</b><p>${escapeHtml(c.desc)}</p>
-          <button class="btn-submit" onclick="enterCourse('${c.id}')">📖 عرض التفاصيل</button>
-          ${subBtn}${adm}</div></div>`;
+          ${c.free && !on ? "" : `<button class="btn-submit" onclick="enterCourse('${c.id}')">📖 عرض التفاصيل</button>`}
+          ${on ? "" : c.free ? `<button class="btn-submit" style="background:#2e7d32" onclick="openFreeSub('${c.id}')">🎁 اشترك مجاناً</button>` : `<button class="btn-submit" style="background:#ef6c00" onclick="activatingCourse='${c.id}';openCodeModal()">🔑 اشترك الآن</button>`}</div></div>`;
       }).join("");
     }
     function goHome() {
@@ -2372,7 +2404,32 @@
       closeAccountIfAny(); setView("courses");
     }
     function closeAccountIfAny() { const p = document.getElementById("accountPage"); if (p) p.style.display = "none"; }
-    function enterCourse(id) { currentCourse = id; setView("course"); }
+    function enterCourse(id) {
+      const c = COURSES.find((x) => x.id === id);
+      if (c && c.free && !c.isActive(currentStudent)) { openFreeSub(id); return; }
+      currentCourse = id; setView("course");
+    }
+    // نافذة تأكيد الاشتراك المجاني
+    function openFreeSub(id) {
+      const c = COURSES.find((x) => x.id === id); if (!c) return;
+      if (!currentStudent) { document.getElementById("authModal").style.display = "flex"; return; }
+      let m = document.getElementById("freeSubModal");
+      if (!m) { m = document.createElement("div"); m.id = "freeSubModal"; m.className = "hl-back"; document.body.appendChild(m); }
+      m.innerHTML = `<div class="hl-box"><div class="hl-fb" style="font-size:54px">${c.icon}</div><h3>الاشتراك في ${escapeHtml(c.title)}</h3><p>الاشتراك <b>مجاني بالكامل</b> ولا يحتاج كود تفعيل. هل تؤكد اشتراكك في الكورس؟</p>
+        <div style="display:flex;gap:8px"><button type="button" class="btn-submit" id="fsOk" style="flex:1;background:#2e7d32">✅ تأكيد الاشتراك</button><button type="button" class="btn-submit" id="fsNo" style="flex:1;background:#78909c">إلغاء</button></div></div>`;
+      m.classList.add("show");
+      m.querySelector("#fsNo").onclick = () => m.classList.remove("show");
+      m.querySelector("#fsOk").onclick = () => {
+        const e = getEnr(); e[id] = e[id] || Date.now(); setEnr(e);
+        try { localStorage.setItem("enrq_" + normalizePhone(currentStudent.phone), "1"); } catch (_) {}
+        try { renderCourses(); } catch (_) {}
+        try { pushNotif("تم الاشتراك في " + c.title + " بنجاح 🎉"); } catch (_) {}
+        if (window.trkEnroll) window.trkEnroll(id);
+        m.innerHTML = `<div class="hl-box"><div class="hl-fb" style="font-size:54px">🎉</div><h3>تم الاشتراك بنجاح</h3><p>أنت الآن مشترك في <b>${escapeHtml(c.title)}</b> مجاناً، وتم تسجيل اشتراكك عند الأستاذ.</p>
+          <button type="button" class="btn-submit" id="fsGo">📖 عرض التفاصيل</button></div>`;
+        m.querySelector("#fsGo").onclick = () => { m.classList.remove("show"); enterCourse(id); };
+      };
+    }
     // مزامنة حالة التفعيل من قاعدة البيانات بهدوء (إن كانت بيانات الدخول متاحة في الجلسة)
     let statusBusy = false, statusAt = 0;
     async function refreshStatus() {
@@ -2620,7 +2677,7 @@
       if (!container) return;
  
       let html = "";
-      const isCourseActivated = currentCourse === "final" ? courseOn() : (currentStudent && currentStudent.code && currentStudent.code !== "غير مفعل");
+      const isCourseActivated = currentStudent && currentStudent.code && currentStudent.code !== "غير مفعل";
  
       const lockMap = qzLockedMap(lecturesList);
       lecturesList.forEach(lecture => {
@@ -3892,20 +3949,16 @@
     // =====  الاشتراك / الاختبارات / قفل المحاضرات / جودة الفيديو  =====
     // ============================================================
     // ---------- (1) معاينة الكورس لغير المشتركين ----------
-    const isSubscribed = () => isAdminUser() || (currentCourse === "final" ? courseOn() : (!!currentStudent && isActivatedValue(currentStudent.code)));
+    const isSubscribed = () => { if (isAdminUser()) return true; const c = COURSES.find((x) => x.id === currentCourse); return !!c && c.isActive(currentStudent); };
     function showSubRequired() {
       try { showNotifToast("🔒 هذا المحتوى للمشتركين فقط — اشترك في الكورس لمشاهدة المحاضرات والواجبات والملفات", "system"); } catch (_) { alert("هذا المحتوى للمشتركين فقط. اشترك في الكورس أولاً."); }
     }
-    function requireSubscription() {
-      const c = COURSES.find((x) => x.id === currentCourse);
-      if (c && c.free) { try { showNotifToast("🆓 الكورس مجاني — سجّل حسابك أولاً لتبدأ المراجعة", "system"); } catch (_) {} document.getElementById("authModal").style.display = "flex"; return; }
-      showSubRequired(); activatingCourse = currentCourse; openCodeModal();
-    }
+    function requireSubscription() { showSubRequired(); activatingCourse = currentCourse; openCodeModal(); }
     function requireActivated() { if (isSubscribed()) return true; requireSubscription(); return false; }
     function renderSubBanner() {
       const b = document.getElementById("subBanner"); if (!b) return;
       const c = COURSES.find((x) => x.id === currentCourse), on = !!c && c.isActive(currentStudent);
-      b.innerHTML = on ? "" : `<div class="sub-banner"><span>${c && c.free ? "🆓 الكورس مجاني! سجّل حسابك لتشاهد المحاضرات وتتابع تقدمك." : "👀 تستطيع تصفّح محتوى الكورس وعناوين المحاضرات، لكن مشاهدة الفيديوهات والواجبات والملفات تتطلب الاشتراك."}</span><button type="button" class="btn-submit" onclick="requireSubscription()">${c && c.free ? "🆓 سجّل مجاناً" : "🔑 اشترك الآن"}</button></div>`;
+      b.innerHTML = on ? "" : `<div class="sub-banner"><span>👀 تستطيع تصفّح محتوى الكورس وعناوين المحاضرات، لكن مشاهدة الفيديوهات والواجبات والملفات تتطلب الاشتراك.</span><button type="button" class="btn-submit" onclick="requireSubscription()">🔑 اشترك الآن</button></div>`;
     }
 
     // ---------- (4) حالة الاختبارات (الخادم هو المرجع، والمتصفح نسخة مؤقتة فقط) ----------
@@ -4332,12 +4385,13 @@
     // ---------- 1) شبكة المواد + صفحة مستقلة لكل مادة ----------
     // لإضافة صورة بانر حقيقية لمادة: ضع رابط الصورة في الحقل banner (مثلاً رابط من جوجل درايف lh3.googleusercontent.com/d/ID)
     const SUBJECT_CARDS = [
-      { tab: "fiqhTab",    title: "الفقه الشافعي", icon: "⚖️", short: "الفقه الشافعي", subjects: ["الفقه"],   banner: "", grad: "linear-gradient(135deg,#0d3b12,#2e7d32)", desc: "شرح أحكام الفقه الشافعي خطوة بخطوة مع الواجبات." },
-      { tab: "tawheedTab", title: "التوحيد",       icon: "🕋", short: "التوحيد",       subjects: ["التوحيد"], banner: "", grad: "linear-gradient(135deg,#0b3d5c,#1a73e8)", desc: "محاضرات العقيدة والتوحيد بأسلوب مبسّط." },
-      { tab: "tafseerTab", title: "التفسير",       icon: "📜", short: "التفسير",       subjects: ["التفسير"], banner: "", grad: "linear-gradient(135deg,#4a148c,#8e24aa)", desc: "تفسير الآيات وفهم معانيها ومقاصدها." },
-      { tab: "osoolTab",   title: "الحديث",        icon: "📚", short: "الحديث",        subjects: ["الحديث"],  banner: "", grad: "linear-gradient(135deg,#7a3e00,#ef6c00)", desc: "شرح الأحاديث النبوية وفوائدها." },
-      { tab: "reviewTab",  title: "قسم المراجعات", icon: "🔁", short: "المراجعات",     subjects: ["مراجعة توحيد", "مراجعة تفسير", "مراجعة حديث", "مراجعة فقه"], banner: "", grad: "linear-gradient(135deg,#004d40,#00897b)", desc: "مراجعات شاملة لكل المواد قبل الاختبار." },
-      { tab: "forumTab",   title: "المنتدى",       icon: "💬", short: "المنتدى",       subjects: [], forum: true, banner: "", grad: "linear-gradient(135deg,#880e4f,#d81b60)", desc: "اسأل أستاذك وزملاءك وشارك في النقاش." }
+      { tab: "fiqhTab", courses: ["term1"],    title: "الفقه الشافعي", icon: "⚖️", short: "الفقه الشافعي", subjects: ["الفقه"],   banner: "", grad: "linear-gradient(135deg,#0d3b12,#2e7d32)", desc: "شرح أحكام الفقه الشافعي خطوة بخطوة مع الواجبات." },
+      { tab: "tawheedTab", courses: ["term1"], title: "التوحيد",       icon: "🕋", short: "التوحيد",       subjects: ["التوحيد"], banner: "", grad: "linear-gradient(135deg,#0b3d5c,#1a73e8)", desc: "محاضرات العقيدة والتوحيد بأسلوب مبسّط." },
+      { tab: "tafseerTab", courses: ["term1"], title: "التفسير",       icon: "📜", short: "التفسير",       subjects: ["التفسير"], banner: "", grad: "linear-gradient(135deg,#4a148c,#8e24aa)", desc: "تفسير الآيات وفهم معانيها ومقاصدها." },
+      { tab: "osoolTab", courses: ["term1"],   title: "الحديث",        icon: "📚", short: "الحديث",        subjects: ["الحديث"],  banner: "", grad: "linear-gradient(135deg,#7a3e00,#ef6c00)", desc: "شرح الأحاديث النبوية وفوائدها." },
+      { tab: "reviewTab", courses: ["term1"],  title: "قسم المراجعات", icon: "🔁", short: "المراجعات",     subjects: ["مراجعة توحيد", "مراجعة تفسير", "مراجعة حديث", "مراجعة فقه"], banner: "", grad: "linear-gradient(135deg,#004d40,#00897b)", desc: "مراجعات شاملة لكل المواد قبل الاختبار." },
+      { tab: "reviewTab", courses: ["final"], title: "المراجعة النهائية", icon: "🎯", short: "المراجعة النهائية", subjects: ["مراجعة توحيد", "مراجعة تفسير", "مراجعة حديث", "مراجعة فقه"], banner: "", grad: "linear-gradient(135deg,#b71c1c,#e65100)", desc: "مراجعة التوحيد والتفسير والحديث والفقه الشافعي قبل الامتحان." },
+      { tab: "forumTab", courses: ["term1"],   title: "المنتدى",       icon: "💬", short: "المنتدى",       subjects: [], forum: true, banner: "", grad: "linear-gradient(135deg,#880e4f,#d81b60)", desc: "اسأل أستاذك وزملاءك وشارك في النقاش." }
     ];
     let currentSubjectTab = null;
     function subjectLectures(card) {
@@ -4357,7 +4411,7 @@
       }).join("");
     }
     function openSubject(tab) {
-      const c = SUBJECT_CARDS.find((x) => x.tab === tab); if (!c) return;
+      const c = SUBJECT_CARDS.find((x) => x.tab === tab && (!x.courses || x.courses.includes(currentCourse))); if (!c) return;
       currentSubjectTab = tab;
       document.getElementById("subjectGrid").style.display = "none";
       switchTab(tab);
@@ -4946,8 +5000,7 @@
   "use strict";
 
   /* ============ الإعدادات ============ */
-  const TRK_URL = "https://script.google.com/macros/s/AKfycbypExog6VGxQE0yyndwxR1cIu5beS3DEraGaLH34ZncbXRO3MNQY0Akn4Im3wC5fKIJvg/exec"; // رابط Tracking.gs
-  window.__TRK_URL = TRK_URL;
+  const TRK_URL = "https://script.google.com/macros/s/AKfycbwMtCg1od__f13XQOTgqatfxraY4I6dIHrxXQ_9w_ktYPhiXoZJDPweLvS8lbQ1AzFKqg/exec"; // رابط Tracking.gs
   const TEACHER_WA = "201101662590";  // واتساب المستر
   const COMPLETE_PCT = 90;            // نسبة المشاهدة لاعتبار المحاضرة "مكتملة"
   const WARN_DAYS = 3;                // أيام استمرار التأخر قبل التواصل مع ولي الأمر
@@ -4962,8 +5015,7 @@
   const $ = (id) => document.getElementById(id);
   const phoneOf = () => normalizePhone((currentStudent && currentStudent.phone) || "");
   const tracked = () => !!currentStudent && !currentStudent.isAdmin && !isAdminUser();
-  const subscribed = () => !!currentStudent && isActivatedValue(currentStudent.code); // مشترك في كورس الترم (للتحذيرات والمهلة)
-  const eligible = () => !!currentStudent; // أي حساب (حتى الكورس المجاني) تُسجَّل مشاهداته في المتابعة
+  const subscribed = () => !!currentStudent && isActivatedValue(currentStudent.code);
   const pad = (n) => String(n).padStart(2, "0");
   const mmss = (s) => { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return (h ? h + ":" + pad(m) : m) + ":" + pad(s % 60); };
   const fmtP = (x) => (Math.round(x * 10) / 10) + "%";
@@ -5005,12 +5057,17 @@
   function save() { if (T) { try { localStorage.setItem(key(), JSON.stringify(T)); } catch (_) {} } }
   function rec(id) { return (T.lec[id] = T.lec[id] || { title: "", subject: "", dur: 0, last: 0, ranges: [], done: false, updated: 0, first: 0 }); }
   const pctOf = (id) => { const r = T.lec[id]; if (!r) return 0; if (r.legacy) return 100; return r.dur ? Math.min(100, rSum(r.ranges) / r.dur * 100) : (r.done ? 100 : 0); };
-  const isDone = (id) => { const r = T.lec[id]; return !!r && (r.done || pctOf(id) >= COMPLETE_PCT); };
+  const isDone = (id) => { if (!oldReady) released(); if (oldIds[id]) return true; if (T.srv && T.srv.base && T.srv.base.indexOf(id) >= 0) return true; const r = T.lec[id]; return !!r && (r.done || pctOf(id) >= COMPLETE_PCT); };
 
   /* ============ المحاضرات المتأخرة والحالة ============ */
-  function releasedFor(cid) { const out = []; SUBJECTS.forEach((s) => (visibleBySubject[s.name] || []).forEach((l) => { if (inCourseId(l, cid)) out.push({ id: l.id, title: l.title, subject: s.name }); })); return out; }
-  function released() { return releasedFor("term1"); }
-  function releasedAll() { const out = []; SUBJECTS.forEach((s) => (visibleBySubject[s.name] || []).forEach((l) => out.push({ id: l.id, title: l.title, subject: s.name, courses: (l.courses || []).join(",") }))); return out; }
+  // تاريخ البداية: أي محاضرة موعدها قبل هذا التاريخ (أو بدون موعد) تُحسب مكتملة للجميع، والمتابعة تبدأ من المحاضرات بعده
+  const TRK_BASELINE_TS = Date.parse("2026-10-19T23:59:59+03:00");
+  let oldIds = {}, oldReady = false;
+  function released() {
+    const out = [], old = {};
+    SUBJECTS.forEach((s) => (visibleBySubject[s.name] || []).filter((l) => !l.courses || !l.courses.length || l.courses.includes(COURSES[0].id)).forEach((l) => { out.push({ id: l.id, title: l.title, subject: s.name }); if (!(Date.parse(l.releaseAt) > TRK_BASELINE_TS)) old[l.id] = 1; }));
+    oldIds = old; oldReady = true; return out;
+  }
   function backlogInfo() {
     const rel = released(), late = rel.filter((x) => !isDone(x.id)), n = late.length;
     return { rel, late, n, days: graceDays(n), st: n >= 3 ? "red" : n === 2 ? "yellow" : "green" };
@@ -5048,15 +5105,15 @@
     acts.forEach((a) => { snapA[a.uid] = a.secs; });
     let logged = false; try { logged = !!sessionStorage.getItem(sessKey()); } catch (_) {}
     const pl = { snapU, snapA, body: {
-      action: "sync", token: tok, full: !!full, withLec: !!withLec, login: !logged,
+      action: "sync", token: tok, full: !!full, withLec: !!withLec, login: !logged, sub: subscribed(),
       name: (currentStudent && currentStudent.name) || "", parentPhone: (currentStudent && currentStudent.parentPhone) || "",
-      released: releasedAll().map((x) => ({ id: x.id, title: x.title, subject: x.subject, courses: x.courses })),
+      released: released().map((x) => ({ id: x.id, title: x.title, subject: x.subject })),
       lectures, activity: acts.map((a) => ({ uid: a.uid, id: a.id, title: a.title, at: a.at, secs: a.secs })), addSec: T.pend
     } };
     extras(pl); return pl;
   }
   async function sync(full, force, withLec) {
-    if (!on() || !tracked() || !eligible()) return false;
+    if (!on() || !tracked()) return false;
     load();
     if (busy) return false;
     if (!full && !force && Date.now() - lastSync < 15000) return false;
@@ -5094,6 +5151,11 @@
       const m = {}; T.act.forEach((a) => { m[a.uid] = a; });
       d.activity.forEach((a) => { const x = m[a.uid]; if (!x) m[a.uid] = a; else x.secs = Math.max(x.secs, a.secs); });
       T.act = Object.values(m).sort((a, b) => b.at - a.at).slice(0, 200);
+    }
+    if (d.base) T.srv.base = d.base;
+    if (d.enr && typeof d.enr === "object") {
+      let q = false; try { q = !!localStorage.getItem("enrq_" + phoneOf()); } catch (_) {}
+      if (!q && JSON.stringify(getEnr()) !== JSON.stringify(d.enr)) { setEnr(d.enr); try { if (view === "courses") renderCourses(); } catch (_) {} }
     }
     if (d.certs) T.srv.certs = d.certs;
     if ("eval" in d) T.srv.eval = d.eval;
@@ -5307,23 +5369,7 @@
   const lockedHTML = (t) => `<div class="trk-card trk-empty"><div class="trk-empty-ico">🔒</div><h3>${t}</h3><p style="margin:10px 0 14px">اشترك في الكورس أولاً لتظهر لك بيانات متابعتك.</p><button type="button" class="btn-activate-code" onclick="openCodeModal()">🔑 تفعيل كود الآن</button></div>`;
   const noteHTML = () => `<p class="trk-note">${dashNote ? escapeHtml(dashNote) : ""} <button type="button" class="trk-refresh" onclick="TRK.refresh()">🔄 تحديث</button></p>`;
 
-  function finalHTML() {
-    load();
-    const rel = releasedFor("final"), total = rel.length, done = rel.filter((x) => isDone(x.id)).length, pct = total ? Math.round(done / total * 100) : 0;
-    const groups = {}; rel.forEach((x) => { (groups[x.subject] = groups[x.subject] || []).push(x); });
-    const rows = ["التوحيد", "التفسير", "الحديث", "الفقه"].map((n) => {
-      const g = groups[n] || [], d = g.filter((x) => isDone(x.id)).length, p = g.length ? Math.round(d / g.length * 100) : 0;
-      return `<div class="trk-lrow"><div class="trk-lrow-t"><b>مراجعة ${n}</b><span class="trk-badge ${p >= 100 ? "done" : p > 0 ? "part" : "none"}">${d} / ${g.length}</span></div><div class="trk-mini"><i style="width:${p}%"></i></div></div>`;
-    }).join("");
-    const left = rel.filter((x) => !isDone(x.id));
-    const msg = !total ? "المحاضرات هتنزل قريباً — خليك جاهز 💚" : left.length === 0 ? "🌟 ما شاء الله! خلصت كل محاضرات المراجعة المتاحة." : `📌 باقي لك ${left.length} من محاضرات المراجعة — كمّلها قبل الاختبار.`;
-    return `<div class="trk-card"><h3>🎯 متابعة المراجعة النهائية (مجاني)</h3>
-      <div class="trk-status"><div class="trk-status-txt"><b>أنجزت ${done} من ${total} (${pct}%)</b><p style="margin-top:8px;font-weight:700;line-height:1.9">${msg}</p></div></div>
-      <div class="trk-mini" style="margin:10px 0"><i style="width:${pct}%"></i></div>${rows}
-      ${left.length ? `<ul style="margin-top:10px">${left.slice(0, 8).map((x) => `<li>${escapeHtml(x.title)} — ${escapeHtml(x.subject)}</li>`).join("")}${left.length > 8 ? `<li>و ${left.length - 8} أخرى...</li>` : ""}</ul>` : ""}</div>`;
-  }
-  function statusHTML() { const fin = finalHTML(); return subscribed() ? statusMainHTML() + fin : fin; }
-  function statusMainHTML() {
+  function statusHTML() {
     if (!subscribed()) return lockedHTML("حالة الطالب");
     const w = warnState(), sv = T.srv || {};
     const done = w.rel.length - w.n;
@@ -5402,6 +5448,35 @@
     if (view === "dash") renderDash();
   }
 
+  /* ============ مراجعة تلقائية كل 30 ثانية (تقييم / شهادات / مهلة) ============ */
+  async function trkEnroll(course) {
+    try {
+      if (!on() || !tracked()) return false;
+      const tok = await token(); if (!tok) return false;
+      const r = await callScript(TRK_URL, { action: "enroll", token: tok, course: course || "final", name: (currentStudent && currentStudent.name) || "", parentPhone: (currentStudent && currentStudent.parentPhone) || "" });
+      if (r.type === "ok" && r.data && r.data.status === "success") { try { localStorage.removeItem("enrq_" + phoneOf()); } catch (_) {} return true; }
+    } catch (_) {}
+    return false;
+  }
+  window.trkEnroll = trkEnroll;
+  let pulling = false;
+  async function pull() {
+    if (pulling || document.hidden || !on() || !tracked()) return;
+    pulling = true;
+    try {
+      try { if (localStorage.getItem("enrq_" + phoneOf())) trkEnroll("final"); } catch (_) {}
+      const tok = await token(); if (!tok) return;
+      const r = await callScript(TRK_URL, { action: "pull", token: tok });
+      if (r.type === "ok" && r.data && r.data.status === "success") {
+        load(); const before = JSON.stringify(T.srv || {});
+        merge(r.data); save();
+        if (JSON.stringify(T.srv || {}) !== before) { chrome(); try { decorateBadges(); if (view === "dash") renderDash(); } catch (_) {} }
+      } else if (r.type === "fail" && r.data && r.data.code === "TAUTH") { try { localStorage.removeItem(tokKey()); } catch (_) {} }
+    } catch (_) {} finally { pulling = false; }
+  }
+  setInterval(pull, 30000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) pull(); });
+
   /* ============ الشريط العلوي + الحالة العامة ============ */
   function chrome() {
     const logged = tracked();
@@ -5457,7 +5532,7 @@
   /* ---- حفظ الاشتراكات والجدول والعلامات على الحساب (تظهر على أي جهاز) ---- */
   let xDirty = false, soonT = null;
   const cKey = (c) => "sched_" + currentStudent.phone + (c.id !== COURSES[0].id ? "_" + c.id : "");
-  function soon() { if (!tracked() || !eligible()) return; xDirty = true; clearTimeout(soonT); soonT = setTimeout(() => sync(false, true), 800); }
+  function soon() { if (!tracked() || !subscribed()) return; xDirty = true; clearTimeout(soonT); soonT = setTimeout(() => sync(false, true), 800); }
   function localSched() {
     const o = {}; if (!currentStudent) return o;
     COURSES.forEach((c) => {
@@ -5533,7 +5608,7 @@
   }
   // شارة المحاضرة ومؤشر التقدم يعتمدان على المشاهدة الفعلية (90%) وليس على مجرد فتح المحاضرة
   function decorateBadges() {
-    if (!tracked() || !eligible()) return;
+    if (!tracked() || !subscribed()) return;
     load();
     Object.keys(lectureIndex).forEach((id) => {
       const b = document.getElementById("badge-" + id); if (!b) return;
@@ -5552,7 +5627,7 @@
   const started = {};
   function onState() {
     chrome(); sbSync(); try { decorateBadges(); } catch (_) {}
-    if (tracked() && eligible() && !started[phoneOf()]) { started[phoneOf()] = 1; load(); sync(false, true, true); }
+    if (tracked() && !started[phoneOf()]) { started[phoneOf()] = 1; load(); sync(false, true, true); }
     try { askAuth(); } catch (_) {}
   }
 
@@ -5586,7 +5661,7 @@
   const _rsg = window.renderSubjectGrid;
   window.renderSubjectGrid = function () {
     const all = SUBJECT_CARDS.slice();
-    SUBJECT_CARDS.length = 0; all.filter((c) => !MOVED_CARDS.includes(c.tab)).forEach((c) => SUBJECT_CARDS.push(c));
+    SUBJECT_CARDS.length = 0; all.filter((c) => !MOVED_CARDS.includes(c.tab) && (!c.courses || c.courses.includes(currentCourse))).forEach((c) => SUBJECT_CARDS.push(c));
     try { _rsg.apply(this, arguments); } finally { SUBJECT_CARDS.length = 0; all.forEach((c) => SUBJECT_CARDS.push(c)); }
   };
 
@@ -5600,7 +5675,7 @@
       if (l > 0) el.textContent = (el.dataset.pre || "") + fmtDhms(l);
       else if (!el.dataset.done) { el.dataset.done = "1"; chrome(); if (view === "dash") renderDash(); }
     });
-    if (n % 5 || !tracked() || !eligible()) return;
+    if (n % 5 || !tracked() || !subscribed()) return;
     load();
     if (!document.hidden && ((typeof pvPlayerInstance !== "undefined" && pvPlayerInstance && pvPlayerInstance.playing) || Date.now() - lastAct < 300000)) T.pend += 5;
     save();
@@ -5633,171 +5708,88 @@
 })();
 </script>
 
-<style id="fx-style">
-/* ===== أنيميشن المنصة (الإصدار 3) ===== */
-@keyframes fxPageIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes fxPop{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:none}}
-@keyframes fxCardIn{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:none}}
-@keyframes fxRipple{to{transform:scale(1);opacity:0}}
-@keyframes fxWobble{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-5px) rotate(-3deg)}75%{transform:translateX(5px) rotate(3deg)}}
-@keyframes fxSlideDown{from{transform:translateY(-100%)}to{transform:none}}
-.fx-page-in{animation:fxPageIn .45s cubic-bezier(.2,.8,.2,1) both}
-.course-card{animation:fxCardIn .55s cubic-bezier(.2,.8,.2,1) backwards}
-.lecture-card{animation:fxCardIn .45s cubic-bezier(.2,.8,.2,1) backwards}
-[id$="Modal"]:not([style*="display: none"]) > div{animation:fxPop .28s cubic-bezier(.2,.8,.2,1) backwards}
-button,.btn-submit,.btn-open-lecture,.subject-card,.course-card{position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
-button,.btn-submit,.btn-open-lecture{transition:transform .15s ease,box-shadow .2s ease,filter .2s ease}
-button:not(:disabled):active,.btn-submit:active,.btn-open-lecture:active{transform:scale(.95)}
-.subject-card:active,.course-card:active{transform:scale(.98)}
-.fx-ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.45);transform:scale(0);animation:fxRipple .6s ease-out forwards;pointer-events:none}
-.sc-fill,.trk-mini i{transition:width .8s cubic-bezier(.2,.8,.2,1)}
-/* شاشة انقطاع الإنترنت */
-#fxOffline{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:24px;text-align:center;background:rgba(10,24,16,.88);backdrop-filter:blur(6px);color:#fff}
-#fxOffline.show{display:flex;animation:fxPop .35s both}
-#fxOffline .fx-fig{width:min(300px,70vw);--hairline-plate:#12261b;--hairline-hi:#ffffff;--hairline-edge:#9fd8b0;--hairline-mid:#5f8f6f;--hairline-lo:#2c4a38}
-#fxOffline h2{font-size:22px}#fxOffline p{opacity:.85;font-size:14px;max-width:420px;line-height:1.9}
-#fxOffline button{background:#2e7d32;color:#fff;border:0;border-radius:12px;padding:11px 26px;font-size:15px;font-weight:700;cursor:pointer}
-#fxOfflineBar{position:fixed;top:0;left:0;right:0;z-index:2147482000;background:#e53935;color:#fff;text-align:center;padding:7px 10px;font-size:13px;font-weight:700;display:none}
-#fxOfflineBar.show{display:block;animation:fxSlideDown .3s both}
-#fxOfflineBar.ok{background:#2e7d32}
-.fx-plug-fallback{width:190px;height:150px;animation:fxWobble 1.6s ease-in-out infinite}
-/* حالة فارغة */
-.hl-empty{display:grid;justify-items:center;gap:6px;padding:26px 10px;text-align:center;color:#666}
-.hl-empty .fx-fig{width:190px;--hairline-plate:var(--card-bg,#fff)}
-[data-theme="dark"] .hl-empty{color:#9fb3a5}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-</style>
-<script id="fx-script">
+<script>
+/* ===== أنيميشن المنصة: انقطاع النت + حالات الفراغ (مكتبة hairline) + ضغطات الأزرار ===== */
 (function () {
   "use strict";
-  const HL_URL = "https://esm.sh/@lucasmarkes/hairline@0.5.1"; // مكتبة hairline (رسومات SVG تتفاعل مع الإصبع/الماوس)
-  const $ = (id) => document.getElementById(id);
-
-  /* ---- تحميل المكتبة مرة واحدة وهي أونلاين (فتبقى جاهزة في الذاكرة لحظة انقطاع النت) ---- */
-  let hl = null, hlP = null;
-  function loadHL() {
-    if (hl) return Promise.resolve(hl);
-    if (!hlP) hlP = import(HL_URL).then((m) => (hl = m)).catch(() => { hlP = null; return null; });
-    return hlP;
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var HL = null, loading = null;
+  function loadHL() { // تحميل مرة واحدة والنت شغال؛ بعدها تفضل الأشكال متاحة حتى لو النت قطع
+    if (HL) return Promise.resolve(HL);
+    if (!loading) loading = import("https://esm.sh/@lucasmarkes/hairline").then(function (m) { return (HL = m); }).catch(function () { loading = null; return null; });
+    return loading;
   }
-  function draw(name, el, opts) {
-    if (!hl || !hl[name] || !el) return null;
-    try { return hl[name](el, Object.assign({ theme: "auto", intensity: 0.7 }, opts || {})); } catch (_) { return null; }
-  }
-  window.addEventListener("load", () => { setTimeout(() => { if (navigator.onLine) loadHL(); }, 1500); });
-
-  /* ---- 1) تموّج عند الضغط ---- */
-  document.addEventListener("pointerdown", (e) => {
-    const t = e.target.closest && e.target.closest("button,.btn-submit,.btn-open-lecture,.subject-card,.course-card");
-    if (!t || t.disabled) return;
-    const r = t.getBoundingClientRect(), d = Math.max(r.width, r.height) * 1.4, el = document.createElement("span");
-    el.className = "fx-ripple";
-    el.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
-    t.appendChild(el); setTimeout(() => el.remove(), 650);
-  }, { passive: true });
-
-  /* ---- 2) انتقال ناعم بين الصفحات ---- */
-  function pageIn() {
-    ["coursesPage", "mainContainer", "accountPage"].forEach((id) => {
-      const el = $(id); if (el && el.style.display !== "none" && el.offsetParent !== null) { el.classList.remove("fx-page-in"); void el.offsetWidth; el.classList.add("fx-page-in"); }
+  function mount(host, name, opts) {
+    return loadHL().then(function (m) {
+      if (!m || !m[name] || !host.isConnected) return null;
+      try { return m[name](host, Object.assign({ play: true, intensity: 0.6 }, opts || {})); } catch (e) { return null; }
     });
   }
-  if (typeof window.setView === "function") { const _sv = window.setView; window.setView = function () { const r = _sv.apply(this, arguments); try { pageIn(); } catch (_) {} return r; }; }
-  if (typeof window.openSubject === "function") { const _os = window.openSubject; window.openSubject = function () { const r = _os.apply(this, arguments); try { pageIn(); } catch (_) {} return r; }; }
+  (window.requestIdleCallback || function (f) { setTimeout(f, 2500); })(function () { if (navigator.onLine !== false) loadHL(); });
 
-  /* ---- 3) شاشة انقطاع النت (Plug من hairline) ---- */
-  const FALLBACK_PLUG = `<svg class="fx-plug-fallback" viewBox="0 0 190 150" fill="none" stroke="#9fd8b0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="12" y="52" width="46" height="46" rx="8"/><path d="M28 68v14M44 68v14"/><path d="M58 75h28c18 0 14 42 38 42h36"/><rect x="146" y="102" width="32" height="30" rx="6" stroke="#fff"/></svg>`;
-  let offEl = null, offBar = null, offFig = null, offDismissed = false;
-  function ensureOff() {
-    if (offEl) return;
-    offEl = document.createElement("div"); offEl.id = "fxOffline"; offEl.setAttribute("role", "alertdialog");
-    offEl.innerHTML = `<div class="fx-fig" id="fxOffFig"></div><h2>انقطع الاتصال بالإنترنت 🔌</h2><p>مفيش نت دلوقتي. المنصة بتحاول ترجع تتصل تلقائياً — ولو فيه حاجة اتحمّلت قبل كده هتفضل شغالة، وتقدّمك هيتحفظ ويتبعت أول ما النت يرجع.</p><button type="button" id="fxOffClose">تمام، هكمل</button>`;
-    document.body.appendChild(offEl);
-    offBar = document.createElement("div"); offBar.id = "fxOfflineBar"; document.body.appendChild(offBar);
-    $("fxOffClose").addEventListener("click", () => { offDismissed = true; offEl.classList.remove("show"); if (offFig) { try { offFig.destroy(); } catch (_) {} offFig = null; } setBar(false); });
+  /* ---- انقطاع الإنترنت ---- */
+  var bar = document.createElement("div"); bar.className = "hl-bar"; document.body.appendChild(bar);
+  var back = document.createElement("div"); back.className = "hl-back";
+  back.innerHTML = '<div class="hl-box" role="dialog" aria-live="polite"><div class="hl-fig" id="hlOffFig"></div><h3>انقطع الاتصال بالإنترنت</h3><p>تأكد من الواي فاي أو بيانات الموبايل. تقدمك محفوظ، وهيتزامن لوحده أول ما النت يرجع.</p><button type="button" class="btn-submit" id="hlOffBtn">حسناً</button></div>';
+  document.body.appendChild(back);
+  var figHost = back.querySelector("#hlOffFig"), figCtl = null, barT = null;
+  var FALLBACK = '<div class="hl-fb">🔌</div>';
+  function showOffline() {
+    clearTimeout(barT); bar.className = "hl-bar show"; bar.textContent = "لا يوجد اتصال بالإنترنت";
+    back.classList.add("show");
+    if (!figCtl) {
+      figHost.innerHTML = FALLBACK;
+      if (HL && HL.plug) { figHost.innerHTML = ""; mount(figHost, "plug", { label: "فيش كهرباء مفصول", intensity: 0.8 }).then(function (c) { figCtl = c; if (!c) figHost.innerHTML = FALLBACK; }); }
+    }
   }
-  function setBar(off) { if (!offBar) return; if (off) { offBar.className = "show"; offBar.textContent = "⚠️ أنت غير متصل بالإنترنت — بنحاول نرجع الاتصال..."; } else offBar.className = ""; }
-  function goOffline() {
-    ensureOff(); offDismissed = false;
-    const holder = $("fxOffFig"); holder.innerHTML = "";
-    offEl.classList.add("show"); setBar(false);
-    if (hl) { offFig = draw("plug", holder, { play: true, intensity: 0.9, label: "قابس كهرباء غير متصل" }); }
-    if (!offFig) holder.innerHTML = FALLBACK_PLUG;
-  }
-  function goOnline() {
-    if (!offEl) return;
-    const wasShown = offEl.classList.contains("show");
-    offEl.classList.remove("show");
-    if (offFig) { try { offFig.destroy(); } catch (_) {} offFig = null; }
-    offBar.className = "show ok"; offBar.textContent = "✅ رجع الاتصال بالإنترنت";
-    setTimeout(() => { if (offBar) offBar.className = ""; }, 2600);
-    try { if (typeof fetchLectures === "function") fetchLectures(); } catch (_) {}
+  function showOnline() {
+    back.classList.remove("show");
+    bar.className = "hl-bar ok show"; bar.textContent = "رجع الاتصال ✅ جاري مزامنة تقدمك";
+    barT = setTimeout(function () { bar.className = "hl-bar ok"; }, 2600);
+    try { window.dispatchEvent(new Event("focus")); } catch (e) {}
     loadHL();
-    if (wasShown) { try { showNotifToast("✅ رجع النت — اتحدّثت بياناتك", "system"); } catch (_) {} }
   }
-  window.addEventListener("offline", goOffline);
-  window.addEventListener("online", goOnline);
-  if (!navigator.onLine) setTimeout(goOffline, 600);
+  back.querySelector("#hlOffBtn").onclick = function () { back.classList.remove("show"); };
+  window.addEventListener("offline", showOffline);
+  window.addEventListener("online", showOnline);
+  if (navigator.onLine === false) setTimeout(showOffline, 600);
 
-  /* ---- 4) حالة فارغة (Sieve) لو مفيش محاضرات في المادة ---- */
-  function emptyStates() {
-    if (typeof SUBJECTS === "undefined") return;
-    SUBJECTS.forEach((s) => {
-      const c = $(s.container); if (!c || c.querySelector(".lecture-card") || c.querySelector(".hl-empty")) return;
-      if (c.textContent.trim() !== "") return;
-      c.innerHTML = `<div class="hl-empty"><div class="fx-fig"></div><b>لا توجد محاضرات هنا حتى الآن</b><span>أول ما تنزل محاضرة هتلاقيها هنا وهيجيلك تنبيه 🔔</span></div>`;
-      const slot = c.querySelector(".fx-fig");
-      if (hl) draw("sieve", slot, { intensity: 0.6, label: "غربال فارغ" }); else loadHL().then(() => { if (slot.isConnected) draw("sieve", slot, { intensity: 0.6, label: "غربال فارغ" }); });
-    });
+  /* ---- حالة الفراغ: حاوية محاضرات من غير محتوى ---- */
+  var IDS = ["tawheedContainer", "tafseerContainer", "fiqhContainer", "osoolContainer", "revTawheedContainer", "revTafseerContainer", "revHadithContainer", "revFiqhContainer"];
+  var ctl = new WeakMap(), busy = false;
+  function check(c) {
+    var e = c.querySelector(":scope > .hl-empty"), others = Array.prototype.filter.call(c.children, function (x) { return !x.classList.contains("hl-empty"); });
+    if (others.length && e) { var o = ctl.get(e); if (o && o.destroy) o.destroy(); e.remove(); return; }
+    if (!others.length && !e && !c.textContent.trim()) {
+      e = document.createElement("div"); e.className = "hl-empty";
+      e.innerHTML = '<div class="hl-fig"><div class="hl-fb" style="font-size:48px">📭</div></div><h4>لا توجد محاضرات هنا بعد</h4><p>هتظهر هنا أول ما تنزل، ونبلغك.</p>';
+      c.appendChild(e);
+      var host = e.querySelector(".hl-fig");
+      loadHL().then(function (m) {
+        if (!m || !m.sieve || !e.isConnected) return;
+        host.innerHTML = ""; mount(host, "sieve", { label: "مصفاة فاضية", intensity: 0.7 }).then(function (cc) { if (cc) ctl.set(e, cc); else host.innerHTML = '<div class="hl-fb" style="font-size:48px">📭</div>'; });
+      });
+    }
   }
-  if (typeof window.renderAll === "function") { const _ra = window.renderAll; window.renderAll = function () { const r = _ra.apply(this, arguments); try { emptyStates(); } catch (_) {} return r; }; }
+  function checkAll() { if (busy) return; busy = true; try { IDS.forEach(function (id) { var c = document.getElementById(id); if (c) check(c); }); } finally { busy = false; } }
+  var mo = new MutationObserver(function () { setTimeout(checkAll, 30); });
+  IDS.forEach(function (id) { var c = document.getElementById(id); if (c) mo.observe(c, { childList: true }); });
+  setTimeout(checkAll, 800);
+  ["renderAll", "openSubject", "switchSub"].forEach(function (n) {
+    var f = window[n]; if (typeof f !== "function") return;
+    window[n] = function () { var r = f.apply(this, arguments); setTimeout(checkAll, 60); return r; };
+  });
 
-  /* ---- 5) بطاقات مواد كورس «المراجعة النهائية» ---- */
-  const FINAL_TABS = [["tawheedTab", "مراجعة التوحيد", "مراجعة شاملة لأهم مسائل العقيدة والتوحيد."], ["tafseerTab", "مراجعة التفسير", "مراجعة الآيات ومعانيها ومقاصدها."], ["osoolTab", "مراجعة الحديث", "مراجعة الأحاديث المقررة وفوائدها."], ["fiqhTab", "مراجعة الفقه الشافعي", "مراجعة الأحكام والمسائل المهمة قبل الاختبار."]];
-  if (typeof window.renderSubjectGrid === "function") {
-    const _rsg = window.renderSubjectGrid;
-    window.renderSubjectGrid = function () {
-      if (typeof currentCourse === "undefined" || currentCourse !== "final") return _rsg.apply(this, arguments);
-      const all = SUBJECT_CARDS.slice(), cards = [];
-      FINAL_TABS.forEach(([tab, title, desc]) => { const b = all.find((x) => x.tab === tab); if (b) cards.push(Object.assign({}, b, { title: title, desc: desc })); });
-      SUBJECT_CARDS.length = 0; cards.forEach((c) => SUBJECT_CARDS.push(c));
-      try { return _rsg.apply(this, arguments); } finally { SUBJECT_CARDS.length = 0; all.forEach((c) => SUBJECT_CARDS.push(c)); }
-    };
-  }
-
-  /* ---- 6) صورة الكورس: تُحفظ في Tracking.gs ويغيّرها الأدمن برابط ---- */
-  const CFG_KEY = "shafeei_course_cfg_v1";
-  const trkUrl = () => window.__TRK_URL || "";
-  function applyCfg(cfg) { if (!cfg || !cfg.covers) return; COURSES.forEach((c) => { if (Object.prototype.hasOwnProperty.call(cfg.covers, c.id)) c.cover = cfg.covers[c.id] || ""; }); }
-  try { applyCfg(JSON.parse(localStorage.getItem(CFG_KEY) || "null")); } catch (_) {}
-  async function loadCfg() {
-    if (!/^https:\/\/script\.google\.com\//.test(trkUrl())) return;
-    try {
-      const r = await callScript(trkUrl(), { action: "config" });
-      if (r.type === "ok" && r.data && r.data.covers) { try { localStorage.setItem(CFG_KEY, JSON.stringify({ covers: r.data.covers })); } catch (_) {} applyCfg(r.data); if (typeof view !== "undefined" && view === "courses") renderCourses(); }
-    } catch (_) {}
-  }
-  loadCfg(); setInterval(() => { if (!document.hidden) loadCfg(); }, 600000);
-  function toDirect(u) {
-    u = String(u || "").trim(); if (!u) return "";
-    const m = u.match(/\/d\/([\w-]{10,})/) || u.match(/[?&]id=([\w-]{10,})/);
-    if (m && /drive\.google|docs\.google|googleusercontent/.test(u)) return "https://lh3.googleusercontent.com/d/" + m[1];
-    return /^https:\/\/\S+$/i.test(u) ? u : null;
-  }
-  window.changeCourseCover = async function (id) {
-    if (!isAdminUser()) return;
-    const c = COURSES.find((x) => x.id === id); if (!c) return;
-    const v = prompt("الصق رابط صورة الكورس (رابط جوجل درايف يكفي، بشرط الصورة تكون مشاركة «أي شخص لديه الرابط»).\nاتركه فارغاً لإرجاع الصورة الافتراضية.", c.cover || "");
-    if (v === null) return;
-    const url = toDirect(v); if (url === null) { alert("الرابط غير صالح — لازم يبدأ بـ https://"); return; }
-    if (!sessionCreds || !sessionCreds.password) { alert("سجّل خروج ثم ادخل بكلمة السر مرة أخرى علشان تقدر تغيّر الصورة."); return; }
-    const a = await callScript(trkUrl(), { action: "auth", phone: normalizePhone(currentStudent.phone), password: sessionCreds.password });
-    if (a.type !== "ok" || !a.data.token) { alert("تعذر التحقق من حساب الأدمن الآن."); return; }
-    const r = await callScript(trkUrl(), { action: "setCover", token: a.data.token, course: id, url: url });
-    if (r.type !== "ok") { alert("تعذر حفظ الصورة. تأكد من تحديث Tracking.gs ونشر نسخة جديدة."); return; }
-    c.cover = url; try { const cur = JSON.parse(localStorage.getItem(CFG_KEY) || "null") || { covers: {} }; cur.covers[id] = url; localStorage.setItem(CFG_KEY, JSON.stringify(cur)); } catch (_) {}
-    renderCourses(); try { showNotifToast("✅ تم تغيير صورة الكورس", "system"); } catch (_) {}
-  };
+  /* ---- ضغطة: موجة + نبضة صغيرة ---- */
+  var SEL = "button,.btn-submit,.btn-3d,.subject-card,.course-card,.sub-btn,.tab-btn,.nav-item,[role=button],.dropdown-item,.sb-item";
+  document.addEventListener("pointerdown", function (ev) {
+    if (reduce || ev.button > 0) return;
+    var t = ev.target && ev.target.closest && ev.target.closest(SEL); if (!t) return;
+    var r = document.createElement("span"); r.className = "hl-rip"; r.style.left = ev.clientX + "px"; r.style.top = ev.clientY + "px";
+    document.body.appendChild(r); setTimeout(function () { r.remove(); }, 620);
+    t.classList.remove("hl-pop"); void t.offsetWidth; t.classList.add("hl-pop");
+    setTimeout(function () { t.classList.remove("hl-pop"); }, 320);
+  }, { passive: true });
 })();
 </script>
 </body>
