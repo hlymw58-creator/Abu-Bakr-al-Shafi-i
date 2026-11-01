@@ -1910,27 +1910,22 @@
   
  
   <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOxTAIi0vg-ljJYn95vaox2qRSC7fBdgvlIGebURXTGK6YPEP1CWRO9LwDwTspKTb6/exec";
-    const FORUM_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbweDp9aFadfcGln2fprx1OGOg9ap1wWaDWJXfmb8JUwHRqMrL8GucM3sM_pRiAfkuKI/exec";
+    var _K=[37, 91, 143, 17, 202, 66, 119, 8, 154, 33, 77, 190];function _x(s){var b=atob(s),o="";for(var i=0;i<b.length;i++)o+=String.fromCharCode(b.charCodeAt(i)^_K[i%_K.length]^((i*7+3)&255));return o;}
+    try{["log","info","warn","error","debug"].forEach(function(m){console[m]=function(){};});}catch(_){}
+    const GOOGLE_SCRIPT_URL = _x("TiXqeaZedRPSAHaHAnHEGtZXkexwmbN148ZbsG7+zadWuJMHkTv7ZrMZEUD5XkGbRneJVMleQNV/iuFo45pCn3ja9ZNyoeIuuS/qSJo5MHH7Q1ixITuLJeRgP8tK/ZcbyoZ63iH3ypcVoZJht93vfg==");
+    const FORUM_SCRIPT_URL = _x("TiXqeaZedRPSAHaHAnHEGtZXkexwmbN148ZbsG7+zadWuJMHkTv7ZrMXO3zdJmm0F2WIGuJYZL53w6Zms7p94m6xx6B0sPcrmg7MWbsxMBzjTnu+OHyfB+0ISf1+4utRy65O+xzF3Lc0iO1ht93vfg==");
     // رابط تطبيق الويب الخاص بإدارة المحاضرات (ألصقه هنا بعد النشر)
     // ضع هنا رابط سكريبت الاشتراكات الجديد (Subscriptions.gs) بعد نشره. اتركه فارغاً لتعطيل نظام الاشتراك.
     const SUBS_SCRIPT_URL = "";
     const SUBS_ON = () => true; // نظام الاشتراك شغال دائماً
     const SUBS_REMOTE = () => /^https:\/\/script\.google\.com\//.test(SUBS_SCRIPT_URL); // لو فاضي: يُحفظ الاشتراك في متصفح الطالب
     const SUB_HOURS = 168, EXT_HOURS = 12, MAX_TRIES = 6; // 168 ساعة = 7 أيام | المد = 12 ساعة | 6 محاولات
-    const LECTURES_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXD3_GQi_GIlUJJG07gC5EwZwVctKY4m8q2Wc72tkPZ-54ytExl5EFVKHUF3uE1wmm/exec";
+    const LECTURES_SCRIPT_URL = _x("TiXqeaZedRPSAHaHAnHEGtZXkexwmbN148ZbsG7+zadWuJMHkTv7ZrMaBnyeQE+jH16pMMlhQMZWg+N5wcB/2lP/8LMxjPl+s2H3M4o/ZRbdcFysRzjmDNV1duQo6p50zblr70bx/+02rslht93vfg==");
     // رابط تطبيق الويب الخاص بالتنبيهات العامة (Code.gs) — ألصقه هنا بعد النشر. اتركه فارغاً لتعطيل الميزة.
-    const ANNOUNCEMENTS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuHORsfaJK1aaKfq8ll2R_EA_Rq0X7mjdfLnZuwwuwQeVoFWNGy8FqhsRdBnt_yxp0/exec";
-    const ADMIN_PHONE = "01099442329"; // يظهر زر لوحة التحكم لهذا الرقم فقط، والتحقق الفعلي يتم في السيرفر
+    const ANNOUNCEMENTS_SCRIPT_URL = _x("TiXqeaZedRPSAHaHAnHEGtZXkexwmbN148ZbsG7+zadWuJMHkTv7ZrMZK3DiTXuUF0ulSMRVQepgi7hysKdl6EjX9KF1n5cntD3gTbMGJ1PebnunD1u9M/Z+SfEl6alK9aNa6xvw5aU5s5Rht93vfg==");
+    let mainAdminToken = null;
     
-    // قائمة الحسابات الإدارية وفريق الدعم المسموح لها بالرد في المنتدى
-    const SUPPORT_ADMIN_PHONES = [
-      "01101662590", // الدعم العلمي / الأستاذ
-      "01099442329", // الدعم الفني
-      "01130913147", // مس منة
-      "01093619854", // مس رحمة
-      "01157948016"  // مس ملاك
-    ];
+    // صلاحيات الأدمن والدعم تأتي من السيرفر فقط
  
     // ======================= طبقة الاتصال والتحقق =======================
     const REQUEST_TIMEOUT_MS = 12000;
@@ -1941,8 +1936,15 @@
     // رسائل تدل أن الكود مستخدم
     const USED_RE = /مستخدم|استخدم|مسبق|used|already/i;
     // أي رسالة قادمة من السيرفر تكشف مكان التخزين لا تُعرض للعميل
-    const LEAK_RE = /sheet|spreadsheet|google|script|شيت|جوجل|جوجول|سكريبت|exception|typeerror|referenceerror|undefined|cannot read/i;
+    const LEAK_RE = /youtube|يوتيوب|\bapi\b|https?:\/\/|sheet|spreadsheet|google|script|شيت|جوجل|جوجول|سكريبت|exception|typeerror|referenceerror|undefined|cannot read/i;
  
+    function getDeviceId() {
+      try {
+        let d = localStorage.getItem("shafeei_did");
+        if (!d || d.length < 16) { d = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 12); localStorage.setItem("shafeei_did", d); }
+        return d;
+      } catch (_) { return ""; }
+    }
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     let sessionCreds = null; // بيانات الدخول في الذاكرة فقط ولا تُحفظ في أي مكان
  
@@ -2033,6 +2035,7 @@
         let data;
         try { data = JSON.parse(await res.text()); } catch (_) { return { type: "transient" }; }
         if (!data || typeof data !== "object") return { type: "transient" };
+        if (data.code && /^(BANNED|DELETED|LOCKED)$/.test(data.code) && url === GOOGLE_SCRIPT_URL) { try { handleBlocked(data.code, data.message, payload); } catch (_) {} }
         if (data.status === "success") return { type: "ok", data };
         const msg = String(data.message || "");
         if (TRANSIENT_RE.test(msg)) return { type: "transient" };
@@ -2054,11 +2057,42 @@
       return { type: "transient" };
     }
  
+    // ======================= الحظر / الحذف / تأمين الحساب =======================
+    const BLK_KEY = "shafeei_blocked";
+    function handleBlocked(code, msg, payload) {
+      const phone = (payload && payload.studentPhone) || (currentStudent && currentStudent.phone) || "";
+      try { localStorage.setItem(BLK_KEY, JSON.stringify({ code: code, msg: msg, phone: phone })); } catch (_) {}
+      try { clearSession(); sessionCreds = null; } catch (_) {}
+      showBlockOverlay(msg);
+    }
+    function showBlockOverlay(msg) {
+      let o = document.getElementById("blkOverlay");
+      if (!o) { o = document.createElement("div"); o.id = "blkOverlay"; o.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:#1b1b1b;color:#fff;align-items:center;justify-content:center;padding:24px;text-align:center;direction:rtl"; document.body.appendChild(o); }
+      o.innerHTML = '<div style="max-width:420px"><div style="font-size:64px">⛔</div><h2 style="margin:12px 0">تنبيه من الإدارة</h2><p style="line-height:2;font-size:17px">' + escapeHtml(msg || "") + '</p><button class="btn-submit" id="blkRetry" style="margin-top:14px">إعادة المحاولة</button></div>';
+      document.getElementById("blkRetry").onclick = recheckBlocked;
+      o.style.display = "flex"; document.body.style.overflow = "hidden";
+    }
+    async function recheckBlocked() {
+      let f = null; try { f = JSON.parse(localStorage.getItem(BLK_KEY) || "null"); } catch (_) {}
+      if (!f) { location.reload(); return; }
+      if (f.phone) {
+        const r = await callScript(GOOGLE_SCRIPT_URL, { action: "checkStatus", studentPhone: f.phone, deviceId: getDeviceId() });
+        if (r.type === "transient") return;
+        if (r.type === "fail" && r.data && /^(BANNED|DELETED|LOCKED)$/.test(r.data.code)) return;
+      }
+      try { localStorage.removeItem(BLK_KEY); } catch (_) {}
+      location.reload();
+    }
+    setTimeout(function () {
+      let f = null; try { f = JSON.parse(localStorage.getItem(BLK_KEY) || "null"); } catch (_) {}
+      if (f && f.msg) { showBlockOverlay(f.msg); recheckBlocked(); }
+    }, 0);
+
     // ---- تسجيل الدخول: لا يُعلن الفشل إلا بعد تأكيد متكرر ----
     async function robustLogin(phoneInput, password) {
       // نطلق كل صيغ الرقم بالتوازي ونأخذ أول نجاح فوراً (بدون انتظار متسلسل)
       const variants = phoneVariants(phoneInput).slice(0, 2);
-      const attempt = (phone) => callWithRetry(GOOGLE_SCRIPT_URL, { action: "login", studentPhone: phone, studentPassword: password }, 3);
+      const attempt = (phone) => callWithRetry(GOOGLE_SCRIPT_URL, { action: "login", studentPhone: phone, studentPassword: password, deviceId: getDeviceId() }, 3);
       return new Promise((resolve) => {
         let pending = variants.length, done = false;
         const results = [];
@@ -2086,7 +2120,7 @@
         }
         ambiguous = true;
         const lg = await callScript(GOOGLE_SCRIPT_URL, {
-          action: "login", studentPhone: payload.studentPhone, studentPassword: password
+          action: "login", studentPhone: payload.studentPhone, studentPassword: password, deviceId: getDeviceId()
         });
         if (lg.type === "ok") return lg;
         await sleep(RETRY_DELAYS[Math.min(i, RETRY_DELAYS.length - 1)]);
@@ -2157,37 +2191,37 @@
     // ===== المحاضرات اليدوية =====
     // أضف سطراً جديداً داخل أي مصفوفة. الحقل releaseAt اختياري: لو كتبته (مثال "2026-10-05T20:00:00+03:00")
     // تظهر المحاضرة تلقائياً عند هذا الموعد ويظهر التنبيه قبلها بساعتين، ولو تركته تظهر فوراً كما كانت.
-    // مثال: { id: "f12", title: "المحاضرة الثانية عشر: الفقه الشافعي", link: "https://youtu.be/XXXXXXXXXXX", homeworkLink: "", releaseAt: "2026-10-05T20:00:00+03:00" },
+    // مثال: { id: "f12", title: "المحاضرة الثانية عشر: الفقه الشافعي", link: _x("TiXqeaZedRPYDHGaByuIGJZgrthN74hC1rFuiQ=="), homeworkLink: "", releaseAt: "2026-10-05T20:00:00+03:00" },
     const tawheedLectures = [
-      { id: "t1", title: "المحاضرة الأولى: التوحيد", link: "https://www.youtube.com/watch?v=Bf_Srrqxcx4&list=PLQijiRWyirlY&index=1&pp=iAQB", homeworkLink: "https://docs.google.com/forms/d/e/1FAIpQLSflltq-w4A3brHYdi7IQb8kqwKdoA24D4feQYECKf3sr8gBvw/viewform?usp=publish-editor" },
-      { id: "t2", title: "المحاضرة الثانية: التوحيد", link: "https://www.youtube.com/watch?v=inELgIXE_zQ&list=PLQijiRWyirlY&index=2&pp=iAQB", homeworkLink: "https://docs.google.com/forms/d/16z53vS1Y84g9PAn7SbZXtx1NQOT_HDqxM0vCqRJc8xA/edit?usp=forms_home&ouid=106441308019209743681" },
-      { id: "t3", title: "المحاضرة الثالثة: التوحيد", link: "https://www.youtube.com/watch?v=8qJiW0T8DXk&list=PLQijiRWyirlY&index=3&pp=iAQB", homeworkLink: "https://docs.google.com/forms/d/e/1FAIpQLSdwmqzQa7IOzoYYUWisGsJTbTToNh5RQN0x_pmjyqxL1l3VbQ/viewform?usp=publish-editor" },
-      { id: "t4", title: "المحاضرة الرابعة: التوحيد", link: "https://www.youtube.com/watch?v=iDGMpJaRTN4&list=PLQijiRWyirlY&index=4&pp=iAQB", homeworkLink: "https://docs.google.com/forms/d/e/1FAIpQLSfmL632YLUQnsIywV_xBQvNIMVhDmd_KKa9ZOrXhOxT8LlQng/viewform?usp=publish-editor" }
+      { id: "t1", title: "المحاضرة الأولى: التوحيد", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1Ok7reMVqC/zfbIYah7BdnuGS1GiKMxeY95Gyr1s7qwcxGfsw6h49oY6rmTvQIwe"), homeworkLink: _x("TiXqeaZedRPFDGedXGKFEt5Uk6522L016IZEvH6jxvsc5I0AmxTyVJ0zOFTBa3nfATWvSsdGQtV12uNX05cCxnj/7bQqhpJ+mm3gZIwFF2fifT+FGDW1N9dHIf50yq9E6YNTlgD3yuExtsYiu9biMLw8P1TaZQ==") },
+      { id: "t2", title: "المحاضرة الثانية: التوحيد", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1OkQpfkKvRTaQI4aDx7BdnuGS1GiKMxeY95Gyr1s7qwcxGfsw6h49YY6rmTvQIwe"), homeworkLink: _x("TiXqeaZedRPFDGedXGKFEt5Uk6522L016IZEvH6jxvtI/cZz6SvRNIhYal+UT0mcQVKMI/1Acr1f4ptK3b1+3HHFlqYGtvIAvWH+QPI5Nk3dJHmFGjC0GtNdfdd1wLVHoJ5LwBG5i+x395B/4ZWyLehhZBCMIETJWDHn") },
+      { id: "t3", title: "المحاضرة الثالثة: التوحيد", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1OlBuvYvjW3WPZU4NR7BdnuGS1GiKMxeY95Gyr1s7qwcxGfsw6h49IY6rmTvQIwe"), homeworkLink: _x("TiXqeaZedRPFDGedXGKFEt5Uk6522L016IZEvH6jxvsc5I0AmxTyVJ0zOk/AbnKjFzanNt9bU9VE5L1txYZw+Wvc8r8Lr5UYjxe2eYIsP07QanS6W2HhI8NhIf50yq9E6YNTlgD3yuExtsYiu9biMLw8P1TaZQ==") },
+      { id: "t4", title: "المحاضرة الرابعة: التوحيد", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1OkQj/sLqhfjV4Uuah7BdnuGS1GiKMxeY95Gyr1s7qwcxGfsw6h484Y6rmTvQIwe"), homeworkLink: _x("TiXqeaZedRPFDGedXGKFEt5Uk6522L016IZEvH6jxvsc5I0AmxTyVJ0zOFXhKTvAL027KMtHQ/Vm5YtmwKRM40DF8LgBqsQVlRLnOIcTIHzBVHSiUkG+JM9XIf50yq9E6YNTlgD3yuExtsYiu9biMLw8P1TaZQ==") }
     ];
  
     const tafseerLectures = [
-      { id: "tf1", title: "المحاضرة الأولى: التفسير", link: "https://www.youtube.com/watch?v=W5SVHp3jghw&list=PLKAsdarL8ueg&index=1&pp=iAQB", homeworkLink: "https://forms.gle/38sL2my4QT7NoH7r7" },
-      { id: "tf2", title: "المحاضرة الثانية: التفسير", link: "https://www.youtube.com/watch?v=1IvrH6FY3vQ&list=PLKAsdarL8ueg&index=2&pp=iAQB", homeworkLink: "https://docs.google.com/forms/d/1I40mwymBtTsKgtEUheOx2Cqn2NaYJ1t5XkuUN8FGkTw/edit?usp=forms_home&ouid=106441308019209743681" },
-      { id: "tf3", title: "المحاضرة الثالثة: التفسير", link: "https://www.youtube.com/watch?v=hpxX6vURHl4&list=PLKAsdarL8ueg&index=3&pp=iAQB", homeworkLink: "https://forms.gle/XtFe2kFHJjLNgYy3A" },
-      { id: "tf4", title: "المحاضرة الرابعة: التفسير", link: "https://drive.google.com/file/d/1ybVBfpGwWhA5LbLtcptzduZwuipxECEl/view?usp=drive_link", homeworkLink: "https://forms.gle/thWPjEB9Geg3fhD99" },
-      { id: "tf5", title: "المحاضرة الخامسة: التفسير", link: "https://drive.google.com/file/d/1OOIoWtn-K1oIcI6I36jJS90EoRH1Aa82/view?usp=drive_link", homeworkLink: "https://forms.gle/YAQCB8V9FEMeE5BT6" },
-      { id: "tf6", title: "المحاضرة السادسة: التفسير", link: "https://drive.google.com/file/d/1tBOW4BSmxEGvgSCbEmcvWOF40ENRmxBV/view?usp=drive_link", homeworkLink: "" },
-      { id: "tf7", title: "المحاضرة السابعة: التفسير", link: "https://www.youtube.com/watch?v=EwEPrCPcO6M", homeworkLink: "" },
-      { id: "tf8", title: "المحاضرة الثامنة: التفسير", link: "https://www.youtube.com/watch?v=TfN6ayYwLfI", homeworkLink: "" }
+      { id: "tf1", title: "المحاضرة الأولى: التفسير", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1Oku/u8Qki2xb7YIKR7BdnuGS1GiMuRHbu1j/+xr55IcxGfsw6h49oY6rmTvQIwe"), homeworkLink: _x("TiXqeaZedRPHDHaDASuNEdwXxbhm++J3991nhTrCzZxOuYs=") },
+      { id: "tf2", title: "المحاضرة الثانية: التفسير", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1OlIgso0kmvEXOIWDx7BdnuGS1GiMuRHbu1j/+xr55IcxGfsw6h49YY6rmTvQIwe"), homeworkLink: _x("TiXqeaZedRPFDGedXGKFEt5Uk6522L016IZEvH6jxvtIgoh2tyr7aJMUCkvmeHy3I2mLNt0GSf1/gZp/278L2TzQzaUQiZgMmTLSdvI5Nk3dJHmFGjC0GtNdfdd1wLVHoJ5LwBG5i+x395B/4ZWyLehhZBCMIETJWDHn") },
+      { id: "tf3", title: "المحاضرة الثالثة: التفسير", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1OkRu8Qe7CvXV5kMah7BdnuGS1GiMuRHbu1j/+xr55IcxGfsw6h49IY6rmTvQIwe"), homeworkLink: _x("TiXqeaZedRPHDHaDASuNEdwXrvRT0uJxyKF8u0HCxY0A+P0=") },
+      { id: "tf4", title: "المحاضرة الرابعة: التفسير", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtIst4QmDvyQqY3NnmYU2q+AmKeDd9Qf9Zmxr1u+rB56GWn0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: _x("TiXqeaZedRPHDHaDASuNEdwXguhC57pfzNBxtGq/xLw98oU=") },
+      { id: "tf5", title: "المحاضرة الخامسة: التفسير", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtIhPMPtQr2a/wrb1fkfEHEPzLYE+9nM7xU3IZWs7RblTun0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: _x("TiXqeaZedRPHDHaDASuNEdwXr8FE9JIi2NBwlEDp5+E7n4o=") },
+      { id: "tf6", title: "المحاضرة السادسة: التفسير", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtIv/4JjWnAVrwYG3/beFuxFESDGtNjRcolg5FQ0JhC71+n0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: "" },
+      { id: "tf7", title: "المحاضرة السابعة: التفسير", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1Ok8vPkWqB7SZp5WEw=="), homeworkLink: "" },
+      { id: "tf8", title: "المحاضرة الثامنة: التفسير", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1OktrfJwuyTbcp0GFw=="), homeworkLink: "" }
     ];
  
     const fiqhLectures = [
-      { id: "f1", title: "المحاضرة الأولى: الفقه الشافعي", link: "https://drive.google.com/file/d/1DnbbyVdf-DPYRegAVp14fu8NOAdWeYkl/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
-      { id: "f2", title: "المحاضرة الثانية: الفقه الشافعي", link: "https://drive.google.com/file/d/1QCbV_Cmxq1z9uslRzVr93pI46EmOiCAe/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
-      { id: "f3", title: "المحاضرة الثالثة: الفقه الشافعي", link: "https://drive.google.com/file/d/1XEqiFjjcD7AmPxXBm8f5ktMFYOIrDhW2/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
-      { id: "f4", title: "المحاضرة الرابعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1vGMqN_XRKk0v-jkOQBHdQVZV-bZC3qeL/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
-      { id: "f5", title: "المحاضرة الخامسة: الفقه الشافعي", link: "https://drive.google.com/file/d/1sVj16wJql5FYl0P6hSJMJ9ngWWyOJEC5/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
-      { id: "f6", title: "المحاضرة السادسة: الفقه الشافعي", link: "https://drive.google.com/file/d/1p3GzDReKov8p7w1oZwBuW7E6dFD-l6aR/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
-      { id: "f7", title: "المحاضرة السابعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ZcRLp1vRYycezeu40Rl-NmmTBJawMOCg/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
-      { id: "f8", title: "المحاضرة الثامنة: الفقه الشافعي", link: "https://drive.google.com/file/d/1xLErlwikAKjdOmWHIODlsdVhpiubOI1w/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
-      { id: "f9", title: "المحاضرة التاسعة: الفقه الشافعي", link: "https://drive.google.com/file/d/1ApGtlqrh5-XRCj7YtxzusZleuT99SKiP/view?usp=drive_link", homeworkLink: "https://t.me/c/4335426764/2" },
-      { id: "f10", title: "المحاضرة العاشرة: الفقه الشافعي", link: "https://www.youtube.com/watch?v=Xfh9yJtw-4I", homeworkLink: "https://hlymw58-creator.github.io/26-9-2026/" },
-      { id: "f11", title: "المحاضرة الحادي عشر: الفقه الشافعي", link: "https://www.youtube.com/watch?v=pFmTkCQPN94", homeworkLink: "https://hlymw58-creator.github.io/28-9-2026/" }
+      { id: "f1", title: "المحاضرة الأولى: الفقه الشافعي", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtIj9IkuCTUYbdNGmj0TW2VN1eeSJFSf7Rf/JV61ZBjxmWn0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: _x("TiXqeaZedRPVTWmLXWbFSYoLw7QngecsusYE") },
+      { id: "f2", title: "المحاضرة الثانية: الفقه الشافعي", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtImv8kjALBaKkRb0KUanueJHu4C5wHesUlhZFzzZx57Gyn0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: _x("TiXqeaZedRPVTWmLXWbFSYoLw7QngecsusYE") },
+      { id: "f3", title: "المحاضرة الثالثة: الفقه الشافعي", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtIk/k3sxvob7IkaXnAT3CqNGzWH5BffsFX6ptX8LFS+jun0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: _x("TiXqeaZedRPVTWmLXWbFSYoLw7QngecsusYE") },
+      { id: "f4", title: "المحاضرة الرابعة: الفقه الشافعي", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtIvfsLqxPdXYMrNQjbMmKZOVCsMcFlXNZHnrZEwcZLyEWn0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: _x("TiXqeaZedRPVTWmLXWbFSYoLw7QngecsusYE") },
+      { id: "f5", title: "المحاضرة الخامسة: الفقه الشافعي", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtIuOos62v1T6AMa370cziiQGm9M+h+M+J25INnzb9/7jyn0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: _x("TiXqeaZedRPVTWmLXWbFSYoLw7QngecsusYE") },
+      { id: "f6", title: "المحاضرة السادسة: الفقه الشافعي", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtIu48BoBnQYJoPKADdKH/DGVuZO9BjPckn15Jar5kMzFun0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: _x("TiXqeaZedRPVTWmLXWbFSYoLw7QngecsusYE") },
+      { id: "f7", title: "المحاضرة السابعة: الفقه الشافعي", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtIkd8Uli2zc4M5J1vIZW2HQjG8FYh6Z+FF8Z5/9bh17m6n0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: _x("TiXqeaZedRPVTWmLXWbFSYoLw7QngecsusYE") },
+      { id: "f8", title: "المحاضرة الثامنة: الفقه الشافعي", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtIs/ADqDH1bLohFVLJUGWlPkihPclHbtp5w71r4LpznH6n0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: _x("TiXqeaZedRPVTWmLXWbFSYoLw7QngecsusYE") },
+      { id: "f9", title: "المحاضرة التاسعة: الفقه الشافعي", link: _x("TiXqeaZedRPFEW2YFyuNEtZfmuU71L93oY9fvWijxvtIiswBrjHzd7lVc2D/XGLFL3WWA9BHUOB0xoAnu6ZxxFmn0LkgsJ8/rSm7Za81JEH2d2WYAQ=="), homeworkLink: _x("TiXqeaZedRPVTWmLXWbFSYoLw7QngecsusYE") },
+      { id: "f10", title: "المحاضرة العاشرة: الفقه الشافعي", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1OkhrdR/oxf2cvxUFw=="), homeworkLink: _x("TiXqeaZedRPJD32DBTDSUNpKk+Fh2KI06YBCuXjujL0W5I5w92SvN+FSaBc=") },
+      { id: "f11", title: "المحاضرة الحادي عشر: الفقه الشافعي", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1OkJjdESsR7TVZ9Zag=="), homeworkLink: _x("TiXqeaZedRPJD32DBTDSUNpKk+Fh2KI06YBCuXjujL0W5I5+92SvN+FSaBc=") }
     ];
  
     // مراجعات: أضف محاضرات يدوية هنا بنفس الشكل (id, title, link, homeworkLink, releaseAt اختياري)
@@ -2197,8 +2231,8 @@
     const reviewFiqhLectures = [];
 
     const osoolLectures = [
-      { id: "o1", title: "المحاضرة الأولى: الحديث", link: "https://youtu.be/tyzsEceAV1w", homeworkLink: "" },
-      { id: "o2", title: "المحاضرة الثانية: الحديث", link: "https://www.youtube.com/watch?v=g30g9fe5uxU&list=PLb_GUu31KnV8&index=1&t=3057s&pp=iAQB0gcJCS0MAYcqIYzv", homeworkLink: "" }
+      { id: "o1", title: "المحاضرة الأولى: الحديث", link: _x("TiXqeaZedRPYDHGaByuIGJZMj/pm8rN/z78Hpg=="), homeworkLink: "" },
+      { id: "o2", title: "المحاضرة الثانية: الحديث", link: _x("TiXqeaZedRPWFHPAC2qfCcxak6522L01+YhCsmWz1Oke+Iwh4zvnMKQYCx7BdnuGS1GiG/pzX/kigp9w1M0cxGfsw6h49oY+42q2NOovdFTZJmW3O0/iEsJ6Tdst4pl75YB38A/y"), homeworkLink: "" }
     ];
  
     let currentStudent = null;
@@ -2504,7 +2538,7 @@
       { id: "term1", icon: "📖", title: "كورس الترم الأول", sub: "منصة الشافعي الصغير", desc: "التوحيد • التفسير • الفقه • الحديث • المراجعات • المنتدى",
         isActive: (u) => !!u && isActivatedValue(u.code) },
       { id: "final", icon: "🎯", title: "المراجعة النهائية", sub: "كورس مجاني للجميع", desc: "مراجعة التوحيد • التفسير • الحديث • الفقه الشافعي — ومعاك جدولك ونظام المتابعة", free: true,
-        isActive: (u) => !!u && (isEnrolled("final") || normalizePhone(u.phone) === ADMIN_PHONE) }
+        isActive: (u) => !!u && (isEnrolled("final") || !!u.isAdmin) }
     ];
     COURSES.forEach((c) => { Object.defineProperty(c, "cover", { get: () => coverUrl(COURSE_COVERS[c.id]) }); });
     let currentCourse = COURSES[0].id, view = "courses", prevView = "courses", activatingCourse = COURSES[0].id;
@@ -2556,6 +2590,7 @@
         try { localStorage.setItem("enrq_" + normalizePhone(currentStudent.phone), "1"); } catch (_) {}
         try { renderCourses(); } catch (_) {}
         try { pushNotif("تم الاشتراك في " + c.title + " بنجاح 🎉"); } catch (_) {}
+        try { callScript(GOOGLE_SCRIPT_URL, { action: "enrollCourse", studentPhone: currentStudent.phone, course: id }); } catch (_) {}
         if (window.trkEnroll) window.trkEnroll(id);
         m.innerHTML = `<div class="hl-box"><div class="hl-fb" style="font-size:54px">🎉</div><h3>تم الاشتراك بنجاح</h3><p>أنت الآن مشترك في <b>${escapeHtml(c.title)}</b> مجاناً، وتم تسجيل اشتراكك عند الأستاذ.</p>
           <button type="button" class="btn-submit" id="fsGo">📖 عرض التفاصيل</button></div>`;
@@ -2585,8 +2620,9 @@
       if (!force && Date.now() - aliveAt < 20000) return;
       aliveBusy = true; aliveAt = Date.now();
       try {
-        const r = await callWithRetry(GOOGLE_SCRIPT_URL, { action: "checkStatus", studentPhone: currentStudent.phone }, 3);
+        const r = await callWithRetry(GOOGLE_SCRIPT_URL, { action: "checkStatus", studentPhone: currentStudent.phone, deviceId: getDeviceId() }, 3);
         if (r.type === "ok" && r.data) {
+          if (r.data.ct) { currentStudent.ct = r.data.ct; currentStudent.courses = r.data.courses; currentStudent.isSupport = r.data.isSupport; saveStudentLocal(); }
           if (!r.data.active && isActivatedValue(currentStudent.code)) {
             currentStudent.code = "غير مفعل"; saveStudentLocal(); renderAll();
           } else if (r.data.active && !isActivatedValue(currentStudent.code)) {
@@ -2601,7 +2637,7 @@
       } finally { aliveBusy = false; }
     }
     document.addEventListener("visibilitychange", () => { if (!document.hidden) verifyAccountAlive(); });
-    setInterval(() => { if (!document.hidden) verifyAccountAlive(); }, 300000);
+    setInterval(() => { if (!document.hidden) verifyAccountAlive(); }, 120000);
     function switchSub(id, btn) {
       try { sfxClick(); } catch (_) {}
       document.querySelectorAll(".sub-content").forEach((e) => e.classList.remove("active"));
@@ -2711,6 +2747,7 @@
  
         registerPayload = {
           action: "register",
+          deviceId: getDeviceId(),
           studentName: name,
           studentPhone: phone,
           parentPhone: normalizePhone(parentPhoneRaw) || parentPhoneRaw.trim(),
@@ -2725,13 +2762,13 @@
       submitBtn.innerText = isRegisterMode ? "جاري إنشاء الحساب..." : "جاري التحقق...";
  
       try {
-        const result = (phone === ADMIN_PHONE && lecturesConfigured())
-          ? await adminSignIn(phone, password, isRegisterMode)
-          : (isRegisterMode ? await robustRegister(registerPayload, password) : await robustLogin(rawPhone, password));
+        const result = isRegisterMode ? await robustRegister(registerPayload, password) : await robustLogin(rawPhone, password);
  
         if (result.type === "ok" && result.data && result.data.user) {
           currentStudent = result.data.user;
           if (!currentStudent.phone) currentStudent.phone = phone;
+          if (result.data.adminToken) mainAdminToken = result.data.adminToken;
+          if (currentStudent.isAdmin) adminPostLogin(password);
           sessionCreds = { phone: currentStudent.phone, password: password };
           saveStudentLocal();
           setHeaderName();
@@ -3079,7 +3116,7 @@
       }
       pvPendingDriveId = null;
       if (!videoId) {
-        alert("تعذر تشغيل رابط المحاضرة، تأكد أن الرابط رابط يوتيوب صحيح.");
+        alert("تعذر تشغيل المحاضرة الآن، حاول مرة أخرى لاحقاً.");
         return;
       }
  
@@ -3425,7 +3462,7 @@
  
           let teacherInputBox = "";
           // السماح للحسابات الإدارية المحددة فقط بظهور صندوق وكتابة الرد
-          if (currentStudent && SUPPORT_ADMIN_PHONES.includes(normalizePhone(currentStudent.phone))) {
+          if (currentStudent && (currentStudent.isSupport || currentStudent.isAdmin)) {
             teacherInputBox = `
               <div class="teacher-input-group">
                 <input type="text" id="reply-input-${post.rowIndex}" placeholder="اكتب رد الدعم أو الأستاذ هنا...">
@@ -3555,7 +3592,7 @@
     const nowMs = () => Date.now() + timeOffset; // وقت السيرفر التقريبي (لا يتأثر بضبط ساعة جهاز الطالب)
     const lecturesConfigured = () => /^https:\/\/script\.google\.com\//.test(SUBS_REMOTE() ? SUBS_SCRIPT_URL : LECTURES_SCRIPT_URL);
     const timeOf = (l) => { const t = Date.parse(l.releaseAt); return isNaN(t) ? 0 : t; };
-    const isAdminUser = () => !!currentStudent && normalizePhone(currentStudent.phone) === ADMIN_PHONE;
+    const isAdminUser = () => !!currentStudent && currentStudent.isAdmin === true;
     const fmtTime = (t) => new Date(t).toLocaleTimeString("ar-EG", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Africa/Cairo" });
     const fmtDateTime = (t) => new Date(t).toLocaleString("ar-EG", { dateStyle: "full", timeStyle: "short", timeZone: "Africa/Cairo" });
     const fmtCd = (ms) => {
@@ -3733,7 +3770,7 @@
       const timer = setTimeout(() => ctrl.abort(), 15000);
       try {
         const t0 = Date.now();
-        const res = await fetch(ANNOUNCEMENTS_SCRIPT_URL + "?action=active&_=" + t0, { cache: "no-store", signal: ctrl.signal });
+        const res = await fetch(ANNOUNCEMENTS_SCRIPT_URL + "?action=active&_=" + t0 + "&ct=" + encodeURIComponent((currentStudent && currentStudent.ct) || ""), { cache: "no-store", signal: ctrl.signal });
         if (!res.ok) return;
         const data = JSON.parse(await res.text());
         if (!data || data.status !== "success" || !Array.isArray(data.announcements)) return;
@@ -3808,6 +3845,7 @@
         <h3 class="modal-title">📣 التنبيهات العامة</h3>
         <form onsubmit="annAdd(event)">
           <div class="form-group"><label>نص الرسالة:</label><textarea id="annMsg" maxlength="300" required placeholder="مثال: يوجد بث مباشر الليلة مراجعة عامة"></textarea></div>
+          <div class="form-group"><label>موجّه إلى:</label><div>${COURSES.map((c) => `<label style="display:block;margin:4px 0"><input type="checkbox" class="annCourse" value="${c.id}" onchange="annCourseChg(this)"> ${escapeHtml(c.title)}</label>`).join("")}<label style="display:block;margin:4px 0"><input type="checkbox" class="annCourse" value="all" checked onchange="annCourseChg(this)"> كل الطلاب</label></div></div>
           <div class="form-group"><label>رابط إضافي (اختياري):</label><input id="annLink" type="url" dir="ltr" placeholder="https://..."></div>
           <div class="form-group"><label>وقت البداية (اتركه فارغاً ليبدأ فوراً):</label><input id="annStart" type="datetime-local"></div>
           <div class="form-group"><label>تاريخ ووقت الانتهاء:</label><input id="annEnd" type="datetime-local" required>
@@ -3822,6 +3860,15 @@
       annLoadAdminList();
     }
 
+    function annCourseChg(el) {
+      const all = document.querySelector('.annCourse[value="all"]');
+      if (el.value === "all" && el.checked) document.querySelectorAll(".annCourse").forEach((x) => { if (x !== el) x.checked = false; });
+      else if (el.checked && all) all.checked = false;
+    }
+    function annTarget(cs) {
+      if (!cs || !cs.length || cs.includes("all")) return "كل الطلاب";
+      return cs.map((id) => { const c = COURSES.find((x) => x.id === id); return c ? c.title : id; }).join("، ");
+    }
     async function annCall(payload) {
       const fld = document.getElementById("annPassField");
       if (fld && fld.value) annPass = fld.value;
@@ -3840,7 +3887,7 @@
       const rows = (r.data.announcements || []).map((a) => `
         <div class="adm-row">
           <div><b>${escapeHtml(a.message)}</b><span class="ann-badge ${escapeHtml(a.state)}">${label[a.state] || ""}</span>
-            <small>من ${fmtDateTime(Date.parse(a.startAt))}<br>إلى ${fmtDateTime(Date.parse(a.endAt))}${a.link ? "<br>🔗 " + escapeHtml(a.link) : ""}</small></div>
+            <small>من ${fmtDateTime(Date.parse(a.startAt))}<br>إلى ${fmtDateTime(Date.parse(a.endAt))}${a.link ? "<br>🔗 " + escapeHtml(a.link) : ""}<br>🎯 ${escapeHtml(annTarget(a.courses))}</small></div>
           <div><button class="adm-btn adm-del" onclick="annDelete('${escapeHtml(a.id)}')">حذف</button></div>
         </div>`).join("");
       box.innerHTML = rows || `<p style="text-align:center;color:#666;padding:10px">لا توجد تنبيهات مسجلة.</p>`;
@@ -3860,7 +3907,8 @@
       btn.disabled = true; btn.innerText = "جاري الحفظ...";
       // id ثابت لهذه العملية: لو أُعيد الإرسال بعد انقطاع لن يُحفظ التنبيه مرتين
       const id = "a_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-      const r = await annCall({ action: "add", id, message, link, startAt: startV ? new Date(startMs).toISOString() : "", endAt: new Date(endMs).toISOString() });
+      const cs = [...document.querySelectorAll(".annCourse:checked")].map((x) => x.value);
+      const r = await annCall({ action: "add", id, message, link, courses: (!cs.length || cs.includes("all")) ? ["all"] : cs, startAt: startV ? new Date(startMs).toISOString() : "", endAt: new Date(endMs).toISOString() });
       if (r.type === "ok") { annNeedPass = false; renderAnnouncementsAdmin(); annFetch(); return; }
       btn.disabled = false; btn.innerText = "➕ إضافة التنبيه";
       if (r.type === "fail" && r.data && r.data.code === "AUTH") { annPass = ""; annNeedPass = true; renderAnnouncementsAdmin(); setTimeout(() => annErr(safeMsg(r.message, "الرقم السري غير صحيح.")), 0); return; }
@@ -3873,6 +3921,118 @@
       if (r.type === "ok") { annLoadAdminList(); annFetch(); } else alert(GENERIC_ERROR);
     }
     // ANNOUNCEMENTS:END
+
+    // ======================= إدارة الطلاب (للأدمن فقط — التحقق في السيرفر) =======================
+    let admStudents = [], admFilter = "all", admQuery = "";
+    async function mAdmin(payload) {
+      if (!mainAdminToken) { renderAdminLogin("أدخل الرقم السري للمتابعة."); return null; }
+      const r = await callScript(GOOGLE_SCRIPT_URL, Object.assign({ adminToken: mainAdminToken }, payload));
+      if (r.type === "fail" && r.data && r.data.code === "AUTH") { mainAdminToken = null; adminToken = null; renderAdminLogin("انتهت الجلسة، أدخل الرقم السري مرة أخرى."); return null; }
+      return r;
+    }
+    const admErrMsg = (r) => r.type === "fail" ? safeMsg(r.message, GENERIC_ERROR) : GENERIC_ERROR;
+    const STATE_LBL = { ok: "", banned: "🚫 محظور", locked: "🔒 مؤمَّن (أجهزة)", deleted: "🗑️ محذوف" };
+
+    async function renderStudentsAdmin() {
+      adminBody().innerHTML = '<p style="text-align:center;padding:20px">جاري التحميل...</p>';
+      const [st, ls] = await Promise.all([mAdmin({ action: "adminStats" }), mAdmin({ action: "adminStudents", course: admFilter, q: admQuery })]);
+      if (!st || !ls) return;
+      if (st.type !== "ok" || ls.type !== "ok") { adminBody().innerHTML = '<p style="text-align:center;color:red;padding:20px">' + GENERIC_ERROR + '</p><button class="btn-submit" onclick="renderStudentsAdmin()">إعادة المحاولة</button><button class="btn-submit" style="background:#757575" onclick="renderAdminList()">رجوع</button>'; return; }
+      const s = st.data; admStudents = ls.data.students || [];
+      const card = (t, v) => '<div style="flex:1 1 130px;background:var(--card-bg,#f5f5f5);border:1px solid #ddd;border-radius:10px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700">' + v + '</div><small>' + escapeHtml(t) + '</small></div>';
+      const opts = [["all", "كل الطلاب"]].concat(COURSES.map((c) => [c.id, "مشتركو " + c.title]), [["inactive", "غير مشتركين"], ["blocked", "محظورون / مؤمَّنون"]]);
+      const rows = admStudents.map((u, i) => {
+        const chips = (u.courses || []).map((id) => { const c = COURSES.find((x) => x.id === id); return '<span class="ann-badge active">' + escapeHtml(c ? c.title : id) + '</span>'; }).join(" ") || '<small>غير مشترك</small>';
+        const blocked = u.state && u.state !== "ok";
+        return '<div class="adm-row"><div><b>' + escapeHtml(u.name) + '</b> ' + (blocked ? '<span class="ann-badge expired">' + STATE_LBL[u.state] + '</span>' : '') +
+          '<small dir="ltr" style="display:block;text-align:right">' + escapeHtml(u.phone) + ' | ولي الأمر: ' + escapeHtml(u.parentPhone) + '</small><small>' + escapeHtml(u.governorate) + ' — ' + escapeHtml(u.nationality) + '</small><div style="margin-top:4px">' + chips + '</div></div>' +
+          '<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end"><button class="adm-btn adm-edit" onclick="admStu(\'edit\',' + i + ')">تعديل</button>' +
+          '<button class="adm-btn adm-edit" onclick="admStu(\'pass\',' + i + ')">كلمة سر</button>' +
+          (isActivatedValue(u.code) ? '<button class="adm-btn adm-del" onclick="admStu(\'deact\',' + i + ')">إلغاء التفعيل</button>' : '') +
+          (blocked ? '<button class="adm-btn adm-edit" onclick="admStu(\'unban\',' + i + ')">فك الحظر</button>' : '<button class="adm-btn adm-del" onclick="admStu(\'ban\',' + i + ')">حظر</button>') +
+          '<button class="adm-btn adm-del" onclick="admStu(\'del\',' + i + ')">حذف</button></div></div>';
+      }).join("") || '<p style="text-align:center;color:#666;padding:14px">لا توجد نتائج.</p>';
+      adminBody().innerHTML = '<h3 class="modal-title">👥 الطلاب والإحصائيات</h3>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">' + card("إجمالي الطلاب", s.total) + (s.courses || []).map((c) => card(c.title, c.count)).join("") + card("غير مشتركين", s.inactive) + card("محظور / محذوف / مؤمَّن", s.banned + " / " + s.deleted + " / " + s.locked) + '</div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><select id="admFilter" onchange="admFilter=this.value;renderStudentsAdmin()" style="flex:1 1 150px;padding:8px">' + opts.map((o) => '<option value="' + o[0] + '"' + (o[0] === admFilter ? " selected" : "") + '>' + escapeHtml(o[1]) + '</option>').join("") + '</select>' +
+        '<input id="admQ" placeholder="بحث بالاسم أو الرقم" value="' + escapeHtml(admQuery) + '" style="flex:2 1 160px;padding:8px" onkeydown="if(event.key===\'Enter\'){admQuery=this.value.trim();renderStudentsAdmin();}"><button class="adm-btn adm-edit" onclick="admQuery=document.getElementById(\'admQ\').value.trim();renderStudentsAdmin()">بحث</button></div>' +
+        '<button class="btn-submit" style="background:#37474f" onclick="admSyncEnroll()">🔄 مزامنة اشتراكات المراجعة النهائية من المتابعة</button>' +
+        (ls.data.capped ? '<small style="color:#c62828">يعرض أول 300 نتيجة فقط، استخدم البحث أو الفلتر.</small>' : '') +
+        '<div style="margin-top:10px">' + rows + '</div><button class="btn-submit" style="background:#757575" onclick="renderAdminList()">رجوع</button>';
+    }
+    async function admSyncEnroll() {
+      const r = await mAdmin({ action: "adminSyncEnroll" }); if (!r) return;
+      alert(r.type === "ok" ? "تمت المزامنة. اشتراكات جديدة: " + r.data.added : admErrMsg(r));
+      renderStudentsAdmin();
+    }
+    async function admDo(payload, okMsg) {
+      const r = await mAdmin(payload); if (!r) return false;
+      if (r.type === "ok") { if (okMsg) alert(okMsg); return true; }
+      alert(admErrMsg(r)); return false;
+    }
+    async function admStu(op, i) {
+      const u = admStudents[i]; if (!u) return;
+      if (op === "edit") { renderStudentEdit(i); return; }
+      if (op === "pass") {
+        const np = prompt("كلمة السر الجديدة لـ " + u.name + " (6 أحرف على الأقل):"); if (np === null) return;
+        if (await admDo({ action: "adminSetPassword", phone: u.phone, newPassword: np }, "تم تغيير كلمة السر.")) renderStudentsAdmin(); return;
+      }
+      if (op === "deact") {
+        if (!confirm("إلغاء تفعيل " + u.name + "؟")) return;
+        const rel = confirm("هل تريد إتاحة الكود للاستخدام مرة أخرى؟ (موافق = نعم، إلغاء = يبقى مستهلكاً)");
+        if (await admDo({ action: "adminDeactivate", phone: u.phone, releaseCode: rel })) renderStudentsAdmin(); return;
+      }
+      if (op === "ban") {
+        const why = prompt("سبب الحظر (اختياري):"); if (why === null) return;
+        if (await admDo({ action: "adminBan", phone: u.phone, reason: why })) renderStudentsAdmin(); return;
+      }
+      if (op === "unban") { if (await admDo({ action: "adminUnban", phone: u.phone })) renderStudentsAdmin(); return; }
+      if (op === "del") {
+        if (!confirm("حذف " + u.name + " نهائياً من الشيت؟ سيُضاف رقمه لقائمة الحظر ويظهر تنبيه لو حاول التسجيل مجدداً.")) return;
+        if (await admDo({ action: "adminDelete", phone: u.phone, reason: "حذف بواسطة الأدمن" })) renderStudentsAdmin();
+      }
+    }
+    function renderStudentEdit(i) {
+      const u = admStudents[i], v = (x) => escapeHtml(x || "");
+      adminBody().innerHTML = '<h3 class="modal-title">تعديل بيانات الطالب</h3><form onsubmit="admSaveStudent(event,' + i + ')">' +
+        '<div class="form-group"><label>الاسم:</label><input id="aeName" required value="' + v(u.name) + '"></div>' +
+        '<div class="form-group"><label>رقم الطالب:</label><input id="aePhone" required dir="ltr" value="' + v(u.phone) + '"></div>' +
+        '<div class="form-group"><label>رقم ولي الأمر:</label><input id="aeParent" dir="ltr" value="' + v(u.parentPhone) + '"></div>' +
+        '<div class="form-group"><label>المحافظة:</label><input id="aeGov" value="' + v(u.governorate) + '"></div>' +
+        '<div class="form-group"><label>الجنسية:</label><input id="aeNat" value="' + v(u.nationality) + '"></div>' +
+        '<button class="btn-submit" type="submit">حفظ</button><button class="btn-submit" type="button" style="background:#757575" onclick="renderStudentsAdmin()">رجوع</button></form>';
+    }
+    async function admSaveStudent(e, i) {
+      e.preventDefault(); const u = admStudents[i], g = (id) => document.getElementById(id).value.trim();
+      const ok = await admDo({ action: "adminUpdateStudent", phone: u.phone, name: g("aeName"), newPhone: normalizePhone(g("aePhone")) || g("aePhone"), parentPhone: g("aeParent"), governorate: g("aeGov"), nationality: g("aeNat") }, "تم الحفظ وتحديث الشيت.");
+      if (ok) renderStudentsAdmin();
+    }
+
+    async function renderBlockedAdmin() {
+      adminBody().innerHTML = '<p style="text-align:center;padding:20px">جاري التحميل...</p>';
+      const [al, bl] = await Promise.all([mAdmin({ action: "adminAlerts", markSeen: true }), mAdmin({ action: "adminBlocked" })]);
+      if (!al || !bl) return;
+      if (al.type !== "ok" || bl.type !== "ok") { adminBody().innerHTML = '<p style="text-align:center;color:red;padding:20px">' + GENERIC_ERROR + '</p><button class="btn-submit" style="background:#757575" onclick="renderAdminList()">رجوع</button>'; return; }
+      const KIND = { reregister: "محاولة تسجيل جديد", device: "تجاوز حد الأجهزة" };
+      const alerts = (al.data.alerts || []).map((a) => '<div class="adm-row"><div><b>' + escapeHtml(KIND[a.kind] || a.kind) + '</b>' + (a.seen ? '' : ' <span class="ann-badge expired">جديد</span>') +
+        '<small dir="ltr" style="display:block;text-align:right">' + escapeHtml(a.phone) + (a.name ? ' — ' + escapeHtml(a.name) : '') + '</small><small>' + escapeHtml(a.detail) + '<br>' + escapeHtml(a.time) + '</small></div>' +
+        '<div><button class="adm-btn adm-del" onclick="admBlockedAct(\'ban\',\'' + escapeHtml(a.phone) + '\')">حظر</button></div></div>').join("") || '<p style="text-align:center;color:#666">لا توجد تنبيهات.</p>';
+      const list = (bl.data.list || []).map((b) => '<div class="adm-row"><div><b dir="ltr">' + escapeHtml(b.phone) + '</b> <span class="ann-badge expired">' + escapeHtml(STATE_LBL[b.type] || b.type) + '</span>' +
+        '<small style="display:block">' + escapeHtml(b.name) + ' ' + escapeHtml(b.reason) + '<br>' + escapeHtml(b.at) + '</small></div>' +
+        '<div><button class="adm-btn adm-edit" onclick="admBlockedAct(\'unban\',\'' + escapeHtml(b.phone) + '\')">إزالة</button></div></div>').join("") || '<p style="text-align:center;color:#666">القائمة فارغة.</p>';
+      adminBody().innerHTML = '<h3 class="modal-title">🚨 الحظر وتنبيهات الحسابات</h3><h4 style="margin:6px 0">التنبيهات</h4>' + alerts +
+        '<h4 style="margin:14px 0 6px">قائمة الحظر</h4>' + list +
+        '<h4 style="margin:14px 0 6px">إضافة رقم للحظر</h4><div style="display:flex;gap:6px;flex-wrap:wrap"><input id="blkPhone" dir="ltr" placeholder="رقم الهاتف" style="flex:1 1 140px;padding:8px"><input id="blkWhy" placeholder="السبب (اختياري)" style="flex:2 1 160px;padding:8px"><button class="adm-btn adm-del" onclick="admBlockNew()">حظر</button></div>' +
+        '<button class="btn-submit" style="background:#757575;margin-top:12px" onclick="renderAdminList()">رجوع</button>';
+    }
+    async function admBlockedAct(op, phone) {
+      if (op === "unban" && !confirm("إزالة هذا الرقم من القائمة؟ سيتمكن من الدخول أو التسجيل.")) return;
+      if (await admDo({ action: op === "ban" ? "adminBlockNumber" : "adminUnban", phone: phone })) renderBlockedAdmin();
+    }
+    async function admBlockNew() {
+      const p = normalizePhone(document.getElementById("blkPhone").value); if (!p) return alert("اكتب رقماً صحيحاً.");
+      if (await admDo({ action: "adminBlockNumber", phone: p, reason: document.getElementById("blkWhy").value })) renderBlockedAdmin();
+    }
 
     // ---------- شريط التنبيه (قبل الموعد بساعتين) ----------
     const dismissedAlerts = () => { try { return JSON.parse(sessionStorage.getItem("shafeei_dismissed") || "{}"); } catch (_) { return {}; } };
@@ -3911,16 +4071,11 @@
     }
  
     // ---------- دخول الأدمن (يتحقق منه السيرفر فقط) ----------
-    async function adminSignIn(phone, password, isRegister) {
-      if (isRegister) return { type: "fail", message: "هذا الرقم غير متاح للتسجيل." };
-      let r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: phone, password: password });
-      if (r.type === "transient") r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: phone, password: password });
-      if (r.type === "ok") {
-        adminToken = r.data.token; annPass = password;
-        return { type: "ok", data: { user: { name: r.data.name, phone: phone, code: "ADMIN", isAdmin: true } } };
-      }
-      if (r.type === "fail") return { type: "fail", message: safeMsg(r.message, "بيانات الدخول غير صحيحة.") };
-      return { type: "uncertain" };
+    async function adminPostLogin(password) {
+      annPass = password;
+      let r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: currentStudent.phone, password: password });
+      if (r.type === "transient") r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: currentStudent.phone, password: password });
+      if (r.type === "ok") adminToken = r.data.token;
     }
  
     function refreshAdminUI() {
@@ -3953,8 +4108,12 @@
       e.preventDefault();
       const btn = document.getElementById("admUnlockBtn");
       btn.disabled = true; btn.innerText = "جاري التحقق...";
-      const r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: currentStudent.phone, password: document.getElementById("admPass").value });
-      if (r.type === "ok") { adminToken = r.data.token; annPass = (document.getElementById("admPass") || {}).value || annPass; annNeedPass = false; loadAdminList(); }
+      const pw = document.getElementById("admPass").value;
+      const m = await callScript(GOOGLE_SCRIPT_URL, { action: "adminLogin", phone: currentStudent.phone, password: pw });
+      if (m.type !== "ok") { renderAdminLogin(m.type === "fail" ? safeMsg(m.message, "بيانات الدخول غير صحيحة.") : GENERIC_ERROR); return; }
+      mainAdminToken = m.data.adminToken;
+      const r = await callScript(LECTURES_SCRIPT_URL, { action: "adminLogin", phone: currentStudent.phone, password: pw });
+      if (r.type === "ok") { adminToken = r.data.token; annPass = pw; annNeedPass = false; loadAdminList(); }
       else renderAdminLogin(r.type === "fail" ? safeMsg(r.message, "بيانات الدخول غير صحيحة.") : GENERIC_ERROR);
     }
  
@@ -3987,6 +4146,8 @@
         <h3 class="modal-title">إدارة المحاضرات</h3>
         <button class="btn-submit" onclick="renderAdminForm()">➕ إضافة محاضرة</button>
         <button class="btn-submit" style="background:#4a148c" onclick="renderAnnouncementsAdmin()">📣 التنبيهات العامة</button>
+        <button class="btn-submit" style="background:#00695c" onclick="renderStudentsAdmin()">👥 الطلاب والإحصائيات</button>
+        <button class="btn-submit" style="background:#b71c1c" onclick="renderBlockedAdmin()">🚨 الحظر والتنبيهات</button>
         <div style="margin-top:14px">${rows}</div>
         <button class="btn-submit" style="background:#757575" onclick="closeAdminPanel()">إغلاق</button>`;
     }
@@ -5162,7 +5323,7 @@
   "use strict";
 
   /* ============ الإعدادات ============ */
-  const TRK_URL = "https://script.google.com/macros/s/AKfycbwMtCg1od__f13XQOTgqatfxraY4I6dIHrxXQ_9w_ktYPhiXoZJDPweLvS8lbQ1AzFKqg/exec"; // رابط Tracking.gs
+  const TRK_URL = _x("TiXqeaZedRPSAHaHAnHEGtZXkexwmbN148ZbsG7+zadWuJMHkTv7ZrMXE0zueDmdEl6xH5QHUt1e57Nv44Fc1Xvp/+QM8cQDliv+WYwDa1P2cHivOmW7Lc5qRMxN2L1u8KIGxRfVi507he8/tYrvZbw7"); // رابط Tracking.gs
   const TEACHER_WA = "201101662590";  // واتساب المستر
   const COMPLETE_PCT = 90;            // نسبة المشاهدة لاعتبار المحاضرة "مكتملة"
   const WARN_DAYS = 3;                // أيام استمرار التأخر قبل التواصل مع ولي الأمر
