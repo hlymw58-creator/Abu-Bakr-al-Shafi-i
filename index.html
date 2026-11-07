@@ -2587,7 +2587,13 @@
     const enrKey = () => "enr_" + (currentStudent ? normalizePhone(currentStudent.phone) : "");
     function getEnr() { try { return JSON.parse(localStorage.getItem(enrKey()) || "{}") || {}; } catch (_) { return {}; } }
     function setEnr(o) { try { localStorage.setItem(enrKey(), JSON.stringify(o || {})); } catch (_) {} }
-    const isEnrolled = (id) => !!getEnr()[id];
+    const isEnrolled = (id) => {
+      if (getEnr()[id]) return true;
+      const u = currentStudent || {};
+      if (u.enrolled && u.enrolled[id]) return true;
+      const c = u.courses, arr = Array.isArray(c) ? c.map(String) : String(c || "").split(/[,،\s]+/);
+      return arr.indexOf(id) >= 0;
+    };
     // صور أغلفة الكورسات: ضع رابط الصورة بين العلامتين (رابط جوجل درايف العادي يتحوّل تلقائياً — لازم الصورة تكون "أي شخص لديه الرابط يمكنه العرض"). فاضي = تظهر الأيقونة.
     const COURSE_COVERS = {
       term1: "https://drive.google.com/file/d/14QBRj4vGPXEm680xSuNkWY-OI43q8L45/view?usp=sharing",
@@ -2699,6 +2705,7 @@
       m.querySelector("#fsNo").onclick = () => m.classList.remove("show");
       m.querySelector("#fsOk").onclick = () => {
         const e = getEnr(); e[id] = e[id] || Date.now(); setEnr(e);
+        try { currentStudent.enrolled = Object.assign({}, currentStudent.enrolled || {}, e); saveStudentLocal(); } catch (_) {}
         try { localStorage.setItem("enrq_" + normalizePhone(currentStudent.phone), "1"); } catch (_) {}
         try { renderCourses(); } catch (_) {}
         try { pushNotif("تم الاشتراك في " + c.title + " بنجاح 🎉"); } catch (_) {}
@@ -3124,19 +3131,8 @@
       const box = document.getElementById("pvVideoBox");
       if (!wrap || !box) return;
       const availW = wrap.clientWidth;
-      let availH = wrap.clientHeight;
-      if (availW <= 0) return;
-      // لو المساحة اتضغطت (عنوان طويل/عناصر تحت الفيديو): نثبّت ارتفاع الفيديو بالعرض 16:9 ونخلي الكارت يسكرول بدل ما الفيديو يتشوّه أو التحكم يختفي
-      const need = Math.floor((availW * 9) / 16);
-      const card = wrap.closest(".pv-card");
-      if (availH < need * 0.7 && !(pvFull)) {
-        wrap.style.flex = "0 0 auto"; wrap.style.height = need + 4 + "px"; availH = need + 4;
-        if (card) card.style.overflowY = "auto";
-      } else if (wrap.style.height) {
-        wrap.style.flex = ""; wrap.style.height = ""; if (card) card.style.overflowY = "";
-        availH = wrap.clientHeight;
-      }
-      if (availH <= 0) return;
+      const availH = wrap.clientHeight;
+      if (availW <= 0 || availH <= 0) return;
  
       let w = availW;
       let h = (w * 9) / 16;
@@ -3144,8 +3140,9 @@
         h = availH;
         w = (h * 16) / 9;
       }
-      box.style.width = Math.floor(w) + "px";
-      box.style.height = Math.floor(h) + "px";
+      const nw = Math.floor(w) + "px", nh = Math.floor(h) + "px";
+      if (box.style.width !== nw) box.style.width = nw;
+      if (box.style.height !== nh) box.style.height = nh;
     }
  
     // نأجّل إعادة الحساب لأول فريم متاح فقط، حتى لو الشاشة بتطلق أحداث resize كتير ورا بعض
