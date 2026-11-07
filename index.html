@@ -2996,7 +2996,8 @@
       if (!container) return;
  
       let html = "";
-      const isCourseActivated = currentStudent && currentStudent.code && currentStudent.code !== "غير مفعل";
+      // كورس المراجعة النهائية (أولى ثانوي) مجاني: يكفي الاشتراك المجاني بدون كود. باقي الكورسات زي ما هي.
+      const isCourseActivated = currentCourse === "final1" ? !!isSubscribed() : (currentStudent && currentStudent.code && currentStudent.code !== "غير مفعل");
  
       const lockMap = qzLockedMap(lecturesList);
       lecturesList.forEach(lecture => {
@@ -4520,7 +4521,10 @@
     function showSubRequired() {
       try { showNotifToast("🔒 هذا المحتوى للمشتركين فقط — اشترك في الكورس لمشاهدة المحاضرات والواجبات والملفات", "system"); } catch (_) { alert("هذا المحتوى للمشتركين فقط. اشترك في الكورس أولاً."); }
     }
-    function requireSubscription() { showSubRequired(); activatingCourse = currentCourse; openCodeModal(); }
+    function requireSubscription() {
+      if (currentCourse === "final1") { openFreeSub("final1"); return; } // كورس مجاني: اشتراك مجاني بدون كود
+      showSubRequired(); activatingCourse = currentCourse; openCodeModal();
+    }
     function requireActivated() { if (isSubscribed()) return true; requireSubscription(); return false; }
     function renderSubBanner() {
       const b = document.getElementById("subBanner"); if (!b) return;
