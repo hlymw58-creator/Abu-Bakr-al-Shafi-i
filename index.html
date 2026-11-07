@@ -4203,7 +4203,7 @@
  
     function openAdminPanel() {
       if (!isAdminUser() || !lecturesConfigured()) return;
-      document.getElementById("adminModal").style.display = "flex"; admGrade = null;
+      document.getElementById("adminModal").style.display = "flex"; admGrade = null; admCourseId = null; admSection = null;
       if (adminToken) loadAdminList(); else renderAdminLogin();
     }
     function closeAdminPanel() { document.getElementById("adminModal").style.display = "none"; }
@@ -4250,14 +4250,25 @@
       renderAdminList();
     }
  
-    function renderAdminList() { admPreset = null; if (admGrade) renderGradePanel(admGrade); else renderAdminHome(); }
+    function renderAdminList() {
+      admPreset = null;
+      if (admGrade && admCourseId && admSection) renderSectionPanel(admCourseId, admSection);
+      else if (admGrade && admCourseId) renderCoursePanel(admCourseId);
+      else if (admGrade) renderGradePanel(admGrade);
+      else renderAdminHome();
+    }
 
     // ======================= اللوحة المركزية: 3 صفوف دراسية =======================
-    let admGrade = null, admPreset = null;
+    let admGrade = null, admPreset = null, admCourseId = null, admSection = null;
     const admGr = (u) => normGrade(u.grade || u.gradeLevel || u["الصف الدراسي"]);
     const admYtReq = () => (admPreset && admPreset.kind && admPreset.kind !== "video") ? "" : "required";
     function admGradeFilter(list) { if (!admGrade) return list; return list.some((u) => admGr(u)) ? list.filter((u) => admGr(u) === admGrade) : list; }
     const lecInGrade = (l, g) => { const ids = gradeCourseIds(g); return (l.courses && l.courses.length) ? l.courses.some((c) => ids.includes(c)) : ids.some((id) => !STRICT_COURSES.includes(id)); };
+    // الأقسام الموجودة داخل كل كورس (نفس الأقسام اللي بتظهر للطالب)
+    const REVIEW_SECTIONS = ["مراجعة توحيد", "مراجعة تفسير", "مراجعة حديث", "مراجعة فقه"];
+    const COURSE_SECTIONS = { term1: ["التوحيد", "التفسير", "الفقه", "الحديث"].concat(REVIEW_SECTIONS), final: REVIEW_SECTIONS, final1: REVIEW_SECTIONS };
+    const courseSections = (cid) => COURSE_SECTIONS[cid] || SUBJECTS.map((x) => x.name);
+    const lecInCourse = (l, cid) => (l.courses && l.courses.length) ? l.courses.includes(cid) : !STRICT_COURSES.includes(cid);
     const admCard = (tt, v) => '<div style="flex:1 1 120px;background:var(--card-bg,#f5f5f5);border:1px solid #ddd;border-radius:10px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700">' + v + '</div><small>' + escapeHtml(tt) + '</small></div>';
     const lecIcons = (l) => (l.youtubeUrl ? "🎬 " : "") + (l.pdfLink ? "📄 " : "") + (l.homeworkLink ? "🔗 " : "") + (l.quiz && l.quiz.questions ? "📝 " : "");
     const lecRows = (list) => list.map((l) => `
@@ -4268,7 +4279,7 @@
         </div>`).join("") || `<p style="text-align:center;color:#666;padding:12px">لا يوجد محتوى بعد.</p>`;
 
     function renderAdminHome() {
-      admGrade = null;
+      admGrade = null; admCourseId = null; admSection = null;
       const cards = GRADES.map((x) => {
         const n = adminLectures.filter((l) => lecInGrade(l, x.id)).length;
         return `<button class="btn-submit" style="background:linear-gradient(135deg,#1b5e20,#2e7d32);display:block;width:100%;text-align:right;padding:14px" onclick="openGradePanel('${x.id}')">🎓 ${escapeHtml(x.label)}<small style="display:block;opacity:.85;font-weight:normal">${n} محاضرة • اضغط لفتح لوحة الصف وإحصائيات طلابه</small></button>`;
@@ -4282,7 +4293,7 @@
         <button class="btn-submit" style="background:#b71c1c" onclick="renderBlockedAdmin()">🚨 الحظر والتنبيهات</button>
         <button class="btn-submit" style="background:#757575" onclick="closeAdminPanel()">إغلاق</button>`;
     }
-    function openGradePanel(g) { admGrade = g; renderGradePanel(g); }
+    function openGradePanel(g) { admGrade = g; admCourseId = null; admSection = null; renderGradePanel(g); }
 
     async function renderGradePanel(g) {
       admGrade = g;
@@ -4300,30 +4311,51 @@
           + (hasGrade ? "" : '<small style="color:#c62828;display:block;margin-bottom:8px">⚠️ السكريبت الرئيسي لا يرجّع حقل «الصف» للطلاب، فالأرقام أعلاه تشمل كل الطلاب. أضف حقل grade في adminStudents (راجع التعليمات).</small>')
           + (ls.data.capped ? '<small style="color:#c62828;display:block">الأرقام مبنية على أول 300 طالب فقط.</small>' : "");
       } else stats = '<p style="color:#c62828;text-align:center">' + GENERIC_ERROR + '</p>';
-      const inG = adminLectures.filter((l) => lecInGrade(l, g) && !(l.courses || []).includes("final1"));
-      let f1 = "";
-      if (g === "1") {
-        const items = adminLectures.filter((l) => (l.courses || []).includes("final1")).sort((a, b) => timeOf(a) - timeOf(b));
-        f1 = `<fieldset class="adm-quiz" style="margin:12px 0"><legend>🎯 كورس المراجعة النهائية (مجاني)</legend>
-          <small style="display:block;color:#555;margin-bottom:8px">أضف وعدّل واحذف محتوى الكورس. الاشتراك فيه مجاني للطلاب بدون كود.</small>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-            <button type="button" class="adm-btn" style="background:#00838f" onclick="admNew('final1','video')">➕ محاضرة فيديو</button>
-            <button type="button" class="adm-btn" style="background:#6a1b9a" onclick="admNew('final1','pdf')">➕ ملف PDF</button>
-            <button type="button" class="adm-btn" style="background:#ef6c00" onclick="admNew('final1','hw')">➕ واجب إلكتروني</button>
-          </div>${lecRows(items)}</fieldset>`;
-      }
+      const courseCards = ids.map((id) => {
+        const c = COURSES.find((x) => x.id === id), n = adminLectures.filter((l) => lecInCourse(l, id)).length;
+        return `<button class="btn-submit" style="background:linear-gradient(135deg,#0d3b12,#2e7d32);display:block;width:100%;text-align:right;padding:14px" onclick="openCoursePanel('${id}')">${c.icon} ${escapeHtml(c.title)}<small style="display:block;opacity:.85;font-weight:normal">${n} محتوى • ${courseSections(id).length} قسم • اضغط لإدارة الكورس</small></button>`;
+      }).join("") || `<p style="text-align:center;color:#666;padding:12px">لا توجد كورسات لهذا الصف بعد.</p>`;
       adminBody().innerHTML = `
         <h3 class="modal-title">🎓 ${escapeHtml(label)}</h3>
         ${stats}
         <button class="btn-submit" style="background:#00695c" onclick="renderStudentsAdmin()">👥 طلاب ${escapeHtml(label)}</button>
-        ${f1}
-        <h4 style="margin:12px 0 6px">📚 محاضرات الصف</h4>
-        <button class="btn-submit" onclick="admNew('${ids.filter((i) => i !== "final1")[0] || ids[0]}','video')">➕ إضافة محاضرة</button>
-        ${lecRows(inG)}
+        <h4 style="margin:12px 0 6px">📚 كورسات ${escapeHtml(label)}</h4>
+        ${courseCards}
         <button class="btn-submit" style="background:#757575" onclick="renderAdminHome()">← اللوحة المركزية</button>`;
     }
-    function admNew(course, kind) {
-      admPreset = { courses: [course], kind: kind };
+    function openCoursePanel(cid) { admCourseId = cid; admSection = null; renderCoursePanel(cid); }
+    function renderCoursePanel(cid) {
+      admCourseId = cid; admSection = null;
+      const c = COURSES.find((x) => x.id === cid) || { title: cid, icon: "📚" };
+      const rows = courseSections(cid).map((name) => {
+        const n = adminLectures.filter((l) => lecInCourse(l, cid) && l.subject === name).length;
+        return `<button class="btn-submit" style="background:linear-gradient(135deg,#0b3d5c,#1a73e8);display:block;width:100%;text-align:right;padding:12px" onclick="openSectionPanel('${cid}','${escapeHtml(name)}')">📂 ${escapeHtml(name)}<small style="display:block;opacity:.85;font-weight:normal">${n} محتوى</small></button>`;
+      }).join("");
+      adminBody().innerHTML = `
+        <h3 class="modal-title">${c.icon} ${escapeHtml(c.title)}</h3>
+        <small style="display:block;text-align:center;color:#555;margin-bottom:8px">${escapeHtml(gradeLabel(admGrade))} — اختر القسم اللي عايز تضيف فيه أو تعدّل</small>
+        ${rows}
+        <button class="btn-submit" style="background:#757575" onclick="admCourseId=null;renderGradePanel(admGrade)">← كورسات ${escapeHtml(gradeLabel(admGrade))}</button>`;
+    }
+    function openSectionPanel(cid, name) { admCourseId = cid; admSection = name; renderSectionPanel(cid, name); }
+    function renderSectionPanel(cid, name) {
+      admCourseId = cid; admSection = name;
+      const c = COURSES.find((x) => x.id === cid) || { title: cid };
+      const items = adminLectures.filter((l) => lecInCourse(l, cid) && l.subject === name).sort((a, b) => timeOf(a) - timeOf(b));
+      const q = (k) => `admNew('${cid}','${k}','${escapeHtml(name)}')`;
+      adminBody().innerHTML = `
+        <h3 class="modal-title">📂 ${escapeHtml(name)}</h3>
+        <small style="display:block;text-align:center;color:#555;margin-bottom:8px">${escapeHtml(c.title)} — ${escapeHtml(gradeLabel(admGrade))}</small>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <button type="button" class="adm-btn" style="background:#00838f" onclick="${q("video")}">➕ محاضرة فيديو</button>
+          <button type="button" class="adm-btn" style="background:#6a1b9a" onclick="${q("pdf")}">➕ ملف PDF</button>
+          <button type="button" class="adm-btn" style="background:#ef6c00" onclick="${q("hw")}">➕ واجب / اختبار</button>
+        </div>
+        ${lecRows(items)}
+        <button class="btn-submit" style="background:#757575" onclick="admSection=null;renderCoursePanel('${cid}')">← أقسام ${escapeHtml(c.title)}</button>`;
+    }
+    function admNew(course, kind, subject) {
+      admPreset = { courses: [course], kind: kind, subject: subject || admSection || "" };
       renderAdminForm();
       setTimeout(() => { const f = document.getElementById(kind === "pdf" ? "admPdf" : kind === "hw" ? "admHw" : "admYt"); if (f) f.focus(); }, 60);
     }
@@ -4339,16 +4371,18 @@
     }
     function renderAdminFormBase(id) {
       const l = adminLectures.find((x) => x.id === id) || {};
-      const mk = (list) => list.map((x) => `<option value="${x}" ${l.subject === x ? "selected" : ""}>${x}</option>`).join("");
-      const opts = `<optgroup label="الأقسام الرئيسية">${mk(["الفقه", "التوحيد", "التفسير", "الحديث"])}</optgroup><optgroup label="المراجعات (قسم فرعي)">${mk(["مراجعة توحيد", "مراجعة تفسير", "مراجعة حديث", "مراجعة فقه"])}</optgroup>`;
-      const sel = (l.courses && l.courses.length) ? l.courses : (id ? COURSES.map((c) => c.id) : ((admPreset && admPreset.courses) || (admGrade ? [gradeCourseIds(admGrade)[0]] : [COURSES[0].id])));
-      const courseBoxes = COURSES.map((c) => `<label><input type="checkbox" class="admCourse" value="${c.id}" ${sel.includes(c.id) ? "checked" : ""}>${escapeHtml(c.title)}</label>`).join("");
+      const wantSub = l.subject || (admPreset && admPreset.subject) || "";
+      const mk = (list) => list.map((x) => `<option value="${x}" ${wantSub === x ? "selected" : ""}>${x}</option>`).join("");
+      const formCourse = (l.courses && l.courses.length === 1) ? l.courses[0] : (admCourseId || (admPreset && admPreset.courses && admPreset.courses[0]) || "");
+      const opts = formCourse ? mk(courseSections(formCourse)) : `<optgroup label="الأقسام الرئيسية">${mk(["الفقه", "التوحيد", "التفسير", "الحديث"])}</optgroup><optgroup label="المراجعات (قسم فرعي)">${mk(REVIEW_SECTIONS)}</optgroup>`;
+      const sel = (l.courses && l.courses.length) ? l.courses : (admCourseId ? [admCourseId] : (id ? COURSES.map((c) => c.id) : ((admPreset && admPreset.courses) || (admGrade ? [gradeCourseIds(admGrade)[0]] : [COURSES[0].id]))));
+      const courseBoxes = (admGrade ? COURSES.filter((c) => !c.grades || c.grades.includes(admGrade)) : COURSES).map((c) => `<label><input type="checkbox" class="admCourse" value="${c.id}" ${sel.includes(c.id) ? "checked" : ""}>${escapeHtml(c.title)}</label>`).join("");
       adminBody().innerHTML = `
         <h3 class="modal-title">${id ? "تعديل محاضرة" : "إضافة محاضرة"}</h3>
         <form onsubmit="adminSave(event, '${id || ""}')">
           <div class="form-group"><label>اسم المحاضرة:</label><input id="admTitle" maxlength="150" required value="${escapeHtml(l.title || "")}"></div>
           <div class="form-group"><label>القسم / المادة:</label><select id="admSubject" required><option value="">اختر القسم</option>${opts}</select></div>
-          <div class="form-group"><label>الكورس المستهدف (يمكن اختيار أكثر من كورس):</label><div class="chk-row">${courseBoxes}</div></div>
+          <div class="form-group"><label>الكورس المستهدف (الكورس اللي إنت فيه محدد تلقائياً، وتقدر تضيف نفس المحتوى لكورس تاني من نفس الصف):</label><div class="chk-row">${courseBoxes}</div></div>
           <div class="form-group"><label>رابط يوتيوب:</label><input id="admYt" type="url" ${admYtReq()} dir="ltr" value="${escapeHtml(l.youtubeUrl || "")}"></div>
           <div class="form-group"><label>موعد نزول المحاضرة (اليوم والتاريخ والساعة):</label><input id="admAt" type="datetime-local" required value="${l.releaseAt ? toLocalInput(timeOf(l)) : ""}"></div>
           <div class="form-group"><label>رابط الواجب (اختياري):</label><input id="admHw" type="url" dir="ltr" value="${escapeHtml(l.homeworkLink || "")}"></div>
@@ -4390,7 +4424,7 @@
       } });
       if (!r) return;
       if (r.type === "ok") { admQDraftClear(id); await loadAdminList(); fetchLectures(); return; }
-      if (r.type === "fail") { showErr(safeMsg(r.message, "تعذر الحفظ، راجع البيانات.")); btn.disabled = false; btn.innerText = "حفظ"; return; }
+      if (r.type === "fail") { showErr(String(r.message || "").trim() || "تعذر الحفظ، راجع البيانات."); btn.disabled = false; btn.innerText = "حفظ"; return; }
       // لم يصل الرد: قد يكون الحفظ تم فعلاً. نتحقق بصمت من القائمة، ولا نمسح النموذج ولا الاختبار أبداً
       btn.innerText = "جاري التأكد من الحفظ...";
       const chk = await adminCall({ action: "adminList" });
