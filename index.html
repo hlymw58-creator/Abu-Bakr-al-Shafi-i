@@ -3083,7 +3083,7 @@
             </div>
             <div class="cm-card-row">
               <button type="button" class="btn-cm" onclick="cmOpen('${escapeHtml(lecture.id)}', false)">💬 التعليقات</button>
-              <button type="button" class="btn-cm" onclick="cmCopyLink('${escapeHtml(lecture.id)}')">🔗 رابط المحاضرة</button>
+              <button type="button" class="btn-cm" onclick="cmCopyLink('${escapeHtml(lecture.id)}')">🔗 نسخ رابط المحاضرة</button>
             </div>
           </div>
         `;
@@ -4002,7 +4002,7 @@
           cmItems.unshift(r.data.comment); ta.value = ""; document.getElementById("cmCnt").innerText = "0 / 500"; cmRender();
           const box = document.getElementById("cmListBox"); if (box) box.scrollTop = 0;
         } else {
-          err.innerText = r.type === "fail" ? safeMsg(r.message, "تعذر إرسال التعليق.") : GENERIC_ERROR;
+          err.innerText = (r.type === "fail" ? safeMsg(r.message, "تعذر إرسال التعليق.") : GENERIC_ERROR) + ((r.data && r.data.debug) ? " [" + r.data.debug + "]" : "");
         }
       } finally { cmBusy = false; btn.disabled = false; btn.innerText = "إرسال"; }
     }
@@ -4023,13 +4023,30 @@
       if (r.type === "ok") { cmItems = cmItems.filter((x) => x.id !== cid); cmRender(); }
       else alert(r.type === "fail" ? safeMsg(r.message, "تعذر حذف التعليق.") : GENERIC_ERROR);
     }
-    // رابط المحاضرة: ‎#lec=ID‎ يفتح تعليقات المحاضرة مباشرة
-    (function cmDeepLink() {
+    // رابط المحاضرة: ‎#lec=ID‎ يفتح المحاضرة نفسها (الكورس ← المادة ← تشغيل المحاضرة)
+    async function goToLecture(id) {
+      const l = lectureIndex[id]; if (!l) return;
+      if (!currentStudent) { openAuth(() => goToLecture(id)); return; }
+      const cs = (l.courses || []).filter(Boolean);
+      const pool = COURSES.filter((c) => (!gradeLocked() || !c.grades || c.grades.includes(viewGrade())) && (cs.length ? (cs.includes("all") || cs.includes(c.id)) : c.id === "term1"));
+      const c = pool.find((x) => x.isActive(currentStudent)) || pool[0];
+      if (!c) return;
+      enterCourse(c.id);
+      if (currentCourse !== c.id || view !== "course") return; // الكورس المجاني يطلب تأكيد الاشتراك أولاً
+      const card = SUBJECT_CARDS.find((x) => (!x.courses || x.courses.includes(c.id)) && x.subjects && x.subjects.includes(l.subject));
+      if (card) openSubject(card.tab);
+      setTimeout(() => {
+        const el = document.getElementById("card-" + id);
+        if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.style.outline = "3px solid #d4af37"; setTimeout(() => { el.style.outline = ""; }, 3500); }
+        openLectureById(id);
+      }, 350);
+    }
+    (function lectureDeepLink() {
       const m = /[#&]lec=([^&]+)/.exec(location.hash || ""); if (!m) return;
       let id = ""; try { id = decodeURIComponent(m[1]); } catch (_) { return; }
       let tries = 0;
       const iv = setInterval(() => {
-        if (lectureIndex[id]) { clearInterval(iv); cmOpen(id, false); }
+        if (lectureIndex[id]) { clearInterval(iv); goToLecture(id); }
         else if (++tries > 50) clearInterval(iv);
       }, 600);
     })();
