@@ -1012,6 +1012,44 @@
     .pv-video-container video { pointer-events: none; }
     .pv-video-container .plyr__controls { pointer-events: auto; }
     .pv-video-container .plyr { width: 100%; height: 100%; }
+
+    /* ===== تعليقات المحاضرات ===== */
+    .cm-card-row { display: flex; gap: 8px; margin-top: 8px; }
+    .btn-cm { flex: 1; padding: 9px 8px; border-radius: 10px; border: 1px solid #1b5e20; background: transparent; color: #1b5e20; font-family: inherit; font-weight: 700; font-size: 13px; cursor: pointer; }
+    html[data-theme="dark"] .btn-cm { color: #a5d6a7; border-color: #66bb6a; }
+    .pv-cm-row { width: 100%; max-width: 560px; padding: 0 12px; margin: 6px auto; box-sizing: border-box; }
+    .pv-cm-btn { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #d4af37; background: rgba(255,255,255,.08); color: #fff; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .pv-overlay.pv-full .pv-cm-row { display: none; }
+    .cm-back { position: fixed; inset: 0; z-index: 2500; display: none; background: rgba(0,0,0,.45); }
+    .cm-back.show { display: block; }
+    .cm-back.player { background: transparent; pointer-events: none; }
+    .cm-sheet { position: absolute; left: 0; right: 0; bottom: 0; margin: 0 auto; width: min(560px, 100%); height: 84vh; background: #fff; color: #222; border-radius: 18px 18px 0 0; box-shadow: 0 -6px 24px rgba(0,0,0,.35); display: flex; flex-direction: column; pointer-events: auto; overflow: hidden; direction: rtl; }
+    html[data-theme="dark"] .cm-sheet { background: #17211c; color: #eceff1; }
+    .cm-back.player .cm-sheet { height: 56vh; }
+    @media (orientation: landscape) {
+      .cm-sheet, .cm-back.player .cm-sheet { left: auto; right: 0; top: 0; bottom: 0; height: auto; width: min(400px, 46vw); margin: 0; border-radius: 0; }
+      .cm-back:not(.player) .cm-sheet { left: 0; right: 0; top: 4vh; bottom: 0; height: auto; width: min(560px, 92vw); margin: 0 auto; border-radius: 18px 18px 0 0; }
+    }
+    .cm-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid rgba(128,128,128,.25); }
+    .cm-head-title { flex: 1; font-weight: 800; font-size: 15px; line-height: 1.4; }
+    .cm-head-title small { display: block; font-weight: 600; opacity: .7; font-size: 12px; }
+    .cm-ico { border: none; background: rgba(128,128,128,.18); color: inherit; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 15px; flex: 0 0 auto; }
+    .cm-list { flex: 1; overflow-y: auto; padding: 8px 14px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+    .cm-item { padding: 10px 0; border-bottom: 1px solid rgba(128,128,128,.18); }
+    .cm-meta { display: flex; gap: 8px; align-items: baseline; font-size: 12px; opacity: .85; }
+    .cm-name { font-weight: 800; font-size: 13.5px; opacity: 1; }
+    .cm-text { margin: 4px 0 6px; white-space: pre-wrap; word-break: break-word; font-size: 14.5px; line-height: 1.6; }
+    .cm-acts { display: flex; gap: 8px; }
+    .cm-like, .cm-del { border: 1px solid rgba(128,128,128,.4); background: transparent; color: inherit; border-radius: 999px; padding: 4px 12px; font-family: inherit; font-size: 13px; cursor: pointer; }
+    .cm-like.on { background: #1b5e20; border-color: #1b5e20; color: #fff; }
+    .cm-empty, .cm-note { text-align: center; opacity: .75; padding: 22px 8px; font-size: 14px; }
+    .cm-composer { border-top: 1px solid rgba(128,128,128,.25); padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); background: inherit; }
+    .cm-composer textarea { width: 100%; box-sizing: border-box; min-height: 52px; max-height: 110px; resize: none; border-radius: 12px; border: 1px solid rgba(128,128,128,.5); padding: 9px 12px; font-family: inherit; font-size: 15px; background: transparent; color: inherit; }
+    .cm-send-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .cm-count { font-size: 12px; opacity: .7; flex: 1; }
+    .cm-send { background: #1b5e20; color: #fff; border: none; border-radius: 10px; padding: 9px 22px; font-family: inherit; font-weight: 800; cursor: pointer; }
+    .cm-send:disabled { opacity: .55; }
+    .cm-err { color: #c62828; font-size: 13px; margin-top: 4px; min-height: 0; }
     /* تكبير الفيديو لقص الحواف السوداء الجانبية (اللي بتبقى جوه الفيديو نفسه) */
     .pv-video-container .plyr__video-wrapper { transform: scale(var(--pvz, 1)); transform-origin: center center; }
     .pv-zoom-btn { position: absolute; top: 10px; left: 90px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; border: 2px solid #d4af37; font-size: 15px; line-height: 1; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 0; }
@@ -1867,6 +1905,7 @@
           <div id="pvPlayer"></div>
         </div>
       </div>
+      <div class="pv-cm-row"><button type="button" class="pv-cm-btn" onclick="cmOpen(cmPlayerLec, true)">💬 تعليقات المحاضرة وإعجابات الطلاب</button></div>
       <div class="pv-hint">💡 لمشاهدة أكبر اضغط زر ⛶ في الأعلى ثم اقلب الجهاز أفقياً</div>
       <div class="pv-support-row">
         <a href="https://wa.me/201099442329" target="_blank" class="pv-support-btn tech">
@@ -3042,6 +3081,10 @@
             <div class="actions-group">
               ${actionButtonHTML}
             </div>
+            <div class="cm-card-row">
+              <button type="button" class="btn-cm" onclick="cmOpen('${escapeHtml(lecture.id)}', false)">💬 التعليقات</button>
+              <button type="button" class="btn-cm" onclick="cmCopyLink('${escapeHtml(lecture.id)}')">🔗 رابط المحاضرة</button>
+            </div>
           </div>
         `;
       });
@@ -3468,6 +3511,7 @@
     }
 
     function closeProtectedPlayer() {
+      try { cmClose(); } catch (_) {}
       pvSetFull(false);
       pvResetPlayer();
       pvPendingVideoId = null; pvPendingDriveId = null;
@@ -3855,9 +3899,141 @@
         else { alert(r.type === "fail" ? safeMsg(r.message, GENERIC_ERROR) : GENERIC_ERROR); return; }
       }
       if (!link) { alert("لم يتم إدراج رابط المحاضرة حتى الآن"); return; }
+      cmPlayerLec = id;
       openProtectedPlayer(link, l.title);
     }
  
+    // ======================= تعليقات المحاضرات + الإعجابات =======================
+    const COMMENTS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysBD4LY3Di70A98VPaSemKAmB43vYuZFGbjsKqvfYHo708f0tjKfjUNv95KLVLDX1arg/exec"; // سكريبت التعليقات (Comments.gs)
+    let cmPlayerLec = null, cmLecId = null, cmTimer = null, cmItems = [], cmCanAdmin = false, cmBusy = false;
+    const cmLinkOf = (id) => location.origin + location.pathname + "#lec=" + encodeURIComponent(id);
+    function cmCopyLink(id) {
+      const url = cmLinkOf(id);
+      const done = () => { try { alert("تم نسخ رابط المحاضرة ✅\n" + url); } catch (_) {} };
+      try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(done, () => prompt("انسخ الرابط:", url)); return; } } catch (_) {}
+      prompt("انسخ الرابط:", url);
+    }
+    // هوية الطالب للتعليقات: رقمه + معرّف جهازه (الخادم يتحقق منهما تلقائياً بدون كلمة سر)
+    function cmAuth() {
+      if (!currentStudent || isAdminUser()) return {};
+      let dev = ""; try { dev = getDeviceId(); } catch (_) {}
+      return { phone: currentStudent.phone, deviceId: dev, name: currentStudent.name || "" };
+    }
+    function cmEl() {
+      let b = document.getElementById("cmBack");
+      if (!b) {
+        b = document.createElement("div"); b.id = "cmBack"; b.className = "cm-back";
+        b.innerHTML = `<div class="cm-sheet" id="cmSheet">
+          <div class="cm-head"><div class="cm-head-title" id="cmTitle"></div>
+            <button type="button" class="cm-ico" id="cmCopy" title="نسخ رابط المحاضرة">🔗</button>
+            <button type="button" class="cm-ico" id="cmX" title="إغلاق">✕</button></div>
+          <div class="cm-list" id="cmListBox"></div>
+          <div class="cm-composer" id="cmComposer"></div></div>`;
+        document.body.appendChild(b);
+        b.addEventListener("click", (e) => { if (e.target === b && !b.classList.contains("player")) cmClose(); });
+        b.querySelector("#cmX").onclick = cmClose;
+        b.querySelector("#cmCopy").onclick = () => cmCopyLink(cmLecId);
+      }
+      return b;
+    }
+    function cmClose() {
+      const b = document.getElementById("cmBack"); if (b) b.classList.remove("show", "player");
+      clearInterval(cmTimer); cmTimer = null; cmLecId = null;
+    }
+    function cmAgo(iso) {
+      const t = Date.parse(iso); if (!t) return "";
+      const d = Math.max(0, Date.now() - t), m = Math.floor(d / 60000);
+      if (m < 1) return "الآن"; if (m < 60) return "منذ " + m + " دقيقة"; if (m < 1440) return "منذ " + Math.floor(m / 60) + " ساعة";
+      try { return new Date(t).toLocaleDateString("ar-EG", { day: "numeric", month: "short" }); } catch (_) { return ""; }
+    }
+    function cmRender() {
+      const box = document.getElementById("cmListBox"); if (!box) return;
+      const t = document.getElementById("cmTitle");
+      const lec = lectureIndex[cmLecId];
+      t.innerHTML = `💬 التعليقات (${cmItems.length})<small>${escapeHtml((lec && lec.title) || "")}</small>`;
+      if (!cmItems.length) { box.innerHTML = `<div class="cm-empty">لا توجد تعليقات بعد — كن أول من يعلّق 👇</div>`; return; }
+      box.innerHTML = cmItems.map((c) => `<div class="cm-item" data-id="${escapeHtml(c.id)}">
+        <div class="cm-meta"><span class="cm-name">${escapeHtml(c.name)}</span><span>${escapeHtml(cmAgo(c.at))}</span></div>
+        <div class="cm-text">${escapeHtml(c.text)}</div>
+        <div class="cm-acts"><button type="button" class="cm-like ${c.liked ? "on" : ""}" onclick="cmLike('${escapeHtml(c.id)}')">👍 ${Number(c.likes) || 0}</button>
+        ${(c.mine || (cmCanAdmin && isAdminUser())) ? `<button type="button" class="cm-del" onclick="cmDelete('${escapeHtml(c.id)}')">🗑 حذف</button>` : ""}</div></div>`).join("");
+    }
+    function cmComposer() {
+      const c = document.getElementById("cmComposer"); if (!c) return;
+      if (isAdminUser()) { c.innerHTML = `<div class="cm-note" style="padding:6px">وضع المشرف: يمكنك حذف أي تعليق (يتطلب تسجيل دخول لوحة التحكم).</div>`; return; }
+      if (!currentStudent) { c.innerHTML = `<button type="button" class="cm-send" style="width:100%" onclick="openAuth(() => cmOpen(cmLecId, document.getElementById('cmBack').classList.contains('player')))">سجّل الدخول لتعلّق وتضع إعجاباً</button>`; return; }
+      c.innerHTML = `<textarea id="cmText" maxlength="500" placeholder="اكتب تعليقك أو سؤالك عن المحاضرة..."></textarea>
+        <div class="cm-send-row"><span class="cm-count" id="cmCnt">0 / 500</span><button type="button" class="cm-send" id="cmSend" onclick="cmSend()">إرسال</button></div>
+        <div class="cm-err" id="cmErr"></div>`;
+      const ta = document.getElementById("cmText");
+      ta.addEventListener("input", () => { document.getElementById("cmCnt").innerText = ta.value.length + " / 500"; });
+    }
+    async function cmLoad(silent) {
+      if (!cmLecId) return;
+      const id = cmLecId;
+      const adm = isAdminUser() ? (adminToken || "") : "";
+      const r = await callWithRetry(COMMENTS_SCRIPT_URL, Object.assign({ action: "commentsList", lectureId: id, adminToken: adm }, cmAuth()), 2);
+      if (cmLecId !== id) return;
+      if (r.type === "ok" && Array.isArray(r.data.comments)) { cmItems = r.data.comments; cmCanAdmin = !!r.data.canAdmin; cmRender(); }
+      else if (!silent) {
+        const box = document.getElementById("cmListBox");
+        if (box) box.innerHTML = `<div class="cm-note">${r.type === "fail" && /غير معروف/.test(String(r.message || "")) ? "التعليقات لم يتم تفعيلها على السيرفر بعد." : "تعذر تحميل التعليقات الآن، حاول لاحقاً."}</div>`;
+      }
+    }
+    async function cmOpen(id, fromPlayer) {
+      if (!id) return;
+      const b = cmEl(); cmLecId = id; cmItems = []; cmCanAdmin = false;
+      b.classList.toggle("player", !!fromPlayer); b.classList.add("show");
+      document.getElementById("cmListBox").innerHTML = `<div class="cm-note">جاري التحميل...</div>`;
+      cmRender(); cmComposer();
+      clearInterval(cmTimer);
+      cmTimer = setInterval(() => { if (!document.hidden) cmLoad(true); }, 25000);
+      await cmLoad(false);
+    }
+    async function cmSend() {
+      if (cmBusy) return;
+      const ta = document.getElementById("cmText"), err = document.getElementById("cmErr"), btn = document.getElementById("cmSend");
+      const text = (ta.value || "").trim(); err.innerText = "";
+      if (!text) { err.innerText = "اكتب تعليقك أولاً."; return; }
+      cmBusy = true; btn.disabled = true; btn.innerText = "جاري الإرسال...";
+      try {
+        const r = await callScript(COMMENTS_SCRIPT_URL, Object.assign({ action: "commentAdd", lectureId: cmLecId, text: text }, cmAuth()));
+        if (r.type === "ok" && r.data.comment) {
+          cmItems.unshift(r.data.comment); ta.value = ""; document.getElementById("cmCnt").innerText = "0 / 500"; cmRender();
+          const box = document.getElementById("cmListBox"); if (box) box.scrollTop = 0;
+        } else {
+          err.innerText = r.type === "fail" ? safeMsg(r.message, "تعذر إرسال التعليق.") : GENERIC_ERROR;
+        }
+      } finally { cmBusy = false; btn.disabled = false; btn.innerText = "إرسال"; }
+    }
+    async function cmLike(cid) {
+      const c = cmItems.find((x) => x.id === cid); if (!c) return;
+      if (!currentStudent || isAdminUser()) return;
+      const was = c.liked; c.liked = !was; c.likes = Math.max(0, (Number(c.likes) || 0) + (was ? -1 : 1)); cmRender();
+      const r = await callScript(COMMENTS_SCRIPT_URL, Object.assign({ action: "commentLike", commentId: cid }, cmAuth()));
+      if (r.type === "ok") { c.liked = !!r.data.liked; c.likes = Number(r.data.likes) || 0; }
+      else { c.liked = was; c.likes = Math.max(0, (Number(c.likes) || 0) + (was ? 1 : -1)); }
+      cmRender();
+    }
+    async function cmDelete(cid) {
+      if (!confirm("حذف هذا التعليق؟")) return;
+      const adm = isAdminUser();
+      if (adm && !adminToken) { alert("سجّل دخول لوحة التحكم أولاً لتتمكن من حذف التعليقات."); return; }
+      const r = await callScript(COMMENTS_SCRIPT_URL, Object.assign({ action: "commentDelete", commentId: cid, adminToken: adm ? adminToken : "" }, cmAuth()));
+      if (r.type === "ok") { cmItems = cmItems.filter((x) => x.id !== cid); cmRender(); }
+      else alert(r.type === "fail" ? safeMsg(r.message, "تعذر حذف التعليق.") : GENERIC_ERROR);
+    }
+    // رابط المحاضرة: ‎#lec=ID‎ يفتح تعليقات المحاضرة مباشرة
+    (function cmDeepLink() {
+      const m = /[#&]lec=([^&]+)/.exec(location.hash || ""); if (!m) return;
+      let id = ""; try { id = decodeURIComponent(m[1]); } catch (_) { return; }
+      let tries = 0;
+      const iv = setInterval(() => {
+        if (lectureIndex[id]) { clearInterval(iv); cmOpen(id, false); }
+        else if (++tries > 50) clearInterval(iv);
+      }, 600);
+    })();
+
     function initLectures() {
       try {
         const c = JSON.parse(localStorage.getItem(LECTURES_CACHE_KEY) || "null");
