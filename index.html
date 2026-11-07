@@ -22,6 +22,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="favicon.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.css" />
   <style>
     :root {
       --primary-color: #1b5e20;
@@ -1010,6 +1011,8 @@
     .lecture-card { content-visibility: auto; contain-intrinsic-size: 1px 220px; }
     .pv-video-container video { pointer-events: none; }
     .pv-video-container .plyr__controls { pointer-events: auto; }
+    .pv-video-container .plyr { width: 100%; height: 100%; }
+    .pv-video-container .plyr__controls { z-index: 5; }
     .pv-yt-cover { position:absolute; inset:0; z-index:2; display:none; align-items:center; justify-content:center; text-align:center; padding:18px;
       color:#f4e285; font-weight:700; font-size:clamp(13px,3.2vw,18px); line-height:1.9; pointer-events:none;
       background:linear-gradient(rgba(5,26,12,.93),rgba(5,26,12,.93)), var(--pv-thumb) center/cover #000; }
@@ -3106,8 +3109,19 @@
       const box = document.getElementById("pvVideoBox");
       if (!wrap || !box) return;
       const availW = wrap.clientWidth;
-      const availH = wrap.clientHeight;
-      if (availW <= 0 || availH <= 0) return;
+      let availH = wrap.clientHeight;
+      if (availW <= 0) return;
+      // لو المساحة اتضغطت (عنوان طويل/عناصر تحت الفيديو): نثبّت ارتفاع الفيديو بالعرض 16:9 ونخلي الكارت يسكرول بدل ما الفيديو يتشوّه أو التحكم يختفي
+      const need = Math.floor((availW * 9) / 16);
+      const card = wrap.closest(".pv-card");
+      if (availH < need * 0.7 && !(pvFull)) {
+        wrap.style.flex = "0 0 auto"; wrap.style.height = need + 4 + "px"; availH = need + 4;
+        if (card) card.style.overflowY = "auto";
+      } else if (wrap.style.height) {
+        wrap.style.flex = ""; wrap.style.height = ""; if (card) card.style.overflowY = "";
+        availH = wrap.clientHeight;
+      }
+      if (availH <= 0) return;
  
       let w = availW;
       let h = (w * 9) / 16;
@@ -3250,10 +3264,16 @@
  
     // اللحظة الوحيدة اللي فعلاً بيتحمّل فيها المشغل الثقيل (Plyr + iframe يوتيوب)
     function loadPlyr() {
+      const SRC = ["https://cdn.plyr.io/3.7.8/plyr.js", "https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.min.js", "https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js"];
       return new Promise((res) => {
         if (window.Plyr) return res();
-        const s = document.createElement("script"); s.src = "https://cdn.plyr.io/3.7.8/plyr.js"; s.onload = res; s.onerror = res;
-        document.head.appendChild(s);
+        let i = 0;
+        const next = () => {
+          if (window.Plyr || i >= SRC.length) return res();
+          const s = document.createElement("script"); s.src = SRC[i++]; s.onload = () => (window.Plyr ? res() : next()); s.onerror = next;
+          document.head.appendChild(s);
+        };
+        next();
       });
     }
     // الاحتياطي: لو الفيديو ما اشتغلش بالمشغل المخصص (ملف كبير/صلاحيات) نرجع لمعاينة الدرايف العادية
