@@ -2582,7 +2582,8 @@
     // صور أغلفة الكورسات: ضع رابط الصورة بين العلامتين (رابط جوجل درايف العادي يتحوّل تلقائياً — لازم الصورة تكون "أي شخص لديه الرابط يمكنه العرض"). فاضي = تظهر الأيقونة.
     const COURSE_COVERS = {
       term1: "https://drive.google.com/file/d/14QBRj4vGPXEm680xSuNkWY-OI43q8L45/view?usp=sharing",
-      final: "https://drive.google.com/file/d/1hK27-xLTzCEqJ5y-kclW58s7SZr1-V15/view?usp=sharing"
+      final: "https://drive.google.com/file/d/1hK27-xLTzCEqJ5y-kclW58s7SZr1-V15/view?usp=sharing",
+      final1: "" // ← ضع هنا رابط صورة غلاف كورس مراجعة أولى ثانوي (اختياري)
     };
     function coverUrl(u) {
       u = String(u || "").trim(); if (!u) return "";
@@ -2627,16 +2628,21 @@
       return `<div class="grade-bar" style="grid-column:1/-1" role="tablist">` + GRADES.map((x) => `<button type="button" role="tab" class="grade-tab ${x.id === viewGrade() ? "on" : ""}" onclick="setViewGrade('${x.id}')">${x.label}</button>`).join("") + `</div>`;
     }
     // grades في كل كورس: الصفوف اللي يظهر لها الكورس (مثال لكورس الصف الثالث: grades: ["3"] — ولكورس للصفين: grades: ["2","3"])
-    const STRICT_COURSES = ["final"];
+    const STRICT_COURSES = ["final", "final1"];
     const COURSES = [
       { id: "term1", grades: ["2"], icon: "📖", title: "كورس الترم الأول", sub: "منصة الشافعي الصغير", desc: "التوحيد • التفسير • الفقه • الحديث • المراجعات • المنتدى",
         isActive: (u) => !!u && isActivatedValue(u.code) },
       { id: "final", grades: ["2"], icon: "🎯", title: "المراجعة النهائية", sub: "كورس مجاني للجميع", desc: "مراجعة التوحيد • التفسير • الحديث • الفقه الشافعي — ومعاك جدولك ونظام المتابعة", free: true,
-        isActive: (u) => !!u && (isEnrolled("final") || !!u.isAdmin) }
+        isActive: (u) => !!u && (isEnrolled("final") || !!u.isAdmin) },
+      { id: "final1", grades: ["1"], icon: "🎯", title: "كورس المراجعة النهائية", sub: "كورس مجاني — الصف الأول الثانوي", desc: "مراجعة نهائية شاملة لمنهج الصف الأول الثانوي: محاضرات فيديو • ملفات PDF • واجبات إلكترونية", free: true,
+        isActive: (u) => !!u && (isEnrolled("final1") || !!u.isAdmin) }
     ];
     COURSES.forEach((c) => { Object.defineProperty(c, "cover", { get: () => coverUrl(COURSE_COVERS[c.id]) }); });
     let currentCourse = COURSES[0].id, view = "courses", prevView = "courses", activatingCourse = COURSES[0].id;
-    const inCourse = (l) => STRICT_COURSES.includes(currentCourse) ? !!(l.courses && l.courses.includes(currentCourse)) : (!l.courses || !l.courses.length || l.courses.includes(currentCourse));
+    // الكورسات المسموحة لصف معيّن (الأدمن يشوف كل شيء)
+    const gradeCourseIds = (g) => COURSES.filter((c) => !c.grades || c.grades.includes(g)).map((c) => c.id);
+    const lectureGradeOk = (l) => { if (!gradeLocked()) return true; const ids = gradeCourseIds(viewGrade()); return (l.courses && l.courses.length) ? l.courses.some((c) => ids.includes(c)) : true; };
+    const inCourse = (l) => lectureGradeOk(l) && (STRICT_COURSES.includes(currentCourse) ? !!(l.courses && l.courses.includes(currentCourse)) : (!l.courses || !l.courses.length || l.courses.includes(currentCourse)));
 
     function setView(v) {
       view = v;
@@ -2667,12 +2673,14 @@
     function closeAccountIfAny() { const p = document.getElementById("accountPage"); if (p) p.style.display = "none"; }
     function enterCourse(id) {
       const c = COURSES.find((x) => x.id === id);
+      if (c && gradeLocked() && c.grades && !c.grades.includes(viewGrade())) return; // كورس صف آخر
       if (c && c.free && !c.isActive(currentStudent)) { openFreeSub(id); return; }
       currentCourse = id; setView("course");
     }
     // نافذة تأكيد الاشتراك المجاني
     function openFreeSub(id) {
       const c = COURSES.find((x) => x.id === id); if (!c) return;
+      if (gradeLocked() && c.grades && !c.grades.includes(viewGrade())) return;
       if (!currentStudent) { openAuth(() => openFreeSub(id)); return; }
       let m = document.getElementById("freeSubModal");
       if (!m) { m = document.createElement("div"); m.id = "freeSubModal"; m.className = "hl-back"; document.body.appendChild(m); }
@@ -3311,6 +3319,8 @@
           showinfo: 0,
           iv_load_policy: 3,
           modestbranding: 1,
+          hl: "ar",
+          cc_load_policy: 0,
           controls: 0,
           disablekb: 1,
           autoplay: 1,
@@ -4040,12 +4050,12 @@
 
     async function renderStudentsAdmin() {
       adminBody().innerHTML = '<p style="text-align:center;padding:20px">جاري التحميل...</p>';
-      const [st, ls] = await Promise.all([mAdmin({ action: "adminStats" }), mAdmin({ action: "adminStudents", course: admFilter, q: admQuery })]);
+      const [st, ls] = await Promise.all([mAdmin({ action: "adminStats", grade: admGrade || "" }), mAdmin({ action: "adminStudents", course: admFilter, q: admQuery, grade: admGrade || "" })]);
       if (!st || !ls) return;
       if (st.type !== "ok" || ls.type !== "ok") { adminBody().innerHTML = '<p style="text-align:center;color:red;padding:20px">' + GENERIC_ERROR + '</p><button class="btn-submit" onclick="renderStudentsAdmin()">إعادة المحاولة</button><button class="btn-submit" style="background:#757575" onclick="renderAdminList()">رجوع</button>'; return; }
-      const s = st.data; admStudents = ls.data.students || [];
+      const s = st.data; admStudents = admGradeFilter(ls.data.students || []);
       const card = (t, v) => '<div style="flex:1 1 130px;background:var(--card-bg,#f5f5f5);border:1px solid #ddd;border-radius:10px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700">' + v + '</div><small>' + escapeHtml(t) + '</small></div>';
-      const opts = [["all", "كل الطلاب"]].concat(COURSES.map((c) => [c.id, "مشتركو " + c.title]), [["inactive", "غير مشتركين"], ["blocked", "محظورون / مؤمَّنون"]]);
+      const opts = [["all", "كل الطلاب"]].concat(COURSES.filter((c) => !admGrade || !c.grades || c.grades.includes(admGrade)).map((c) => [c.id, "مشتركو " + c.title]), [["inactive", "غير مشتركين"], ["blocked", "محظورون / مؤمَّنون"]]);
       const rows = admStudents.map((u, i) => {
         const chips = (u.courses || []).map((id) => { const c = COURSES.find((x) => x.id === id); return '<span class="ann-badge active">' + escapeHtml(c ? c.title : id) + '</span>'; }).join(" ") || '<small>غير مشترك</small>';
         const blocked = u.state && u.state !== "ok";
@@ -4057,7 +4067,7 @@
           (blocked ? '<button class="adm-btn adm-edit" onclick="admStu(\'unban\',' + i + ')">فك الحظر</button>' : '<button class="adm-btn adm-del" onclick="admStu(\'ban\',' + i + ')">حظر</button>') +
           '<button class="adm-btn adm-del" onclick="admStu(\'del\',' + i + ')">حذف</button></div></div>';
       }).join("") || '<p style="text-align:center;color:#666;padding:14px">لا توجد نتائج.</p>';
-      adminBody().innerHTML = '<h3 class="modal-title">👥 الطلاب والإحصائيات</h3>' +
+      adminBody().innerHTML = '<h3 class="modal-title">👥 الطلاب والإحصائيات' + (admGrade ? ' — ' + escapeHtml(gradeLabel(admGrade)) : '') + '</h3>' +
         '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">' + card("إجمالي الطلاب", s.total) + (s.courses || []).map((c) => card(c.title, c.count)).join("") + card("غير مشتركين", s.inactive) + card("محظور / محذوف / مؤمَّن", s.banned + " / " + s.deleted + " / " + s.locked) + '</div>' +
         '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><select id="admFilter" onchange="admFilter=this.value;renderStudentsAdmin()" style="flex:1 1 150px;padding:8px">' + opts.map((o) => '<option value="' + o[0] + '"' + (o[0] === admFilter ? " selected" : "") + '>' + escapeHtml(o[1]) + '</option>').join("") + '</select>' +
         '<input id="admQ" placeholder="بحث بالاسم أو الرقم" value="' + escapeHtml(admQuery) + '" style="flex:2 1 160px;padding:8px" onkeydown="if(event.key===\'Enter\'){admQuery=this.value.trim();renderStudentsAdmin();}"><button class="adm-btn adm-edit" onclick="admQuery=document.getElementById(\'admQ\').value.trim();renderStudentsAdmin()">بحث</button></div>' +
@@ -4193,7 +4203,7 @@
  
     function openAdminPanel() {
       if (!isAdminUser() || !lecturesConfigured()) return;
-      document.getElementById("adminModal").style.display = "flex";
+      document.getElementById("adminModal").style.display = "flex"; admGrade = null;
       if (adminToken) loadAdminList(); else renderAdminLogin();
     }
     function closeAdminPanel() { document.getElementById("adminModal").style.display = "none"; }
@@ -4240,21 +4250,82 @@
       renderAdminList();
     }
  
-    function renderAdminList() {
-      const rows = adminLectures.map((l) => `
+    function renderAdminList() { admPreset = null; if (admGrade) renderGradePanel(admGrade); else renderAdminHome(); }
+
+    // ======================= اللوحة المركزية: 3 صفوف دراسية =======================
+    let admGrade = null, admPreset = null;
+    const admGr = (u) => normGrade(u.grade || u.gradeLevel || u["الصف الدراسي"]);
+    const admYtReq = () => (admPreset && admPreset.kind && admPreset.kind !== "video") ? "" : "required";
+    function admGradeFilter(list) { if (!admGrade) return list; return list.some((u) => admGr(u)) ? list.filter((u) => admGr(u) === admGrade) : list; }
+    const lecInGrade = (l, g) => { const ids = gradeCourseIds(g); return (l.courses && l.courses.length) ? l.courses.some((c) => ids.includes(c)) : ids.some((id) => !STRICT_COURSES.includes(id)); };
+    const admCard = (tt, v) => '<div style="flex:1 1 120px;background:var(--card-bg,#f5f5f5);border:1px solid #ddd;border-radius:10px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700">' + v + '</div><small>' + escapeHtml(tt) + '</small></div>';
+    const lecIcons = (l) => (l.youtubeUrl ? "🎬 " : "") + (l.pdfLink ? "📄 " : "") + (l.homeworkLink ? "🔗 " : "") + (l.quiz && l.quiz.questions ? "📝 " : "");
+    const lecRows = (list) => list.map((l) => `
         <div class="adm-row">
-          <div><b>${escapeHtml(l.title)}</b><small>${escapeHtml(l.subject)} — ${fmtDateTime(timeOf(l))}${l.quiz && l.quiz.questions ? " — 📝 " + l.quiz.questions.length + " سؤال" : ""}</small></div>
+          <div><b>${escapeHtml(l.title)}</b><small>${lecIcons(l)}${escapeHtml(l.subject)} — ${fmtDateTime(timeOf(l))}${l.quiz && l.quiz.questions ? " — " + l.quiz.questions.length + " سؤال" : ""}</small></div>
           <div><button class="adm-btn adm-edit" onclick="renderAdminForm('${escapeHtml(l.id)}')">تعديل</button>
                <button class="adm-btn adm-del" onclick="adminDelete('${escapeHtml(l.id)}')">حذف</button></div>
-        </div>`).join("") || `<p style="text-align:center;color:#666;padding:16px">لا توجد محاضرات مضافة من لوحة التحكم بعد.</p>`;
+        </div>`).join("") || `<p style="text-align:center;color:#666;padding:12px">لا يوجد محتوى بعد.</p>`;
+
+    function renderAdminHome() {
+      admGrade = null;
+      const cards = GRADES.map((x) => {
+        const n = adminLectures.filter((l) => lecInGrade(l, x.id)).length;
+        return `<button class="btn-submit" style="background:linear-gradient(135deg,#1b5e20,#2e7d32);display:block;width:100%;text-align:right;padding:14px" onclick="openGradePanel('${x.id}')">🎓 ${escapeHtml(x.label)}<small style="display:block;opacity:.85;font-weight:normal">${n} محاضرة • اضغط لفتح لوحة الصف وإحصائيات طلابه</small></button>`;
+      }).join("");
       adminBody().innerHTML = `
-        <h3 class="modal-title">إدارة المحاضرات</h3>
-        <button class="btn-submit" onclick="renderAdminForm()">➕ إضافة محاضرة</button>
+        <h3 class="modal-title">⚙️ لوحة التحكم المركزية</h3>
+        ${cards}
+        <hr style="margin:14px 0;border:none;border-top:1px solid #ddd">
         <button class="btn-submit" style="background:#4a148c" onclick="renderAnnouncementsAdmin()">📣 التنبيهات العامة</button>
-        <button class="btn-submit" style="background:#00695c" onclick="renderStudentsAdmin()">👥 الطلاب والإحصائيات</button>
+        <button class="btn-submit" style="background:#00695c" onclick="admGrade=null;renderStudentsAdmin()">👥 كل الطلاب (كل الصفوف)</button>
         <button class="btn-submit" style="background:#b71c1c" onclick="renderBlockedAdmin()">🚨 الحظر والتنبيهات</button>
-        <div style="margin-top:14px">${rows}</div>
         <button class="btn-submit" style="background:#757575" onclick="closeAdminPanel()">إغلاق</button>`;
+    }
+    function openGradePanel(g) { admGrade = g; renderGradePanel(g); }
+
+    async function renderGradePanel(g) {
+      admGrade = g;
+      const label = gradeLabel(g), ids = gradeCourseIds(g);
+      adminBody().innerHTML = `<h3 class="modal-title">🎓 ${escapeHtml(label)}</h3><p style="text-align:center;padding:20px">جاري تحميل الإحصائيات...</p>`;
+      const ls = await mAdmin({ action: "adminStudents", course: "all", q: "", grade: g });
+      if (!ls) return;
+      let stats = "";
+      if (ls.type === "ok") {
+        const all = ls.data.students || [], hasGrade = all.some((u) => admGr(u)), list = admGradeFilter(all);
+        const subs = ids.map((id) => { const c = COURSES.find((x) => x.id === id); return admCard("مشتركو " + c.title, list.filter((u) => (u.courses || []).includes(id)).length); }).join("");
+        const none = list.filter((u) => !(u.courses || []).some((id) => ids.includes(id))).length;
+        const blocked = list.filter((u) => u.state && u.state !== "ok").length;
+        stats = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">' + admCard("إجمالي طلاب الصف", list.length) + subs + admCard("غير مشتركين", none) + admCard("محظور / مؤمَّن / محذوف", blocked) + '</div>'
+          + (hasGrade ? "" : '<small style="color:#c62828;display:block;margin-bottom:8px">⚠️ السكريبت الرئيسي لا يرجّع حقل «الصف» للطلاب، فالأرقام أعلاه تشمل كل الطلاب. أضف حقل grade في adminStudents (راجع التعليمات).</small>')
+          + (ls.data.capped ? '<small style="color:#c62828;display:block">الأرقام مبنية على أول 300 طالب فقط.</small>' : "");
+      } else stats = '<p style="color:#c62828;text-align:center">' + GENERIC_ERROR + '</p>';
+      const inG = adminLectures.filter((l) => lecInGrade(l, g) && !(l.courses || []).includes("final1"));
+      let f1 = "";
+      if (g === "1") {
+        const items = adminLectures.filter((l) => (l.courses || []).includes("final1")).sort((a, b) => timeOf(a) - timeOf(b));
+        f1 = `<fieldset class="adm-quiz" style="margin:12px 0"><legend>🎯 كورس المراجعة النهائية (مجاني)</legend>
+          <small style="display:block;color:#555;margin-bottom:8px">أضف وعدّل واحذف محتوى الكورس. الاشتراك فيه مجاني للطلاب بدون كود.</small>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+            <button type="button" class="adm-btn" style="background:#00838f" onclick="admNew('final1','video')">➕ محاضرة فيديو</button>
+            <button type="button" class="adm-btn" style="background:#6a1b9a" onclick="admNew('final1','pdf')">➕ ملف PDF</button>
+            <button type="button" class="adm-btn" style="background:#ef6c00" onclick="admNew('final1','hw')">➕ واجب إلكتروني</button>
+          </div>${lecRows(items)}</fieldset>`;
+      }
+      adminBody().innerHTML = `
+        <h3 class="modal-title">🎓 ${escapeHtml(label)}</h3>
+        ${stats}
+        <button class="btn-submit" style="background:#00695c" onclick="renderStudentsAdmin()">👥 طلاب ${escapeHtml(label)}</button>
+        ${f1}
+        <h4 style="margin:12px 0 6px">📚 محاضرات الصف</h4>
+        <button class="btn-submit" onclick="admNew('${ids.filter((i) => i !== "final1")[0] || ids[0]}','video')">➕ إضافة محاضرة</button>
+        ${lecRows(inG)}
+        <button class="btn-submit" style="background:#757575" onclick="renderAdminHome()">← اللوحة المركزية</button>`;
+    }
+    function admNew(course, kind) {
+      admPreset = { courses: [course], kind: kind };
+      renderAdminForm();
+      setTimeout(() => { const f = document.getElementById(kind === "pdf" ? "admPdf" : kind === "hw" ? "admHw" : "admYt"); if (f) f.focus(); }, 60);
     }
  
     function toLocalInput(t) {
@@ -4270,7 +4341,7 @@
       const l = adminLectures.find((x) => x.id === id) || {};
       const mk = (list) => list.map((x) => `<option value="${x}" ${l.subject === x ? "selected" : ""}>${x}</option>`).join("");
       const opts = `<optgroup label="الأقسام الرئيسية">${mk(["الفقه", "التوحيد", "التفسير", "الحديث"])}</optgroup><optgroup label="المراجعات (قسم فرعي)">${mk(["مراجعة توحيد", "مراجعة تفسير", "مراجعة حديث", "مراجعة فقه"])}</optgroup>`;
-      const sel = (l.courses && l.courses.length) ? l.courses : (id ? COURSES.map((c) => c.id) : [COURSES[0].id]);
+      const sel = (l.courses && l.courses.length) ? l.courses : (id ? COURSES.map((c) => c.id) : ((admPreset && admPreset.courses) || (admGrade ? [gradeCourseIds(admGrade)[0]] : [COURSES[0].id])));
       const courseBoxes = COURSES.map((c) => `<label><input type="checkbox" class="admCourse" value="${c.id}" ${sel.includes(c.id) ? "checked" : ""}>${escapeHtml(c.title)}</label>`).join("");
       adminBody().innerHTML = `
         <h3 class="modal-title">${id ? "تعديل محاضرة" : "إضافة محاضرة"}</h3>
@@ -4278,7 +4349,7 @@
           <div class="form-group"><label>اسم المحاضرة:</label><input id="admTitle" maxlength="150" required value="${escapeHtml(l.title || "")}"></div>
           <div class="form-group"><label>القسم / المادة:</label><select id="admSubject" required><option value="">اختر القسم</option>${opts}</select></div>
           <div class="form-group"><label>الكورس المستهدف (يمكن اختيار أكثر من كورس):</label><div class="chk-row">${courseBoxes}</div></div>
-          <div class="form-group"><label>رابط يوتيوب:</label><input id="admYt" type="url" required dir="ltr" value="${escapeHtml(l.youtubeUrl || "")}"></div>
+          <div class="form-group"><label>رابط يوتيوب:</label><input id="admYt" type="url" ${admYtReq()} dir="ltr" value="${escapeHtml(l.youtubeUrl || "")}"></div>
           <div class="form-group"><label>موعد نزول المحاضرة (اليوم والتاريخ والساعة):</label><input id="admAt" type="datetime-local" required value="${l.releaseAt ? toLocalInput(timeOf(l)) : ""}"></div>
           <div class="form-group"><label>رابط الواجب (اختياري):</label><input id="admHw" type="url" dir="ltr" value="${escapeHtml(l.homeworkLink || "")}"></div>
           <div class="form-group"><label>رابط ملف PDF (اختياري):</label><input id="admPdf" type="url" dir="ltr" placeholder="https://...pdf" value="${escapeHtml(l.pdfLink || "")}"></div>
@@ -4822,6 +4893,7 @@
       { tab: "reviewTab", courses: ["final"], title: "المراجعة النهائية", icon: "🎯", short: "المراجعة النهائية", subjects: ["مراجعة توحيد", "مراجعة تفسير", "مراجعة حديث", "مراجعة فقه"], banner: "", grad: "linear-gradient(135deg,#b71c1c,#e65100)", desc: "مراجعة التوحيد والتفسير والحديث والفقه الشافعي قبل الامتحان." },
       { tab: "forumTab", courses: ["term1"],   title: "المنتدى",       icon: "💬", short: "المنتدى",       subjects: [], forum: true, banner: "", grad: "linear-gradient(135deg,#880e4f,#d81b60)", desc: "اسأل أستاذك وزملاءك وشارك في النقاش." }
       ,{ tab: "quranQuizTab", courses: ["term1"], title: "اختبار حفظ آل عمران", icon: "🕌", short: "كويز آل عمران", subjects: [], quiz: true, banner: "", grad: "linear-gradient(135deg,#1b5e20,#c9a24b)", desc: "كويز من 10 أسئلة عشوائية من الآيات 92–200 (نهايات الآيات، الآيتان التاليتان، الكلمة المفقودة) بصوت الشيخ المنشاوي." }
+      ,{ tab: "reviewTab", courses: ["final1"], title: "كورس المراجعة النهائية", icon: "🎯", short: "المراجعة النهائية", subjects: ["مراجعة توحيد", "مراجعة تفسير", "مراجعة حديث", "مراجعة فقه"], banner: "", grad: "linear-gradient(135deg,#b71c1c,#e65100)", desc: "محاضرات فيديو وملفات PDF وواجبات إلكترونية للمراجعة النهائية." }
     ];
     let currentSubjectTab = null;
     function subjectLectures(card) {
@@ -5749,7 +5821,7 @@
   /* ============ القائمة الجانبية ============ */
   const SB_ITEMS = [
     ["courses", "📚", "كورساتك"], ["eval", "⭐", "تقييمك"], ["status", "🚦", "حالة الطالب"],
-    ["certs", "🏆", "شهاداتي"], ["schedule", "🗓️", "الجدول"], ["forum", "💬", "المنتدى"]
+    ["certs", "🏆", "شهاداتي"], ["schedule", "🗓️", "الجدول"], ["forum", "💬", "المنتدى"], ["chat", "✉️", "كلّم الشيخ / الدعم"]
   ];
   const isDesktop = () => window.matchMedia("(min-width: 900px)").matches;
   function buildSidebar() {
@@ -5787,6 +5859,7 @@
     if (k === "courses") goHome();
     else if (k === "schedule") goSchedule();
     else if (k === "forum") goForum();
+    else if (k === "chat") openChat();
     else openDash(k);
     closeMobile(); sbSync();
   }
@@ -6854,6 +6927,225 @@ function pvWarm() {
     const l = document.createElement("link"); l.rel = "preconnect"; l.href = h; l.crossOrigin = ""; document.head.appendChild(l);
   });
 }
+</script>
+
+<style>
+#chatPanel{position:fixed;z-index:1100;left:16px;bottom:16px;width:360px;max-width:calc(100vw - 24px);height:min(560px,calc(100vh - 32px));background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden;direction:rtl;color:#1d2b20}
+#chatPanel[hidden]{display:none}
+@media (max-width:600px){#chatPanel{left:0;right:0;bottom:0;width:100%;max-width:100%;height:100vh;height:100dvh;border-radius:0}}
+#chatPanel .ch-head{display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--primary-color,#1b5e20);color:#fff;font-weight:800}
+#chatPanel .ch-head b{flex:1}
+#chatPanel .ch-x{border:none;background:rgba(255,255,255,.18);color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:15px}
+#chatPanel .ch-tabs{display:flex;gap:6px;padding:8px;background:#e8f1e9}
+#chatPanel .ch-tab{flex:1;border:2px solid var(--primary-color,#1b5e20);background:#fff;color:var(--primary-color,#1b5e20);border-radius:12px;padding:7px 4px;font-weight:bold;font-size:12.5px;cursor:pointer;font-family:inherit;position:relative}
+#chatPanel .ch-tab.on{background:var(--primary-color,#1b5e20);color:#fff}
+#chatPanel .ch-tab i{position:absolute;top:-5px;left:-5px;min-width:16px;height:16px;border-radius:8px;background:#e53935;color:#fff;font-size:10px;font-style:normal;line-height:16px;text-align:center;padding:0 4px}
+#chatPanel .ch-msgs{flex:1;overflow-y:auto;padding:12px;background:#f4f7f4;display:flex;flex-direction:column;gap:8px}
+#chatPanel .ch-empty{margin:auto;text-align:center;color:#6b7a6e;font-size:13.5px;line-height:1.8;padding:0 12px}
+#chatPanel .ch-b{max-width:82%;padding:8px 12px;border-radius:14px;font-size:14.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+#chatPanel .ch-b.me{align-self:flex-start;background:var(--primary-color,#1b5e20);color:#fff;border-bottom-right-radius:4px}
+#chatPanel .ch-b.st{align-self:flex-end;background:#fff;border:1px solid #d6e3d8;border-bottom-left-radius:4px}
+#chatPanel .ch-b small{display:block;opacity:.7;font-size:11px;margin-top:3px}
+#chatPanel .ch-b .ch-who{font-weight:800;color:#1b5e20;font-size:12px;margin-bottom:2px}
+#chatPanel .ch-b .ch-retry{background:none;border:none;color:#ffd54f;text-decoration:underline;cursor:pointer;font-family:inherit;font-size:12px;padding:0}
+#chatPanel .ch-foot{display:flex;gap:8px;padding:10px;border-top:1px solid #dfe8e0;background:#fff;align-items:flex-end}
+#chatPanel textarea{flex:1;resize:none;border:1px solid #cfdcd2;border-radius:12px;padding:9px 12px;font-family:inherit;font-size:15px;max-height:110px;outline:none}
+#chatPanel .ch-send{border:none;background:#f9a825;color:#222;font-weight:800;border-radius:12px;padding:0 16px;height:42px;cursor:pointer;font-family:inherit}
+#chatPanel .ch-send:disabled{opacity:.5}
+#chatPanel .ch-auth{padding:14px;background:#fff;border-top:1px solid #dfe8e0;font-size:13.5px;line-height:1.7}
+#chatPanel .ch-auth input{width:100%;margin:8px 0;padding:10px 12px;border:1px solid #cfdcd2;border-radius:10px;font-size:15px;font-family:inherit}
+#chatPanel .ch-auth .ch-err{color:#c62828;font-size:12.5px;min-height:18px}
+.sb-item .chat-badge{margin-inline-start:auto;min-width:18px;height:18px;border-radius:9px;background:#e53935;color:#fff;font-size:11px;line-height:18px;text-align:center;padding:0 5px;font-weight:bold}
+body.chat-open .support-widget{display:none}
+body.sb-collapsed .sb-item .chat-badge{position:absolute;top:4px;left:8px;margin:0}
+</style>
+<script>
+// ===== شات الطالب مع الشيخ / الدعم الفني / الدعم العلمي (يوصل تيليجرام والرد يرجع هنا) =====
+const CHAT_SCRIPT_URL = ""; // ← ضع هنا رابط Chat.gs (ينتهي بـ /exec)
+const CHAT_DEPTS = [["sheikh", "استفسار علمي (الشيخ)"], ["tech", "مشكلة تقنية (الدعم الفني)"]];
+const chatDeptName = (d) => (CHAT_DEPTS.find((x) => x[0] === d) || [0, "الدعم"])[1];
+let chatOpen = false, chatDept = "sheikh", chatMsgs = [], chatAfter = 0, chatPolling = false, chatLoopOn = false, chatSeen = {}, chatAuthErr = "", chatAuthBusy = false;
+const chatPh = () => normalizePhone((currentStudent && currentStudent.phone) || "");
+const chatTokKey = () => "shafeei_chat_tok_" + chatPh();
+const chatSeenKey = () => "shafeei_chat_seen_" + chatPh();
+function chatTok() { try { return localStorage.getItem(chatTokKey()) || ""; } catch (_) { return ""; } }
+function chatSetTok(t) { try { t ? localStorage.setItem(chatTokKey(), t) : localStorage.removeItem(chatTokKey()); } catch (_) {} }
+function chatLoadSeen() { try { chatSeen = JSON.parse(localStorage.getItem(chatSeenKey()) || "{}") || {}; } catch (_) { chatSeen = {}; } }
+function chatSaveSeen() { try { localStorage.setItem(chatSeenKey(), JSON.stringify(chatSeen)); } catch (_) {} }
+const chatUnread = (d) => chatMsgs.filter((m) => m.dir === "out" && (!d || m.dept === d) && m.t > (chatSeen[m.dept] || 0)).length;
+
+function chatEl(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+function buildChat() {
+  if (document.getElementById("chatPanel")) return;
+  const p = chatEl("div"); p.id = "chatPanel"; p.hidden = true; p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "التواصل مع الشيخ والدعم");
+  const head = chatEl("div", "ch-head"); head.appendChild(chatEl("b", "", "✉️ تواصل معنا"));
+  const x = chatEl("button", "ch-x", "✕"); x.type = "button"; x.setAttribute("aria-label", "إغلاق"); x.onclick = closeChat; head.appendChild(x);
+  const tabs = chatEl("div", "ch-tabs"); tabs.id = "chTabs";
+  const msgs = chatEl("div", "ch-msgs"); msgs.id = "chMsgs";
+  const foot = chatEl("div", "ch-foot"); foot.id = "chFoot";
+  const ta = chatEl("textarea"); ta.id = "chInput"; ta.rows = 1; ta.maxLength = 1000; ta.placeholder = "اكتب رسالتك…";
+  ta.addEventListener("input", () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 110) + "px"; });
+  ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && window.matchMedia("(pointer:fine)").matches) { e.preventDefault(); chatSend(); } });
+  const sb = chatEl("button", "ch-send", "إرسال"); sb.type = "button"; sb.onclick = () => chatSend();
+  foot.appendChild(ta); foot.appendChild(sb);
+  const auth = chatEl("div", "ch-auth"); auth.id = "chAuth"; auth.style.display = "none";
+  p.appendChild(head); p.appendChild(tabs); p.appendChild(msgs); p.appendChild(foot); p.appendChild(auth);
+  document.body.appendChild(p);
+}
+function openChat() {
+  if (!currentStudent) { openAuth(openChat); return; }
+  if (typeof chatAllowed === "function" && !chatAllowed()) { try { showNotifToast("🔒 الشات متاح للطلاب المشتركين فقط", "system"); } catch (_) {} return; }
+  buildChat(); chatLoadSeen();
+  document.getElementById("chatPanel").hidden = false; chatOpen = true; document.body.classList.add("chat-open");
+  renderChat();
+  if (CHAT_SCRIPT_URL) { if (chatTok()) chatPollNow(); else if (sessionCreds && sessionCreds.password) chatDoAuth(sessionCreds.password); }
+  startChatLoop();
+  setTimeout(() => { const i = document.getElementById("chInput"); if (i && window.matchMedia("(pointer:fine)").matches) i.focus(); }, 80);
+}
+function closeChat() { chatOpen = false; document.body.classList.remove("chat-open"); const p = document.getElementById("chatPanel"); if (p) p.hidden = true; }
+
+function renderChat() {
+  const p = document.getElementById("chatPanel"); if (!p) return;
+  // التابات
+  const tabs = document.getElementById("chTabs"); tabs.textContent = "";
+  CHAT_DEPTS.forEach((d) => {
+    const b = chatEl("button", "ch-tab" + (d[0] === chatDept ? " on" : ""), d[1]); b.type = "button";
+    const u = chatUnread(d[0]); if (u && d[0] !== chatDept) b.appendChild(chatEl("i", "", String(u)));
+    b.onclick = () => { chatDept = d[0]; renderChat(); }; tabs.appendChild(b);
+  });
+  // الرسائل
+  const box = document.getElementById("chMsgs"), nearEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+  box.textContent = "";
+  const list = chatMsgs.filter((m) => m.dept === chatDept).sort((a, b) => a.t - b.t);
+  if (!CHAT_SCRIPT_URL) box.appendChild(chatEl("div", "ch-empty", "الشات هيتفعّل قريباً إن شاء الله 🌿"));
+  else if (!list.length) box.appendChild(chatEl("div", "ch-empty", "اكتب رسالتك وهتوصل لـ" + chatDeptName(chatDept) + " على طول، وردّه هيظهر لك هنا في المحادثة 💬"));
+  list.forEach((m) => {
+    const b = chatEl("div", "ch-b " + (m.dir === "out" ? "st" : "me"));
+    if (m.dir === "out") b.appendChild(chatEl("div", "ch-who", m.staff || chatDeptName(m.dept)));
+    b.appendChild(chatEl("span", "", m.text));
+    const meta = chatEl("small", "", new Date(m.t).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }) + (m.pending ? " • ⏳ جاري الإرسال" : m.dir === "in" && !m.failed ? " • ✓" : ""));
+    b.appendChild(meta);
+    if (m.failed) { const r = chatEl("button", "ch-retry", "⚠ " + (m.err || "لم تُرسل") + " — إعادة المحاولة"); r.type = "button"; r.onclick = () => chatRetry(m.id); b.appendChild(chatEl("br")); b.appendChild(r); }
+    box.appendChild(b);
+  });
+  if (nearEnd || list.some((m) => m.pending)) box.scrollTop = box.scrollHeight;
+  // وضع الإدخال أو التفعيل
+  const needAuth = CHAT_SCRIPT_URL && !chatTok(), auth = document.getElementById("chAuth"), foot = document.getElementById("chFoot");
+  foot.style.display = (!CHAT_SCRIPT_URL || needAuth) ? "none" : "flex";
+  auth.style.display = needAuth ? "block" : "none";
+  if (needAuth && !auth.firstChild) {
+    auth.appendChild(chatEl("div", "", "عشان نفعّل الشات على جهازك، اكتب كلمة السر بتاعتك (مرة واحدة بس):"));
+    const pw = chatEl("input"); pw.type = "password"; pw.id = "chPw"; pw.placeholder = "كلمة السر"; pw.autocomplete = "current-password";
+    pw.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); chatDoAuth(pw.value); } });
+    const er = chatEl("div", "ch-err"); er.id = "chErr";
+    const go = chatEl("button", "ch-send", "تفعيل الشات"); go.type = "button"; go.id = "chGo"; go.style.width = "100%"; go.onclick = () => chatDoAuth(pw.value);
+    auth.appendChild(pw); auth.appendChild(er); auth.appendChild(go);
+  }
+  if (!needAuth) auth.textContent = "";
+  const er2 = document.getElementById("chErr"); if (er2) er2.textContent = chatAuthErr;
+  const go2 = document.getElementById("chGo"); if (go2) { go2.disabled = chatAuthBusy; go2.textContent = chatAuthBusy ? "جاري التفعيل…" : "تفعيل الشات"; }
+  // اعتبر رسائل التاب الحالي مقروءة لو الشات مفتوح
+  if (chatOpen && chatUnread(chatDept)) { chatSeen[chatDept] = Date.now() + 1; chatSaveSeen(); }
+  chatBadge();
+}
+function chatBadge() {
+  const n = chatUnread();
+  document.querySelectorAll('#sideNav .sb-item[data-k="chat"]').forEach((b) => {
+    let e = b.querySelector(".chat-badge");
+    if (n) { if (!e) { e = chatEl("span", "chat-badge"); b.appendChild(e); } e.textContent = String(n); } else if (e) e.remove();
+  });
+}
+
+async function chatDoAuth(pw) {
+  pw = String(pw || "").trim();
+  if (!pw) { chatAuthErr = "اكتب كلمة السر"; renderChat(); return; }
+  if (chatAuthBusy) return;
+  chatAuthBusy = true; chatAuthErr = ""; renderChat();
+  const r = await callScript(CHAT_SCRIPT_URL, { action: "chatAuth", studentPhone: currentStudent.phone, studentPassword: pw, deviceId: getDeviceId() });
+  chatAuthBusy = false;
+  if (r.type === "ok" && r.data.token) { chatSetTok(r.data.token); chatAuthErr = ""; chatAfter = 0; renderChat(); chatPollNow(); }
+  else { chatAuthErr = r.type === "fail" ? (r.message || "تعذر التفعيل") : "مفيش اتصال، جرّب تاني"; renderChat(); }
+}
+async function chatSend(retryCid) {
+  const ta = document.getElementById("chInput"); if (!ta || !CHAT_SCRIPT_URL || !chatTok()) return;
+  let m;
+  if (retryCid) { m = chatMsgs.find((x) => x.id === retryCid); if (!m) return; m.failed = false; m.pending = true; }
+  else {
+    const text = ta.value.trim(); if (!text) return;
+    const cid = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    m = { id: cid, cid: cid, t: Date.now(), dept: chatDept, dir: "in", text: text, pending: true };
+    chatMsgs.push(m); ta.value = ""; ta.style.height = "auto";
+  }
+  renderChat();
+  const r = await callScript(CHAT_SCRIPT_URL, { action: "chatSend", studentPhone: currentStudent.phone, token: chatTok(), dept: m.dept, text: m.text, cid: m.cid });
+  m.pending = false;
+  if (r.type === "ok") { if (r.data.id) m.id = r.data.id; if (r.data.t) m.t = r.data.t; m.failed = false; }
+  else {
+    m.failed = true;
+    if (r.type === "fail" && r.data && r.data.code === "NOAUTH") { chatSetTok(""); m.err = "فعّل الشات الأول"; }
+    else m.err = r.type === "fail" ? (r.message || "لم تُرسل") : "مفيش اتصال";
+  }
+  renderChat();
+}
+const chatRetry = (id) => chatSend(id);
+
+async function chatPollNow() {
+  if (chatPolling || !CHAT_SCRIPT_URL || !currentStudent || !chatTok()) return;
+  chatPolling = true;
+  const r = await callScript(CHAT_SCRIPT_URL, { action: "chatPoll", studentPhone: currentStudent.phone, token: chatTok(), after: chatAfter });
+  chatPolling = false;
+  if (r.type === "ok") {
+    const had = chatUnread(), incoming = r.data.messages || [];
+    incoming.forEach((s) => {
+      if (s.t > chatAfter) chatAfter = s.t;
+      if (chatMsgs.some((x) => x.id === s.id)) return;
+      if (s.dir === "in") { const loc = chatMsgs.find((x) => x.dir === "in" && x.dept === s.dept && x.text === s.text && (x.pending || String(x.id).charAt(0) === "c")); if (loc) { loc.id = s.id; loc.t = s.t; loc.pending = false; return; } }
+      chatMsgs.push({ id: s.id, t: s.t, dept: s.dept, dir: s.dir, text: s.text, staff: s.staff });
+    });
+    if (!chatOpen && chatUnread() > had) { try { showNotifToast("💬 وصلك ردّ جديد في المحادثة", "system"); } catch (_) {} }
+    if (incoming.length || chatOpen) renderChat(); else chatBadge();
+  } else if (r.type === "fail" && r.data && r.data.code === "NOAUTH") { chatSetTok(""); if (chatOpen) renderChat(); }
+}
+function startChatLoop() {
+  if (chatLoopOn) return; chatLoopOn = true;
+  (function tick() { setTimeout(async () => { if (!document.hidden) { try { await chatPollNow(); } catch (_) {} } tick(); }, chatOpen ? 5000 : 45000); })();
+}
+setInterval(() => { if (!chatLoopOn && CHAT_SCRIPT_URL && currentStudent && chatTok()) { chatLoadSeen(); startChatLoop(); chatPollNow(); } }, 4000);
+</script>
+
+<style id="chatFabCss">
+#chatFab{position:fixed;z-index:1090;left:25px;bottom:100px;width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;background:var(--primary-color,#1b5e20);color:#fff;font-size:26px;box-shadow:0 6px 18px rgba(0,0,0,.35);display:none;align-items:center;justify-content:center}
+#chatFab.show{display:flex}
+#chatFab i{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:#e53935;color:#fff;font-size:11px;font-style:normal;line-height:20px;text-align:center;padding:0 5px;font-weight:bold}
+body.chat-open #chatFab{display:none}
+</style>
+<script id="chatFabJs">
+// الشات متاح فقط لمن سجّل دخوله وهو مشترك في كورس واحد على الأقل (غيّر القيمة لـ false لو عايزه لكل من سجّل دخول)
+const CHAT_REQUIRE_SUB = true;
+function chatAllowed() {
+  if (!currentStudent) return false;
+  if (!CHAT_REQUIRE_SUB || currentStudent.isAdmin) return true;
+  return COURSES.some((c) => { try { return !!c.isActive(currentStudent); } catch (_) { return false; } });
+}
+(function () {
+  const b = document.createElement("button"); b.id = "chatFab"; b.type = "button"; b.textContent = "💬";
+  b.setAttribute("aria-label", "تواصل مع الشيخ أو الدعم الفني"); b.title = "تواصل مع الشيخ / الدعم";
+  b.onclick = () => { chatOpen ? closeChat() : openChat(); };
+  document.body.appendChild(b);
+  const _badge = chatBadge;
+  chatBadge = function () {
+    _badge();
+    const n = chatUnread(); let e = b.querySelector("i");
+    if (n) { if (!e) { e = document.createElement("i"); b.appendChild(e); } e.textContent = String(n); } else if (e) e.remove();
+  };
+  function sync() {
+    const ok = chatAllowed();
+    b.classList.toggle("show", ok);
+    document.querySelectorAll('#sideNav .sb-item[data-k="chat"]').forEach((x) => { x.style.display = ok ? "" : "none"; });
+    if (!ok && chatOpen) closeChat();
+  }
+  setInterval(sync, 1200); sync();
+})();
 </script>
 </body>
 </html>
