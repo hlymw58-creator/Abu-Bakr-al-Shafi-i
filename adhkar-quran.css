@@ -1,5 +1,5 @@
 /* ===== قسم الأذكار والقرآن الكريم — كل التنسيقات محصورة داخل #aq-root ===== */
-#aq-root{--g:var(--primary-color,#1b5e20);--gold:#c9a24b;--bg:var(--card-bg,#fff);--tx:var(--text-color,#222);--bd:var(--border-color,#e0e0e0);--soft:rgba(27,94,32,.07);
+#aq-root{--g:var(--primary-color,#1b5e20);--gold:#c9a24b;--bg:#fffdf7;--tx:#1f2a24;--bd:#d9d2bd;--soft:#e8efe6;
   max-width:760px;margin:0 auto;color:var(--tx);line-height:1.8;position:relative}
 #aq-root *{box-sizing:border-box}
 #aq-root button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
@@ -54,3 +54,23 @@
 .aq-stage.night canvas{filter:invert(1) hue-rotate(180deg)}
 .aq-msg{color:#fff;padding:60px 12px}.aq-msg button{margin-top:10px;padding:8px 18px;border-radius:10px;background:var(--gold);color:#222}
 @media(prefers-reduced-motion:reduce){#aq-root *{transition:none!important}}
+
+/* خلفيات صلبة وواضحة فوق أي خلفية للموقع */
+[data-theme="dark"] #aq-root{--bg:#1b2a21;--tx:#eef2ea;--bd:#3a5243;--soft:#243a2d}
+.aq-cat,.aq-item,.aq-search,.aq-bar button,.aq-chips button,.aq-qbar button,.aq-qbar input{background:var(--bg);color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.aq-tabs{background:var(--soft);box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.aq-tabs button:not(.on){color:var(--tx)}
+.aq-cat{border:1.5px solid var(--bd);border-right:5px solid var(--gold);animation:aqIn .45s both;animation-delay:calc(var(--n,0)*28ms);position:relative;overflow:hidden}
+.aq-cat:hover{background:var(--soft);box-shadow:0 8px 20px rgba(0,0,0,.25);transform:translateY(-3px)}
+.aq-cat:active{transform:scale(.95);box-shadow:0 0 0 4px rgba(201,162,75,.45)}
+.aq-cat .ic{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--soft);transition:transform .25s}
+.aq-cat:hover .ic{transform:rotate(-8deg) scale(1.12)}
+.aq-cat.ok{border-right-color:var(--g);background:linear-gradient(90deg,var(--soft),var(--bg))}
+.aq-bar button,.aq-chips button,.aq-qbar button{transition:transform .12s,box-shadow .2s,background .2s}
+.aq-bar button:hover,.aq-chips button:hover,.aq-qbar button:hover{transform:translateY(-2px)}
+.aq-bar button:active,.aq-chips button:active,.aq-qbar button:active,.aq-tabs button:active{transform:scale(.93)}
+.aq-chips button.on{background:var(--g);color:#fff}
+.aq-ring:hover{box-shadow:0 0 0 6px rgba(201,162,75,.25)}
+@keyframes aqIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes aqPulse{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+.aq-ring.pulse b{animation:aqPulse .25s}

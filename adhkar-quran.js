@@ -47,9 +47,10 @@ function toast(t) { var el = $('#aq-toast'); if (!el) return; el.textContent = t
 function drawGrid() {
   var q = S.q.trim(), g = $('#aq-grid'); if (!g) return;
   var list = D.categories.filter(function (c) { return !q || c.title.indexOf(q) > -1 || c.sections.some(function (s) { return (s.title || '').indexOf(q) > -1 || (s.items || []).some(function (it) { return (it.text || '').indexOf(q) > -1; }); }); });
+  var idx = 0;
   g.innerHTML = list.length ? list.map(function (c) {
     var st = stats(c), meta = !st.ready ? 'قريباً' : st.done === st.ready ? 'أتممته اليوم ✓' : st.done + ' من ' + st.ready + ' اليوم';
-    return '<button class="aq-cat ' + (!st.ready ? 'soon' : st.done === st.ready ? 'ok' : '') + '" data-a="cat" data-id="' + esc(c.id) + '"><span class="ic">' + (c.icon || '📿') + '</span><span><b>' + esc(c.title) + '</b><small>' + meta + '</small></span></button>';
+    return '<button style="--n:' + idx++ + '" class="aq-cat ' + (!st.ready ? 'soon' : st.done === st.ready ? 'ok' : '') + '" data-a="cat" data-id="' + esc(c.id) + '"><span class="ic">' + (c.icon || '📿') + '</span><span><b>' + esc(c.title) + '</b><small>' + meta + '</small></span></button>';
   }).join('') : '<div class="aq-empty">لا توجد نتائج مطابقة.</div>';
 }
 function viewList() {
@@ -88,6 +89,7 @@ function tap(i) {
   r--; P.c[k] = r; save(); try { navigator.vibrate && navigator.vibrate(12); } catch (e) {}
   var el = document.querySelector('#aq-items .aq-item[data-i="' + i + '"]'), n = it.count || 1;
   el.querySelector('.aq-ring b').textContent = r;
+  var rg = el.querySelector('.aq-ring'); rg.classList.remove('pulse'); void rg.offsetWidth; rg.classList.add('pulse');
   el.querySelector('.aq-ring circle+circle').style.strokeDashoffset = (289 * (1 - (n - r) / n)).toFixed(1);
   upProg();
   if (r > 0) return;
