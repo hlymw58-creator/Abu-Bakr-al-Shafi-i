@@ -122,7 +122,11 @@ function qLoad() {
   if (Q.doc) { qDraw(); return; }
   var u = window.QURAN_PDF_URL || '', m = /drive\.google\.com\/file\/d\/([^\/?#]+)/.exec(u);
   if (m) {
-    if (!window.QURAN_DRIVE_API_KEY) { qmsg('رابط Google Drive يحتاج مفتاح API: ضعه في <code>QURAN_DRIVE_API_KEY</code> داخل adhkar-data.js'); return; }
+    if (!window.QURAN_DRIVE_API_KEY) {
+      document.querySelectorAll('#aq-quran .aq-qbar').forEach(function (b) { b.hidden = true; });
+      $('#aq-stage').innerHTML = '<iframe src="https://drive.google.com/file/d/' + m[1] + '/preview" title="المصحف الشريف" allow="autoplay" style="width:100%;height:78vh;border:0;border-radius:10px;background:#fff"></iframe>';
+      return;
+    }
     u = 'https://www.googleapis.com/drive/v3/files/' + m[1] + '?alt=media&key=' + window.QURAN_DRIVE_API_KEY;
   }
   if (!window.QURAN_PDF_URL || /USERNAME/.test(window.QURAN_PDF_URL)) { qmsg('ضع رابط ملف المصحف في <code>QURAN_PDF_URL</code> داخل adhkar-data.js'); return; }

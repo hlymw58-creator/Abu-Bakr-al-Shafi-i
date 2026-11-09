@@ -85,3 +85,19 @@
 .aq-cat.ok{background:var(--c,#2e7d32)}
 .aq-cat.ok::after{content:"✓";position:absolute;left:14px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:#fff;color:#1b5e20;display:grid;place-items:center;font-weight:800}
 .aq-cat.soon{opacity:.6;filter:saturate(.5)}
+
+/* ===== نهائي: كل الأزرار خلفية بيضاء صلبة (!important ليتغلب على أي تنسيق في الموقع) ===== */
+#aq-root .aq-cat,#aq-root .aq-bar button,#aq-root .aq-chips button,#aq-root .aq-qbar button,#aq-root .aq-qbar input,#aq-root .aq-search,#aq-root .aq-tabs button:not(.on),#aq-root .aq-item{background:#fff !important;color:#1f2a24 !important;border:2px solid #c9d3c7 !important;box-shadow:0 4px 12px rgba(0,0,0,.28) !important;opacity:1 !important;filter:none !important}
+#aq-root .aq-tabs{background:#fff !important;border:2px solid #c9d3c7;box-shadow:0 4px 12px rgba(0,0,0,.28)}
+#aq-root .aq-tabs button.on,#aq-root .aq-chips button.on{background:#1b5e20 !important;color:#fff !important;border-color:#1b5e20 !important}
+#aq-root .aq-grid{grid-template-columns:1fr !important}
+#aq-root .aq-cat{width:100%;border-right:8px solid var(--c,#2e7d32) !important;border-radius:16px;padding:14px 16px}
+#aq-root .aq-cat b{color:#1f2a24 !important;font-size:17px}
+#aq-root .aq-cat small{color:#566 !important}
+#aq-root .aq-cat .ic{background:#f1f5ef !important;border:2px solid var(--c,#2e7d32)}
+#aq-root .aq-cat:hover{background:#f6faf4 !important;transform:translateY(-3px)}
+#aq-root .aq-cat.soon{opacity:.75 !important}
+#aq-root .aq-cat.ok::after{background:#2e7d32;color:#fff}
+#aq-root .aq-item.open{border-color:#c9a24b !important}
+#aq-root .aq-text,#aq-root .aq-src{color:#1f2a24}
+#aq-root .aq-qbar span{color:#fff;text-shadow:0 1px 3px #000}
