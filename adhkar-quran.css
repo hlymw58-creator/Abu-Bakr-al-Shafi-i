@@ -2,7 +2,7 @@
 #aq-root{--g:var(--primary-color,#1b5e20);--gold:#c9a24b;--bg:#fffdf7;--tx:#1f2a24;--bd:#d9d2bd;--soft:#e8efe6;
   max-width:760px;margin:0 auto;color:var(--tx);line-height:1.8;position:relative}
 #aq-root *{box-sizing:border-box}
-#aq-root button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+:where(#aq-root button){font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 #aq-root button:focus-visible,#aq-root input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .aq-tabs{display:flex;gap:6px;background:var(--soft);padding:5px;border-radius:14px;margin-bottom:14px}
 .aq-tabs button{flex:1;padding:10px;border-radius:10px;font-weight:700;transition:.2s}
@@ -74,3 +74,14 @@
 @keyframes aqIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes aqPulse{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
 .aq-ring.pulse b{animation:aqPulse .25s}
+
+/* الأزرار: عمود واحد، كل زر بلونه وخلفيته الصلبة */
+.aq-grid{grid-template-columns:1fr;gap:10px}
+.aq-cat{width:100%;background:var(--c,#2e7d32);color:#fff;border:0;border-radius:16px;padding:14px 16px;box-shadow:0 4px 12px rgba(0,0,0,.28)}
+.aq-cat b{font-size:17px;color:#fff}
+.aq-cat small{color:rgba(255,255,255,.88)}
+.aq-cat .ic{background:rgba(255,255,255,.22);width:48px;height:48px;font-size:26px}
+.aq-cat:hover{background:var(--c,#2e7d32);filter:brightness(1.1);box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.aq-cat.ok{background:var(--c,#2e7d32)}
+.aq-cat.ok::after{content:"✓";position:absolute;left:14px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:#fff;color:#1b5e20;display:grid;place-items:center;font-weight:800}
+.aq-cat.soon{opacity:.6;filter:saturate(.5)}

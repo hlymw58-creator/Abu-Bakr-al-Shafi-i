@@ -8,6 +8,11 @@ var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
 var WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 var $ = function (s) { return document.querySelector(s); };
 var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+var COL = {}; (function (m) { Object.keys(m).forEach(function (k) { m[k].split(' ').forEach(function (id) { COL[id] = k; }); }); })({
+  '#4f46a5': 'sleep waking night dream witr', '#d98a00': 'morning-evening', '#00897b': 'clothes', '#1e88e5': 'khala wudu',
+  '#2e7d32': 'home mosque adhan prayer istikhara', '#8e3a59': 'distress debt hard sin shaytan waswasa unpleasant anger afflicted',
+  '#546e7a': 'dead sick condolence', '#d81b60': 'newborn marriage reply sneeze majlis', '#0288d1': 'nature travel',
+  '#ef6c00': 'food', '#8d6e00': 'hajj', '#c62828': 'enemy dajjal', '#00796b': 'misc' });
 var L = {};
 function lib(u) { return L[u] || (L[u] = new Promise(function (ok, no) { var s = document.createElement('script'); s.src = u; s.onload = ok; s.onerror = function () { delete L[u]; no(new Error(u)); }; document.head.appendChild(s); })); }
 
@@ -50,7 +55,7 @@ function drawGrid() {
   var idx = 0;
   g.innerHTML = list.length ? list.map(function (c) {
     var st = stats(c), meta = !st.ready ? 'قريباً' : st.done === st.ready ? 'أتممته اليوم ✓' : st.done + ' من ' + st.ready + ' اليوم';
-    return '<button style="--n:' + idx++ + '" class="aq-cat ' + (!st.ready ? 'soon' : st.done === st.ready ? 'ok' : '') + '" data-a="cat" data-id="' + esc(c.id) + '"><span class="ic">' + (c.icon || '📿') + '</span><span><b>' + esc(c.title) + '</b><small>' + meta + '</small></span></button>';
+    return '<button style="--n:' + idx++ + ';--c:' + (COL[c.id] || '#2e7d32') + '" class="aq-cat ' + (!st.ready ? 'soon' : st.done === st.ready ? 'ok' : '') + '" data-a="cat" data-id="' + esc(c.id) + '"><span class="ic">' + (c.icon || '📿') + '</span><span><b>' + esc(c.title) + '</b><small>' + meta + '</small></span></button>';
   }).join('') : '<div class="aq-empty">لا توجد نتائج مطابقة.</div>';
 }
 function viewList() {
