@@ -4,8 +4,6 @@
 var D = window.ADHKAR_DATA || { categories: [] };
 var COURSES_WITH_SECTION = ['term1', 'final', 'final1'];
 var CF = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
-var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-var WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 var $ = function (s) { return document.querySelector(s); };
 var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
 var COL = {}; (function (m) { Object.keys(m).forEach(function (k) { m[k].split(' ').forEach(function (id) { COL[id] = k; }); }); })({
@@ -109,53 +107,79 @@ function tap(i) {
   }, 380);
 }
 
-/* ---------- قارئ المصحف (PDF.js) ---------- */
-var Q = { doc: null, n: 1, total: 0, zoom: 1, tok: 0, busy: false };
-var QK = 'aq_quran_page_v1';
-function qmsg(h) { $('#aq-stage').innerHTML = '<div class="aq-msg">' + h + '</div>'; }
+/* ---------- قارئ المصحف (alquran.cloud — نص عثماني، بدون مفتاح وبدون ملفات) ---------- */
+var QURL = 'https://api.alquran.cloud/v1/quran/quran-uthmani';
+var QCACHE = 'aq_quran_uthmani_v1', QMARK = 'aq_quran_mark_v1', QSET = 'aq_quran_set_v1';
+var Q = { data: null, s: 0, fs: 1, night: false, q: '', p: null };
+var AR = '٠١٢٣٤٥٦٧٨٩';
+function num(n) { return String(n).replace(/\d/g, function (d) { return AR[d]; }); }
+function norm(s) { return String(s || '').replace(/[\u0640\u064B-\u065F\u0670\u06D6-\u06ED]/g, '').replace(/[ٱأإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي'); }
+function sname(s) { var p = String(s.name).split(' '); return p.length > 1 ? p.slice(1).join(' ') : s.name; }
+try { var _qs = JSON.parse(localStorage.getItem(QSET)); if (_qs) { Q.fs = _qs.fs || 1; Q.night = !!_qs.night; } } catch (e) {}
+function qSaveSet() { try { localStorage.setItem(QSET, JSON.stringify({ fs: Q.fs, night: Q.night })); } catch (e) {} }
+function qMark() { try { return JSON.parse(localStorage.getItem(QMARK)); } catch (e) { return null; } }
+
+/* جلب القرآن كاملاً مرة واحدة ثم حفظه في المتصفح (يعمل بعدها بدون إنترنت) */
+function qParse(j) {
+  var sr = j && j.data && j.data.surahs;
+  if (!sr || sr.length !== 114) throw new Error('bad data');
+  return sr.map(function (s) { return { n: s.number, name: s.name, en: s.englishName, t: s.revelationType, a: s.ayahs.map(function (a) { return a.text; }) }; });
+}
+function qFetch() {
+  if (Q.data) return Promise.resolve(Q.data);
+  try { var c = JSON.parse(localStorage.getItem(QCACHE)); if (c && c.length === 114 && c[0].a && c[0].a.length) { Q.data = c; return Promise.resolve(c); } } catch (e) {}
+  if (Q.p) return Q.p;
+  var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 45000);
+  Q.p = fetch(QURL, ctl ? { signal: ctl.signal } : {}).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(function (j) {
+    clearTimeout(tm); Q.data = qParse(j);
+    try { localStorage.setItem(QCACHE, JSON.stringify(Q.data)); } catch (e) {}
+    return Q.data;
+  }).catch(function (e) { clearTimeout(tm); Q.p = null; throw e; });
+  return Q.p;
+}
+
+function qmsg(h) { $('#aq-qbody').innerHTML = '<div class="aq-qmsg">' + h + '</div>'; }
 function viewQuran() {
-  $('#aq-quran').innerHTML = '<div class="aq-qbar"><button data-a="next" id="aq-nx" aria-label="الصفحة التالية">◀ التالي</button><span>صفحة <input type="number" id="aq-pn" min="1" value="1" aria-label="رقم الصفحة"> <span id="aq-pt"></span></span><button data-a="prev" id="aq-pv" aria-label="الصفحة السابقة">السابق ▶</button></div>' +
-    '<div class="aq-qbar"><button data-a="zout" aria-label="تصغير">➖</button><button data-a="fit">ملء العرض</button><button data-a="zin" aria-label="تكبير">➕</button><button data-a="night">🌙 ليلي</button></div><div class="aq-stage" id="aq-stage"></div>';
-  qmsg('جارٍ تحميل المصحف…'); qLoad();
+  $('#aq-quran').innerHTML = '<div id="aq-qbody"></div>';
+  $('#aq-quran').style.setProperty('--fs', Q.fs);
+  qmsg('جارٍ تحميل المصحف…');
+  qFetch().then(function () { if (Q.s) qSurah(Q.s); else qList(); })
+    .catch(function () { qmsg('تعذّر تحميل المصحف. تأكد من اتصالك بالإنترنت ثم أعد المحاولة.<br><button data-a="retry">إعادة المحاولة</button>'); });
 }
-function qLoad() {
-  if (Q.doc) { qDraw(); return; }
-  var u = window.QURAN_PDF_URL || '', m = /drive\.google\.com\/file\/d\/([^\/?#]+)/.exec(u);
-  if (m) {
-    if (!window.QURAN_DRIVE_API_KEY) {
-      document.querySelectorAll('#aq-quran .aq-qbar').forEach(function (b) { b.hidden = true; });
-      $('#aq-stage').innerHTML = '<iframe src="https://drive.google.com/file/d/' + m[1] + '/preview" title="المصحف الشريف" allow="autoplay" style="width:100%;height:78vh;border:0;border-radius:10px;background:#fff"></iframe>';
-      return;
-    }
-    u = 'https://www.googleapis.com/drive/v3/files/' + m[1] + '?alt=media&key=' + window.QURAN_DRIVE_API_KEY;
-  }
-  if (!window.QURAN_PDF_URL || /USERNAME/.test(window.QURAN_PDF_URL)) { qmsg('ضع رابط ملف المصحف في <code>QURAN_PDF_URL</code> داخل adhkar-data.js'); return; }
-  lib(PDFJS).then(function () {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER;
-    return pdfjsLib.getDocument({ url: u, disableAutoFetch: true }).promise;
-  }).then(function (d) {
-    Q.doc = d; Q.total = d.numPages;
-    var sv = parseInt(localStorage.getItem(QK), 10); Q.n = sv > 0 && sv <= Q.total ? sv : 1;
-    qDraw();
-  }).catch(function () { qmsg('تعذّر تحميل المصحف. تأكد من الرابط والاتصال.<br><button data-a="retry">إعادة المحاولة</button>'); });
+
+/* قائمة السور */
+function qList() {
+  Q.s = 0;
+  var m = qMark(), ms = m && Q.data[m.s - 1];
+  $('#aq-qbody').innerHTML = (ms ? '<button class="aq-resume" data-a="resume">📖 تابع القراءة: ' + esc(sname(ms)) + ' — آية ' + num(m.a) + '</button>' : '') +
+    '<input class="aq-search" id="aq-qsearch" type="search" placeholder="ابحث عن سورة بالاسم أو الرقم…" value="' + esc(Q.q) + '" aria-label="بحث عن سورة"><div class="aq-sl" id="aq-sl"></div>';
+  qDrawList();
 }
-function qDraw() {
-  var t = ++Q.tok, st = $('#aq-stage'); if (!Q.doc || !st) return;
-  $('#aq-pn').value = Q.n; $('#aq-pn').max = Q.total; $('#aq-pt').textContent = 'من ' + Q.total;
-  $('#aq-nx').disabled = Q.n >= Q.total; $('#aq-pv').disabled = Q.n <= 1;
-  try { localStorage.setItem(QK, Q.n); } catch (e) {}
-  Q.doc.getPage(Q.n).then(function (pg) {
-    if (t !== Q.tok) return;
-    var w = Math.max(st.clientWidth - 16, 200), v1 = pg.getViewport({ scale: 1 }), s = w / v1.width * Q.zoom, dpr = Math.min(window.devicePixelRatio || 1, 2.5), v = pg.getViewport({ scale: s * dpr });
-    var cv = document.createElement('canvas'); cv.width = v.width; cv.height = v.height; cv.style.width = v.width / dpr + 'px'; cv.style.height = v.height / dpr + 'px';
-    cv.oncontextmenu = function () { return false; };
-    return pg.render({ canvasContext: cv.getContext('2d'), viewport: v }).promise.then(function () {
-      if (t !== Q.tok) return; st.innerHTML = ''; st.appendChild(cv); st.scrollTop = 0;
-    });
-  }).catch(function () {});
+function qDrawList() {
+  var el = $('#aq-sl'); if (!el) return;
+  var q = norm(Q.q.trim().toLowerCase().replace(/[٠-٩]/g, function (d) { return AR.indexOf(d); }));
+  var l = Q.data.filter(function (s) { return !q || norm(sname(s)).indexOf(q) > -1 || String(s.n) === q || String(s.en).toLowerCase().indexOf(q) > -1; });
+  el.innerHTML = l.length ? l.map(function (s) {
+    return '<button class="aq-sur" data-a="qs" data-i="' + s.n + '"><span class="no">' + num(s.n) + '</span><span><b>' + esc(sname(s)) + '</b><small>' + (s.t === 'Meccan' ? 'مكية' : 'مدنية') + ' • ' + num(s.a.length) + ' آية</small></span></button>';
+  }).join('') : '<div class="aq-empty">لا توجد سورة مطابقة.</div>';
 }
-function qGo(n) { n = Math.max(1, Math.min(Q.total, parseInt(n, 10) || 1)); if (n !== Q.n) { Q.n = n; qDraw(); } else { $('#aq-pn').value = n; } }
-function qZoom(z) { Q.zoom = Math.max(.6, Math.min(3, z)); qDraw(); }
+
+/* عرض سورة */
+function qSurah(n, jump) {
+  var s = Q.data[n - 1]; if (!s) return; Q.s = n;
+  var a = s.a.slice(), hasB = n !== 1 && n !== 9;
+  /* الـ API يضع البسملة داخل الآية الأولى لكل سورة (عدا الفاتحة والتوبة) — نفصلها لتُعرض كسطر مستقل */
+  if (hasB) { var w = String(a[0]).replace(/^\uFEFF/, '').trim().split(/\s+/); if (w.length > 4 && norm(w[0]) === 'بسم') a[0] = w.slice(4).join(' '); }
+  var mk = qMark(), mi = mk && mk.s === n ? mk.a : 0;
+  var txt = a.map(function (t, i) { return '<span class="aq-ay' + (mi === i + 1 ? ' mark' : '') + '" data-a="ay" data-i="' + (i + 1) + '">' + esc(t) + ' <span class="aq-no">﴿' + num(i + 1) + '﴾</span></span> '; }).join('');
+  $('#aq-qbody').innerHTML =
+    '<div class="aq-bar"><button data-a="qback">→ السور</button><h3>' + esc(s.name) + '</h3><button data-a="qfs" data-v="-1" aria-label="تصغير الخط">أ-</button><button data-a="qfs" data-v="1" aria-label="تكبير الخط">أ+</button><button data-a="night" aria-label="الوضع الليلي">🌙</button></div>' +
+    '<div class="aq-sh"><b>' + esc(s.name) + '</b><small>' + (s.t === 'Meccan' ? 'مكية' : 'مدنية') + ' • ' + num(s.a.length) + ' آية • رقمها ' + num(n) + '</small></div>' +
+    '<div class="aq-read' + (Q.night ? ' night' : '') + '" id="aq-read">' + (hasB ? '<p class="aq-bsm">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>' : '') + '<div class="aq-ayat">' + txt + '</div></div>' +
+    '<div class="aq-qbar" style="margin-top:12px"><button data-a="qprev"' + (n <= 1 ? ' disabled' : '') + '>→ السورة السابقة</button><button data-a="qnext"' + (n >= 114 ? ' disabled' : '') + '>السورة التالية ←</button></div>';
+  var mEl = jump && mi ? $('#aq-read .aq-ay.mark') : null;
+  if (mEl) setTimeout(function () { mEl.scrollIntoView({ block: 'center' }); }, 60); else window.scrollTo({ top: 0 });
+}
 
 /* ---------- الربط والأحداث ---------- */
 function shell() {
@@ -168,7 +192,7 @@ function shell() {
       S.tab = b.dataset.v;
       document.querySelectorAll('.aq-tabs button').forEach(function (x) { x.classList.toggle('on', x === b); });
       $('#aq-adhkar').hidden = S.tab !== 'adhkar'; $('#aq-quran').hidden = S.tab !== 'quran';
-      if (S.tab === 'quran' && !$('#aq-stage')) viewQuran(); else if (S.tab === 'quran') qDraw();
+      if (S.tab === 'quran' && !$('#aq-qbody')) viewQuran();
     }
     else if (a === 'cat') { S.cat = b.dataset.id; S.sec = 0; viewRead(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
     else if (a === 'back') { S.cat = null; viewList(); }
@@ -177,21 +201,23 @@ function shell() {
     else if (a === 'tap') tap(i);
     else if (a === 'fs') { S.fs = Math.max(.8, Math.min(1.8, S.fs + .15 * b.dataset.v)); $('#aq-adhkar').style.setProperty('--fs', S.fs); }
     else if (a === 'reset') { var c = cat(); Object.keys(P.c).forEach(function (k) { if (k.indexOf(c.id + '|' + S.sec + '|') === 0) delete P.c[k]; }); save(); viewRead(); }
-    else if (a === 'next') qGo(Q.n + 1); else if (a === 'prev') qGo(Q.n - 1);
-    else if (a === 'zin') qZoom(Q.zoom + .2); else if (a === 'zout') qZoom(Q.zoom - .2); else if (a === 'fit') qZoom(1);
-    else if (a === 'night') $('#aq-stage').classList.toggle('night');
-    else if (a === 'retry') { viewQuran(); }
+    else if (a === 'qs') qSurah(i);
+    else if (a === 'qback') { qList(); window.scrollTo({ top: 0 }); }
+    else if (a === 'qprev') qSurah(Q.s - 1); else if (a === 'qnext') qSurah(Q.s + 1);
+    else if (a === 'qfs') { Q.fs = Math.max(.8, Math.min(2, Q.fs + .15 * b.dataset.v)); $('#aq-quran').style.setProperty('--fs', Q.fs); qSaveSet(); }
+    else if (a === 'night') { Q.night = !Q.night; var rd = $('#aq-read'); if (rd) rd.classList.toggle('night', Q.night); qSaveSet(); }
+    else if (a === 'ay') {
+      try { localStorage.setItem(QMARK, JSON.stringify({ s: Q.s, a: i })); } catch (e) {}
+      document.querySelectorAll('#aq-read .aq-ay.mark').forEach(function (x) { x.classList.remove('mark'); }); b.classList.add('mark');
+      toast('تم حفظ موضع القراءة ✓');
+    }
+    else if (a === 'resume') { var mk = qMark(); if (mk) qSurah(mk.s, true); }
+    else if (a === 'retry') viewQuran();
   });
-  r.addEventListener('input', function (e) { if (e.target.classList.contains('aq-search')) { S.q = e.target.value; drawGrid(); } });
-  r.addEventListener('change', function (e) { if (e.target.id === 'aq-pn') qGo(e.target.value); });
-  var x0 = null;
-  r.addEventListener('touchstart', function (e) { x0 = e.target.closest('#aq-stage') && Q.zoom <= 1.05 ? e.touches[0].clientX : null; }, { passive: true });
-  r.addEventListener('touchend', function (e) { if (x0 == null) return; var dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 60) qGo(Q.n + (dx > 0 ? 1 : -1)); }, { passive: true });
-  document.addEventListener('keydown', function (e) {
-    var t = $('#adhkarTab'); if (S.tab !== 'quran' || !t || !t.classList.contains('active') || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
-    if (e.key === 'ArrowLeft') qGo(Q.n + 1); else if (e.key === 'ArrowRight') qGo(Q.n - 1);
+  r.addEventListener('input', function (e) {
+    if (e.target.id === 'aq-qsearch') { Q.q = e.target.value; qDrawList(); }
+    else if (e.target.classList.contains('aq-search')) { S.q = e.target.value; drawGrid(); }
   });
-  var rz; addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (S.tab === 'quran') qDraw(); }, 250); });
 }
 
 /* تسجيل بطاقة القسم في كل كورس + فتح التبويب */

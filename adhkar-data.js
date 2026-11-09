@@ -1,17 +1,11 @@
 /* ============================================================
    بيانات قسم الأذكار والقرآن — عدّل هنا فقط
    ------------------------------------------------------------
-   1) QURAN_PDF_URL: رابط ملف المصحف. يجب أن يكون رابط raw من GitHub:
-      https://raw.githubusercontent.com/USERNAME/REPO/main/quran.pdf
-      (روابط Google Drive لا تعمل داخل العارض بسبب قيود CORS)
-   2) لإضافة ذكر: ضع كائناً جديداً داخل items القسم المناسب:
+   1) لإضافة ذكر: ضع كائناً جديداً داخل items القسم المناسب:
       { text: "نص الذكر", count: 3, source: "المصدر (اختياري)", title: "عنوان قصير (اختياري)" }
       count = عدد التكرار. الأقسام التي items فيها فارغة تظهر "قريباً".
-   3) لإضافة تصنيف جديد: انسخ أي كائن داخل categories وغيّر id (فريد) والعنوان.
+   2) لإضافة تصنيف جديد: انسخ أي كائن داخل categories وغيّر id (فريد) والعنوان.
    ============================================================ */
-window.QURAN_PDF_URL = "https://drive.google.com/file/d/1dPjvCV1t9k6OxumJgDkf8VDZUTRNZccu/view?usp=drive_link";
-/* مفتاح Google Drive API (مطلوب لروابط درايف). اتركه فارغاً لو استخدمت رابط GitHub */
-window.QURAN_DRIVE_API_KEY = "";
 window.ADHKAR_DATA = {
  "categories": [
   {
