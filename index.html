@@ -1590,6 +1590,7 @@
 [data-theme="dark"] #quran-quiz button.qq-alt{background:#2b3b31;color:#e6eee8}
 [data-theme="dark"] #quran-quiz .qq-bar{background:#2b3b31}
 </style>
+<link rel="stylesheet" href="adhkar-quran.css">
 </head>
 <body>
 <div id="hlIntro" aria-hidden="true">
@@ -1689,6 +1690,11 @@
     <div id="quranQuizTab" class="tab-content">
       <h2 class="section-title">اختبار حفظ سورة آل عمران</h2>
       <div id="quran-quiz" dir="rtl"></div>
+    </div>
+
+    <div id="adhkarTab" class="tab-content">
+      <h2 class="section-title">الأذكار والقرآن الكريم</h2>
+      <div id="aq-root"></div>
     </div>
   </div>
  
@@ -7409,5 +7415,7 @@ function chatAllowed() {
   setInterval(sync, 1200); sync();
 })();
 </script>
+<script src="adhkar-data.js"></script>
+<script src="adhkar-quran.js"></script>
 </body>
 </html>
