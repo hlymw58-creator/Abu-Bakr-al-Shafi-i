@@ -2404,14 +2404,21 @@
     }
     // إشعار المحاضرات الجديدة: أول مرة نحفظ الموجود بدون إشعار، وبعدها أي محاضرة جديدة تنبّه الطالب
     function checkNewLectures() {
-      if (!currentStudent || !isActivatedValue(currentStudent.code)) return;
+      if (!currentStudent) return;
       const k = "seen_lec_" + currentStudent.phone;
       let seen = null; try { seen = JSON.parse(localStorage.getItem(k) || "null"); } catch (_) {}
       const ids = Object.keys(lectureIndex);
       if (!Array.isArray(seen)) { try { localStorage.setItem(k, JSON.stringify(ids)); } catch (_) {} return; }
       const fresh = ids.filter((id) => !seen.includes(id));
       if (!fresh.length) return;
-      fresh.forEach((id) => pushNotif(`تم نزول محاضرة جديدة! ${lectureIndex[id].title} (${lectureIndex[id].subject})`, "lecture"));
+      const mine = studentCourseIds();
+      // نمرّ على كل المحاضرات الجديدة (Array) ونُنبّه فقط لمن Course ID الخاص بها ضمن كورسات الطالب؛ الباقي يُتجاهل تماماً
+      fresh.forEach((id) => {
+        const l = lectureIndex[id];
+        if (!l || !lectureTargetsStudent(l, mine)) return;
+        const cl = lectureCourseLabel(l, mine);
+        pushNotif(`تم نزول محاضرة جديدة! ${l.title} (${l.subject})${cl ? " — " + cl : ""}`, "lecture");
+      });
       try { localStorage.setItem(k, JSON.stringify(seen.concat(fresh))); } catch (_) {}
     }
 
@@ -4080,7 +4087,7 @@
         timeOffset = isFinite(off) ? off : 0;
         sheetLectures = r.data.lectures.map((l) => ({
           id: String(l.id), title: String(l.title || ""), subject: l.subject, link: l.link || "",
-          homeworkLink: l.homeworkLink || "", pdfLink: l.pdfLink || "", releaseAt: l.releaseAt, remote: true, courses: normCourses(l.courses), quiz: l.quiz || null
+          homeworkLink: l.homeworkLink || "", pdfLink: l.pdfLink || "", releaseAt: l.releaseAt, remote: true, courses: normCourses(l.courses != null && l.courses !== "" ? l.courses : (l.course_id != null ? l.course_id : l.courseId)), quiz: l.quiz || null
         }));
         lastFetchAt = Date.now();
         try { localStorage.setItem(LECTURES_CACHE_KEY, JSON.stringify({ lectures: sheetLectures, offset: timeOffset })); } catch (_) {}
@@ -4397,35 +4404,48 @@
     function studentCourseIds() {
       return COURSES.filter((c) => { try { return !!c.isActive(currentStudent); } catch (_) { return false; } }).map((c) => c.id);
     }
-    function alertAllowedFor(l) {
-      if (!currentStudent) return false;
-      if (isAdminUser()) return true;                       // الأدمن يشوف كل التنبيهات
-      const mine = studentCourseIds();                      // كورسات الطالب المشترك بها فعلاً
-      const lecCourses = normCourses(l.courses);            // Course IDs الخاصة بالمحاضرة الجديدة
-      // محاضرة بلا كورس محدد = تتبع الكورسات العادية (غير STRICT) كما في inCourse()
-      if (!lecCourses.length) return mine.some((id) => !STRICT_COURSES.includes(id));
-      // الشرط الأساسي: هل أي Course ID من المحاضرة موجود ضمن كورسات الطالب؟
-      return lecCourses.some((id) => mine.includes(id));
+    // لو true: المحاضرة التي ليس لها أي Course ID (محاضرات قديمة) تظهر لمشتركي الكورسات العادية (غير STRICT) فقط.
+    // لو false: أي محاضرة بلا Course ID تُتجاهل تماماً (مطابقة صارمة 100%).
+    var ALERT_LEGACY_NO_COURSE = true;
+    // مطابقة صارمة: هل هذه المحاضرة/الإشعار موجّهة لهذا الطالب؟ (تُستخدم في شريط العدّاد وفي إشعار «محاضرة جديدة»)
+    function lectureTargetsStudent(l, userCourses) {
+      if (!currentStudent || !l) return false;
+      if (isAdminUser()) return true;                              // الأدمن يرى الكل
+      const mine = userCourses || studentCourseIds();               // userCourses: كورسات الطالب
+      const lecCourses = normCourses(l.courses);                    // Course IDs المرفقة بالإشعار (Array)
+      if (!lecCourses.length) return ALERT_LEGACY_NO_COURSE && mine.some((id) => !STRICT_COURSES.includes(id));
+      return lecCourses.some((id) => mine.includes(String(id)));    // الـ ID لازم يكون موجود فعلاً ضمن كورسات الطالب
+    }
+    // اسم الكورس الخاص بهذه المحاضرة (من كورسات الطالب فقط) — يُعرض فقط لو الطالب مشترك في أكثر من كورس
+    function lectureCourseLabel(l, mine) {
+      if (mine.length < 2) return "";
+      const ids = normCourses(l.courses).filter((id) => mine.includes(id));
+      return ids.map((id) => { const c = COURSES.find((x) => x.id === id); return c ? c.title : id; }).join(" + ");
     }
 
+    // مفتاح فريد لكل إشعار: يشمل الكورسات حتى لا يتداخل إشعاران لهما نفس id في كورسين مختلفين
+    function alertKeyOf(l) { return l.id + "|" + l.releaseAt + "|" + normCourses(l.courses).join("+"); }
     function updateAlert() {
       const box = document.getElementById("lectureAlert");
       if (!box) return;
       const now = nowMs(), dis = dismissedAlerts();
-      const items = !currentStudent ? [] : upcomingList
-        .filter((l) => alertAllowedFor(l))                  // ← الفلتر الجديد: غير المشترك لا يظهر له الشريط
-        .filter((l) => { const d = timeOf(l) - now; return d > 0 && d <= ALERT_BEFORE_MS && !dis[l.id + "|" + l.releaseAt]; })
+      const mine = currentStudent ? studentCourseIds() : [];       // كورسات الطالب تُحسب مرة واحدة
+      const items = !currentStudent ? [] : (Array.isArray(upcomingList) ? upcomingList : [])
+        .filter((l) => lectureTargetsStudent(l, mine))              // فلترة صارمة: Course ID للمحاضرة ∈ كورسات الطالب
+        .filter((l) => { const d = timeOf(l) - now; return d > 0 && d <= ALERT_BEFORE_MS && !dis[alertKeyOf(l)]; })
         .sort((a, b) => timeOf(a) - timeOf(b));
       if (!items.length) {
         if (alertKey) { alertKey = ""; box.classList.remove("show"); setAlertH(0); }
         return;
       }
-      const key = items.map((l) => l.id + "|" + l.releaseAt).join(",");
+      const key = items.map(alertKeyOf).join(",");
       if (key !== alertKey) {
         alertKey = key;
-        document.getElementById("laTrack").innerHTML = items.map((l) =>
-          `📢 محاضرة «${escapeHtml(l.title)}» في مادة ${escapeHtml(l.subject)} ستبدأ قريباً — الموعد الساعة ${fmtTime(timeOf(l))} — باقي <span class="la-cd" dir="ltr" data-t="${timeOf(l)}"></span>`
-        ).join(" &nbsp;•&nbsp; ");
+        // كل محاضرة تُرسم ببياناتها هي فقط (عنوانها/قسمها/موعدها) — لا متغيّر مشترك بين الإشعارات
+        document.getElementById("laTrack").innerHTML = items.map((l) => {
+          const cl = lectureCourseLabel(l, mine);
+          return `📢 محاضرة «${escapeHtml(l.title)}»${cl ? " [" + escapeHtml(cl) + "]" : ""} في مادة ${escapeHtml(l.subject)} ستبدأ قريباً — الموعد الساعة ${fmtTime(timeOf(l))} — باقي <span class="la-cd" dir="ltr" data-t="${timeOf(l)}"></span>`;
+        }).join(" &nbsp;•&nbsp; ");
         box.style.setProperty("--la-dur", Math.max(22, items.length * 24) + "s");
         box.classList.add("show");
         setAlertH(box.offsetHeight);
