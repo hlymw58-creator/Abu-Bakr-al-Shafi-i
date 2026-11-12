@@ -1138,6 +1138,16 @@
     .subject-body p{font-size:13px;color:#666;line-height:1.7}
     .sc-bar{height:7px;border-radius:6px;background:#e0e6e1;overflow:hidden}.sc-fill{height:100%;background:linear-gradient(90deg,#66bb6a,#1b5e20);border-radius:6px;transition:width .8s ease}
     .subject-enter{margin-top:auto;width:100%}
+    /* ===== بطاقات مواد المراجعات (نفس شكل بطاقات الترم الأول، بدون أيقونة واسم المادة بخط مزخرف) ===== */
+    .rev-grid{margin-bottom:22px}
+    .rev-card .subject-banner{min-height:150px;align-items:center;justify-content:center;text-align:center;gap:8px}
+    .rev-card .subject-title.rev-title{font-family:'Aref Ruqaa','Amiri',serif;font-weight:700;font-size:clamp(30px,6vw,40px);line-height:1.5;
+      background:linear-gradient(180deg,#fff8dc 0%,#ffd54f 50%,#ffa000 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+      text-shadow:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}
+    .rev-card .subject-body{padding:12px 16px 16px}
+    .rev-card .rev-pct{font-size:12px;color:#666;display:flex;justify-content:space-between}
+    [data-theme="dark"] .rev-card .rev-pct{color:#9fb3a5}
+    .rev-card.active{outline:4px solid #ffb300;outline-offset:3px;box-shadow:0 14px 32px rgba(255,179,0,.35)}
     [data-theme="dark"] .subject-card{background:#16221b!important;color:#e6eee8!important}
     [data-theme="dark"] .subject-body p{color:#9fb3a5}[data-theme="dark"] .sc-bar{background:#2b3f32}
 
@@ -1665,12 +1675,8 @@
  
     <div id="reviewTab" class="tab-content">
       <h2 class="section-title">المراجعات</h2>
-      <div class="sub-tabs">
-        <button class="sub-btn active" onclick="switchSub('revTawheed', this)">مراجعة التوحيد</button>
-        <button class="sub-btn" onclick="switchSub('revTafseer', this)">مراجعة التفسير</button>
-        <button class="sub-btn" onclick="switchSub('revHadith', this)">مراجعة الحديث</button>
-        <button class="sub-btn" onclick="switchSub('revFiqh', this)">مراجعة الفقه الشافعي</button>
-      </div>
+      <!-- بطاقات المواد الكبيرة داخل المراجعات (تُرسم من renderReviewCards) -->
+      <div class="subject-grid rev-grid" id="revGrid"></div>
       <div id="revTawheed" class="sub-content active"><div id="revTawheedContainer"></div></div>
       <div id="revTafseer" class="sub-content"><div id="revTafseerContainer"></div></div>
       <div id="revHadith" class="sub-content"><div id="revHadithContainer"></div></div>
@@ -2809,6 +2815,46 @@
     }
     document.addEventListener("visibilitychange", () => { if (!document.hidden) verifyAccountAlive(); });
     setInterval(() => { if (!document.hidden) verifyAccountAlive(); }, 120000);
+    // ---- بطاقات المراجعات الكبيرة ----
+    const REV_CARDS = [
+      { id: "revTawheed", subj: "مراجعة توحيد", title: "مراجعة التوحيد",        grad: "linear-gradient(135deg,#0b3d5c,#1a73e8)" },
+      { id: "revTafseer", subj: "مراجعة تفسير", title: "مراجعة التفسير",        grad: "linear-gradient(135deg,#4a148c,#8e24aa)" },
+      { id: "revHadith",  subj: "مراجعة حديث",  title: "مراجعة الحديث",         grad: "linear-gradient(135deg,#7a3e00,#ef6c00)" },
+      { id: "revFiqh",    subj: "مراجعة فقه",   title: "مراجعة الفقه الشافعي", grad: "linear-gradient(135deg,#0d3b12,#2e7d32)" }
+    ];
+    let revOpen = null; // null = شبكة بطاقات المراجعات | id المادة المفتوحة (صفحة مستقلة للمحاضرات)
+    function renderReviewCards() {
+      const g = document.getElementById("revGrid"); if (!g) return;
+      g.style.display = revOpen ? "none" : "";
+      const h = document.querySelector("#reviewTab > .section-title"); if (h) h.style.display = revOpen ? "none" : "";
+      g.innerHTML = REV_CARDS.map((c, i) => {
+        const s = SUBJECTS.find((x) => x.name === c.subj), ls = s ? visibleFor(s) : [];
+        const total = ls.length, done = ls.filter((l) => attendanceRecords[l.id]).length, pct = total ? Math.round((done / total) * 100) : 0;
+        return `<article class="subject-card rev-card" role="button" tabindex="0" style="animation-delay:${i * 60}ms" onclick="pickReview('${c.id}')" onkeydown="if(event.key==='Enter')pickReview('${c.id}')">
+          <div class="subject-banner" style="background:${c.grad}"><h3 class="subject-title rev-title">${escapeHtml(c.title)}</h3><span class="subject-meta">${total} محاضرة • أتممت ${done}</span></div>
+          <div class="subject-body"><div class="sc-bar"><div class="sc-fill" style="width:${pct}%"></div></div><div class="rev-pct"><span>التقدّم</span><b>${pct}%</b></div><button type="button" class="btn-submit subject-enter">الدخول</button></div></article>`;
+      }).join("");
+      document.querySelectorAll("#reviewTab .sub-content").forEach((e) => e.classList.toggle("active", e.id === revOpen));
+    }
+    // فتح مادة المراجعة كصفحة مستقلة (المحاضرات داخلها فقط) — زر الرجوع يعيدك لبطاقات المراجعات
+    function pickReview(id) {
+      try { sfxClick(); } catch (_) {}
+      const c = REV_CARDS.find((x) => x.id === id); if (!c) return;
+      revOpen = id; renderReviewCards();
+      document.getElementById("courseTitle").innerText = c.title;
+      document.getElementById("courseBackBtn").innerText = "← المراجعات";
+      try { history.pushState({ subject: "reviewTab", rev: id }, ""); } catch (_) {}
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(pinFooter, 50);
+    }
+    function closeReviewSubject() {
+      revOpen = null; renderReviewCards();
+      const sc = (typeof SUBJECT_CARDS !== "undefined") ? SUBJECT_CARDS.find((x) => x.tab === "reviewTab" && (!x.courses || x.courses.includes(currentCourse))) : null;
+      if (sc) document.getElementById("courseTitle").innerText = sc.title;
+      document.getElementById("courseBackBtn").innerText = "← المواد";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(pinFooter, 50);
+    }
     function switchSub(id, btn) {
       try { sfxClick(); } catch (_) {}
       document.querySelectorAll(".sub-content").forEach((e) => e.classList.remove("active"));
@@ -4727,6 +4773,7 @@
       loadSubs();
       rebuildLectures();
       SUBJECTS.forEach((s) => renderLectures(visibleFor(s), s.container));
+      try { renderReviewCards(); } catch (e) { console.error("rev", e); }
       refreshAdminUI();
       updateAlert();
       checkNewLectures();
@@ -5229,6 +5276,7 @@
       currentSubjectTab = tab;
       document.getElementById("subjectGrid").style.display = "none";
       switchTab(tab);
+      if (tab === "reviewTab") { revOpen = null; try { renderReviewCards(); } catch (_) {} }
       document.getElementById("courseTitle").innerText = c.title;
       document.getElementById("courseBackBtn").innerText = "← المواد";
       try { history.pushState({ subject: tab }, ""); } catch (_) {}
@@ -5236,7 +5284,7 @@
       setTimeout(pinFooter, 50);
     }
     function showSubjectGrid() {
-      currentSubjectTab = null;
+      currentSubjectTab = null; revOpen = null;
       document.querySelectorAll(".tab-content").forEach((el) => el.classList.remove("active"));
       document.getElementById("subjectGrid").style.display = "";
       const c = COURSES.find((x) => x.id === currentCourse);
@@ -5251,7 +5299,7 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else setView("courses");
     }
-    window.addEventListener("popstate", () => { if (currentSubjectTab) showSubjectGrid(); });
+    window.addEventListener("popstate", () => { if (revOpen) { closeReviewSubject(); return; } if (currentSubjectTab) showSubjectGrid(); });
 
     // ---------- 2) مركز الإشعارات: تنبيه منبثق + جرس + رسائل تحفيزية + تنبيهات التقدّم ----------
     let notifChimeAt = 0, toastTimer = null;
