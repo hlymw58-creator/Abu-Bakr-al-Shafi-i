@@ -2157,6 +2157,7 @@
         if (url === GOOGLE_SCRIPT_URL && data.status === "success" && (data.devWarn || payload.action === "checkStatus" || payload.action === "login")) { try { setDeviceWarn(data.devWarn ? Number(data.devWarn) : 0); } catch (_) {} }
         if (data.status === "success") return { type: "ok", data };
         const msg = String(data.message || "");
+        if (data.code === "DEVICE_LIMIT") return { type: "fail", data, message: msg || DEVICE_LIMIT_MSG };
         if (TRANSIENT_RE.test(msg)) return { type: "transient" };
         return { type: "fail", data, message: msg };
       } catch (_) {
@@ -2209,6 +2210,7 @@
     }, 0);
 
     // ======================= تنبيه تجاوز عدد الأجهزة (3 إلى 6 أجهزة) =======================
+    const DEVICE_LIMIT_MSG = "لديك 3 أجهزة مسجّل الدخول منها حالياً. سجّل الخروج من أحد أجهزتك الأخرى ثم أعد المحاولة.";
     const DEVICE_WARN_MSG = "تم تجاوز الحد الأقصى لعدد الأجهزة المسموح بها. يرجى توحيد الجهاز المستخدم وتسجيل الخروج من الأجهزة الأخرى فوراً. في حال تسجيل الدخول من أجهزة إضافية، سيتم حظر حسابك نهائياً ولن يحق لك المطالبة باسترداد قيمة الاشتراك.";
     function setDeviceWarn(count) {
       let b = document.getElementById("devWarnBar");
@@ -2822,6 +2824,10 @@
           } else if (r.data.active && !isActivatedValue(currentStudent.code)) {
             currentStudent.code = r.data.code; saveStudentLocal(); renderAll();
           }
+        } else if (r.type === "fail" && r.data && r.data.code === "DEVICE_LIMIT") {
+          clearSession(); sessionCreds = null;
+          alert(r.data.message || DEVICE_LIMIT_MSG);
+          location.reload();
         } else if (r.type === "fail" && r.data && r.data.code === "GONE") {
           clearSession(); sessionCreds = null;
           alert("هذا الحساب لم يعد موجوداً. يرجى إنشاء حساب جديد أو التواصل مع الإدارة.");
@@ -3096,8 +3102,12 @@
  
     function logout() {
       if (confirm("هل تريد تسجيل الخروج؟")) {
-        clearSession(); sessionCreds = null;
-        location.reload();
+        const ph = currentStudent && currentStudent.phone, did = getDeviceId();
+        const done = () => { clearSession(); sessionCreds = null; location.reload(); };
+        if (ph && !currentStudent.isAdmin) {
+          // نبلغ السيرفر ليحرّر هذا الجهاز من العدّاد (ننتظر 3 ثوانٍ كحد أقصى)
+          Promise.race([callScript(GOOGLE_SCRIPT_URL, { action: "logout", studentPhone: ph, deviceId: did }), sleep(3000)]).then(done, done);
+        } else done();
       }
     }
  
