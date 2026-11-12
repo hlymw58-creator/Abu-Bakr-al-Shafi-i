@@ -4384,12 +4384,36 @@
     const dismissedAlerts = () => { try { return JSON.parse(sessionStorage.getItem("shafeei_dismissed") || "{}"); } catch (_) { return {}; } };
     const setAlertH = (h) => document.documentElement.style.setProperty("--alert-h", h + "px");
  
+    // ===== فلتر الكورسات: الشريط يظهر فقط للطلاب المشتركين في كورس المحاضرة =====
+    // مصدر بيانات كورسات الطالب (لا تحتاج تمرير شيء يدوياً — الدالة تقرأ من هنا):
+    //   1) COURSES[i].isActive(currentStudent)  ← أهم مصدر، وهو نفسه المستخدم في بطاقات الكورسات
+    //        - كورس term1: يعتمد على currentStudent.code (كود التفعيل)
+    //        - كورسي final / final1: يعتمد على isEnrolled(id) أي:
+    //            a) localStorage["enr_<phone>"]        (الاشتراك المجاني المحفوظ على الجهاز)
+    //            b) currentStudent.enrolled = { final1: true }   (قادم من الـ Backend)
+    //            c) currentStudent.courses  = ["final1", ...]    (قادم من الـ Backend)
+    //   2) رقم/معرّف كورس المحاضرة يأتي من l.courses (مصفوفة IDs من شيت المحاضرات، أو courses:[...] في المحاضرة اليدوية)
+    // لو حبيت تغيّر مصدر كورسات الطالب، عدّل فقط الدالة studentCourseIds() بالأسفل.
+    function studentCourseIds() {
+      return COURSES.filter((c) => { try { return !!c.isActive(currentStudent); } catch (_) { return false; } }).map((c) => c.id);
+    }
+    function alertAllowedFor(l) {
+      if (!currentStudent) return false;
+      if (isAdminUser()) return true;                       // الأدمن يشوف كل التنبيهات
+      const mine = studentCourseIds();                      // كورسات الطالب المشترك بها فعلاً
+      const lecCourses = normCourses(l.courses);            // Course IDs الخاصة بالمحاضرة الجديدة
+      // محاضرة بلا كورس محدد = تتبع الكورسات العادية (غير STRICT) كما في inCourse()
+      if (!lecCourses.length) return mine.some((id) => !STRICT_COURSES.includes(id));
+      // الشرط الأساسي: هل أي Course ID من المحاضرة موجود ضمن كورسات الطالب؟
+      return lecCourses.some((id) => mine.includes(id));
+    }
+
     function updateAlert() {
       const box = document.getElementById("lectureAlert");
       if (!box) return;
       const now = nowMs(), dis = dismissedAlerts();
-      const eligible = !!currentStudent && isActivatedValue(currentStudent.code);
-      const items = !eligible ? [] : upcomingList
+      const items = !currentStudent ? [] : upcomingList
+        .filter((l) => alertAllowedFor(l))                  // ← الفلتر الجديد: غير المشترك لا يظهر له الشريط
         .filter((l) => { const d = timeOf(l) - now; return d > 0 && d <= ALERT_BEFORE_MS && !dis[l.id + "|" + l.releaseAt]; })
         .sort((a, b) => timeOf(a) - timeOf(b));
       if (!items.length) {
