@@ -2153,6 +2153,7 @@
         try { data = JSON.parse(await res.text()); } catch (_) { return { type: "transient" }; }
         if (!data || typeof data !== "object") return { type: "transient" };
         if (data.code && /^(BANNED|DELETED|LOCKED)$/.test(data.code) && url === GOOGLE_SCRIPT_URL) { try { handleBlocked(data.code, data.message, payload); } catch (_) {} }
+        if (url === GOOGLE_SCRIPT_URL && data.status === "success" && (data.devWarn || payload.action === "checkStatus" || payload.action === "login")) { try { setDeviceWarn(data.devWarn ? Number(data.devWarn) : 0); } catch (_) {} }
         if (data.status === "success") return { type: "ok", data };
         const msg = String(data.message || "");
         if (TRANSIENT_RE.test(msg)) return { type: "transient" };
@@ -2204,6 +2205,20 @@
       let f = null; try { f = JSON.parse(localStorage.getItem(BLK_KEY) || "null"); } catch (_) {}
       if (f && f.msg) { showBlockOverlay(f.msg); recheckBlocked(); }
     }, 0);
+
+    // ======================= تنبيه تجاوز عدد الأجهزة (3 إلى 6 أجهزة) =======================
+    const DEVICE_WARN_MSG = "تم تجاوز الحد الأقصى لعدد الأجهزة المسموح بها. يرجى توحيد الجهاز المستخدم وتسجيل الخروج من الأجهزة الأخرى فوراً. في حال تسجيل الدخول من أجهزة إضافية، سيتم حظر حسابك نهائياً ولن يحق لك المطالبة باسترداد قيمة الاشتراك.";
+    function setDeviceWarn(count) {
+      let b = document.getElementById("devWarnBar");
+      if (!count || count < 3) { if (b) b.style.display = "none"; return; }
+      if (!b) {
+        b = document.createElement("div"); b.id = "devWarnBar"; b.setAttribute("role", "alert");
+        b.style.cssText = "position:sticky;top:0;z-index:2147482000;background:#b71c1c;color:#fff;padding:12px 16px;text-align:center;font-weight:800;font-size:15px;line-height:1.9;direction:rtl;box-shadow:0 2px 10px rgba(0,0,0,.35)";
+        b.textContent = "⚠️ " + DEVICE_WARN_MSG;
+        document.body.insertBefore(b, document.body.firstChild);
+      }
+      b.style.display = "block";
+    }
 
     // ---- تسجيل الدخول: لا يُعلن الفشل إلا بعد تأكيد متكرر ----
     async function robustLogin(phoneInput, password) {
