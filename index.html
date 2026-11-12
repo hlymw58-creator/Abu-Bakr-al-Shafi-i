@@ -2152,7 +2152,8 @@
         let data;
         try { data = JSON.parse(await res.text()); } catch (_) { return { type: "transient" }; }
         if (!data || typeof data !== "object") return { type: "transient" };
-        if (data.code && /^(BANNED|DELETED|LOCKED)$/.test(data.code) && url === GOOGLE_SCRIPT_URL) { try { handleBlocked(data.code, data.message, payload); } catch (_) {} }
+        if (data.code === "LOCKED" && url === GOOGLE_SCRIPT_URL) { try { setDeviceWarn(3); } catch (_) {} }
+        else if (data.code && /^(BANNED|DELETED)$/.test(data.code) && url === GOOGLE_SCRIPT_URL) { try { handleBlocked(data.code, data.message, payload); } catch (_) {} }
         if (url === GOOGLE_SCRIPT_URL && data.status === "success" && (data.devWarn || payload.action === "checkStatus" || payload.action === "login")) { try { setDeviceWarn(data.devWarn ? Number(data.devWarn) : 0); } catch (_) {} }
         if (data.status === "success") return { type: "ok", data };
         const msg = String(data.message || "");
@@ -2203,6 +2204,7 @@
     }
     setTimeout(function () {
       let f = null; try { f = JSON.parse(localStorage.getItem(BLK_KEY) || "null"); } catch (_) {}
+      if (f && f.code === "LOCKED") { try { localStorage.removeItem(BLK_KEY); } catch (_) {} return; }
       if (f && f.msg) { showBlockOverlay(f.msg); recheckBlocked(); }
     }, 0);
 
