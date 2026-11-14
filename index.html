@@ -2163,7 +2163,7 @@
         try { data = JSON.parse(await res.text()); } catch (_) { return { type: "transient" }; }
         if (!data || typeof data !== "object") return { type: "transient" };
         if (data.code === "LOCKED" && url === GOOGLE_SCRIPT_URL) { try { setDeviceWarn(3); } catch (_) {} }
-        else if (data.code && /^(BANNED|DELETED)$/.test(data.code) && url === GOOGLE_SCRIPT_URL) { try { handleBlocked(data.code, data.message, payload); } catch (_) {} }
+        else if (data.code && /^(BANNED|DELETED)$/.test(data.code) && url === GOOGLE_SCRIPT_URL && !(payload && payload.action === "checkStatus" && data.code === "DELETED")) { try { handleBlocked(data.code, data.message, payload); } catch (_) {} }
         if (url === GOOGLE_SCRIPT_URL && data.status === "success" && (data.devWarn || payload.action === "checkStatus" || payload.action === "login")) { try { setDeviceWarn(data.devWarn ? Number(data.devWarn) : 0); } catch (_) {} }
         if (data.status === "success") return { type: "ok", data };
         const msg = String(data.message || "");
@@ -2876,6 +2876,30 @@
     // - حساب محذوف  => تسجيل خروج فوري ومسح الجلسة المحلية
     // - غير مفعّل في الشيت => إلغاء التفعيل محلياً (حتى لو عدّل الطالب بيانات المتصفح)
     // أخطاء الشبكة/السيرفر المؤقتة لا تُخرج الطالب أبداً.
+    // يؤكد أن الحساب محذوف فعلاً: 4 فحوصات متباعدة × صيغ الرقم، وأي رد "موجود" يلغي الحذف فوراً
+    async function confirmAccountGone() {
+      const phones = (function () { try { return phoneVariants(currentStudent.phone).slice(0, 2); } catch (_) { return [currentStudent.phone]; } })();
+      let gone = 0;
+      for (let round = 0; round < 4; round++) {
+        if (round) await sleep(2500);
+        let alive = false, sawGone = false;
+        for (const ph of phones) {
+          const r = await callScript(GOOGLE_SCRIPT_URL, { action: "checkStatus", studentPhone: ph, deviceId: getDeviceId() });
+          if (r.type === "ok") { alive = true; break; }
+          if (r.type === "fail" && r.data && (r.data.code === "GONE" || r.data.code === "DELETED")) sawGone = true;
+        }
+        if (alive) return false;
+        if (!sawGone) return false; // رد غير حاسم (شبكة/ضغط) = لا حذف
+        gone++;
+      }
+      // حماية إضافية: لو عندنا كلمة السر في الجلسة نجرّب الدخول الفعلي قبل الحكم
+      if (sessionCreds) {
+        const lg = await robustLogin(sessionCreds.phone, sessionCreds.password);
+        if (lg.type === "ok") return false;
+        if (lg.type !== "fail") return false;
+      }
+      return gone >= 4;
+    }
     let aliveBusy = false, aliveAt = 0;
     async function verifyAccountAlive(force) {
       if (aliveBusy || !currentStudent || currentStudent.isAdmin || !currentStudent.phone) return;
@@ -2894,10 +2918,14 @@
           clearSession(); sessionCreds = null;
           alert(r.data.message || DEVICE_LIMIT_MSG);
           location.reload();
-        } else if (r.type === "fail" && r.data && r.data.code === "GONE") {
-          clearSession(); sessionCreds = null;
-          alert("هذا الحساب لم يعد موجوداً. يرجى إنشاء حساب جديد أو التواصل مع الإدارة.");
-          location.reload();
+        } else if (r.type === "fail" && r.data && (r.data.code === "GONE" || r.data.code === "DELETED")) {
+          // لا نُخرج الطالب إلا بعد تأكيد الحذف عدة مرات وبصيغ الرقم المختلفة
+          const sure = await confirmAccountGone();
+          if (sure) {
+            clearSession(); sessionCreds = null;
+            alert("هذا الحساب لم يعد موجوداً. يرجى إنشاء حساب جديد أو التواصل مع الإدارة.");
+            location.reload();
+          }
         }
       } catch (_) {
       } finally { aliveBusy = false; }
