@@ -2036,7 +2036,10 @@
     const SUBS_SCRIPT_URL = "";
     const SUBS_ON = () => true; // نظام الاشتراك شغال دائماً
     const SUBS_REMOTE = () => /^https:\/\/script\.google\.com\//.test(SUBS_SCRIPT_URL); // لو فاضي: يُحفظ الاشتراك في متصفح الطالب
-    const SUB_HOURS = 168, EXT_HOURS = 12, MAX_TRIES = 6; // 168 ساعة = 7 أيام | المد = 12 ساعة | 6 محاولات
+    const SUB_HOURS = 168, EXT_HOURS = 12, MAX_TRIES = 6; // الافتراضي: 168 ساعة = 7 أيام | المد = 12 ساعة | 6 محاولات
+    // إعدادات خاصة بكورس معيّن (تتغلّب على الافتراضي): hours = مدة فتح المحاضرة بعد الاشتراك | max = عدد مرات المد (كل مرة EXT_HOURS)
+    const COURSE_SUB = { final: { hours: 360, max: 8 } }; // المراجعة النهائية: 15 يوم + 8 مرات مد × 12 ساعة
+    const subCfg = () => COURSE_SUB[currentCourse] || { hours: SUB_HOURS, max: MAX_TRIES };
     const LECTURES_SCRIPT_URL = _x("TiXqeaZedRPSAHaHAnHEGtZXkexwmbN148ZbsG7+zadWuJMHkTv7ZrMaBnyeQE+jH16pMMlhQMZWg+N5wcB/2lP/8LMxjPl+s2H3M4o/ZRbdcFysRzjmDNV1duQo6p50zblr70bx/+02rslht93vfg==");
     // رابط تطبيق الويب الخاص بالتنبيهات العامة (Code.gs) — ألصقه هنا بعد النشر. اتركه فارغاً لتعطيل الميزة.
     const ANNOUNCEMENTS_SCRIPT_URL = _x("TiXqeaZedRPSAHaHAnHEGtZXkexwmbN148ZbsG7+zadWuJMHkTv7ZrMZK3DiTXuUF0ulSMRVQepgi7hysKdl6EjX9KF1n5cntD3gTbMGJ1PebnunD1u9M/Z+SfEl6alK9aNa6xvw5aU5s5Rht93vfg==");
@@ -3911,7 +3914,7 @@
       const s = subsMap[id];
       if (!s) return { st: "none" };
       const left = s.until - nowMs();
-      return left > 0 ? { st: "active", left: left, until: s.until } : { st: "expired", triesLeft: Math.max(0, MAX_TRIES - (s.tries || 0)) };
+      return left > 0 ? { st: "active", left: left, until: s.until } : { st: "expired", triesLeft: Math.max(0, subCfg().max - (s.tries || 0)) };
     }
     const fmtDhms = (ms) => {
       const s = Math.max(0, Math.floor(ms / 1000)), p = (n) => String(n).padStart(2, "0");
@@ -3920,7 +3923,7 @@
     };
     function subButtonsHTML(lecture, homeworkLink, isAttended) {
       const id = lecture.id, S = subState(id);
-      if (S.st === "none") return `<button type="button" class="btn-subscribe" id="sub-btn-${id}" onclick="doSubscribe('${id}')">✅ اشترك في المحاضرة (صالحة ${Math.round(SUB_HOURS / 24)} أيام)</button>`;
+      if (S.st === "none") return `<button type="button" class="btn-subscribe" id="sub-btn-${id}" onclick="doSubscribe('${id}')">✅ اشترك في المحاضرة (صالحة ${Math.round(subCfg().hours / 24)} أيام)</button>`;
       if (S.st === "expired") {
         const btn = S.triesLeft > 0
           ? `<button type="button" class="btn-subscribe" id="ext-btn-${id}" onclick="doExtend('${id}')">🔄 إعادة فتح / تمديد المحاضرة (${EXT_HOURS} ساعة) — المحاولات المتبقية: ${S.triesLeft}</button>`
@@ -3955,8 +3958,8 @@
     }
     function localSub(p) {
       const now = nowMs(), s = subsMap[p.lectureId];
-      if (p.action === "subscribe") { if (!s) subsMap[p.lectureId] = { at: now, until: now + SUB_HOURS * 3600000, tries: 0 }; }
-      else if (p.action === "extend" && s && now >= s.until && (s.tries || 0) < MAX_TRIES)
+      if (p.action === "subscribe") { if (!s) subsMap[p.lectureId] = { at: now, until: now + subCfg().hours * 3600000, tries: 0 }; }
+      else if (p.action === "extend" && s && now >= s.until && (s.tries || 0) < subCfg().max)
         subsMap[p.lectureId] = { at: s.at, until: now + EXT_HOURS * 3600000, tries: (s.tries || 0) + 1 };
       saveSubs();
     }
