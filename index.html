@@ -1393,6 +1393,12 @@
     .sub-banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#fff3e0;color:#7a4300;border:1px solid #ffb74d;border-radius:12px;padding:12px 16px;margin:0 0 16px;font-weight:700;font-size:14px}
     .sub-banner .btn-submit{width:auto;margin:0;padding:8px 16px;background:#ef6c00}
     [data-theme="dark"] .sub-banner{background:#3a2a10;color:#ffcc80;border-color:#8a5a1a}
+    /* فيديو الشرح في صفحة الكورسات (الصف الثاني الثانوي) */
+    .cv-box{max-width:360px;margin:0 auto 16px;background:var(--card-bg,#fff);border:1px solid var(--border-color);border-radius:14px;padding:8px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+    .cv-title{font-weight:700;font-size:13px;color:var(--primary-color);text-align:center;margin-bottom:6px}
+    .cv-frame{position:relative;width:100%;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000}
+    .cv-frame iframe,.cv-frame #cvPlayer{position:absolute;inset:0;width:100%;height:100%;border:0}
+    .cv-mute{display:block;width:100%;margin-top:8px;background:var(--primary-color);color:#fff;border:0;border-radius:10px;padding:9px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer}
     .course-card .btn-submit + .btn-submit{margin-top:8px}
     .qz-note{width:100%;text-align:center;font-size:13px;font-weight:700;color:#555;padding:4px 0}
     .qz-note.ok{color:#2e7d32}.qz-note.bad{color:#c62828}
@@ -1706,6 +1712,7 @@
  
   <div class="container" id="coursesPage">
     <h2 class="section-title">الكورسات المتاحة</h2>
+    <div id="coursesVideoBox"></div>
     <div class="courses-grid" id="coursesGrid"></div>
   </div>
 
@@ -2741,7 +2748,7 @@
 
     function setView(v) {
       view = v;
-      document.getElementById("coursesPage").style.display = v === "courses" ? "" : "none";
+      document.getElementById("coursesPage").style.display = v === "courses" ? "" : "none"; try { cvPageVisible(v === "courses"); } catch (_) {}
       document.getElementById("mainContainer").style.display = v === "course" ? "" : "none";
       document.getElementById("accountPage").style.display = v === "account" ? "block" : "none";
       if (v === "courses") { renderCourses(); refreshStatus(); }
@@ -2749,8 +2756,64 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
       setTimeout(pinFooter, 50);
     }
+    // ============ فيديو الشرح في صفحة الكورسات: الصف الثاني الثانوي فقط ============
+    const CV_VIDEO_ID = "HLoX2nkWgt4", CV_GRADE = "2", CV_VOLUME = 50; // الصوت المبدئي متوسط (50%) والطالب يقدر يعلّيه من شريط الصوت
+    let cvPlayer = null, cvPoll = null, cvApiLoading = false, cvFellBack = false;
+    function cvLoadApi(cb) {
+      if (window.YT && window.YT.Player) return cb();
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function () { try { if (prev) prev(); } catch (_) {} cb(); };
+      if (cvApiLoading) return; cvApiLoading = true;
+      const sc = document.createElement("script"); sc.src = "https://www.youtube.com/iframe_api"; sc.async = true; document.head.appendChild(sc);
+    }
+    function cvSyncBtn() {
+      const b = document.getElementById("cvMuteBtn"); if (!b || !cvPlayer || !cvPlayer.isMuted) return;
+      try { b.textContent = cvPlayer.isMuted() ? "🔊 تشغيل الصوت" : "🔇 كتم الصوت"; } catch (_) {}
+    }
+    function cvToggleMute() {
+      if (!cvPlayer || !cvPlayer.isMuted) return;
+      try {
+        if (cvPlayer.isMuted()) { cvPlayer.unMute(); if (!cvPlayer.getVolume || cvPlayer.getVolume() < 5) cvPlayer.setVolume(CV_VOLUME); cvPlayer.playVideo(); }
+        else cvPlayer.mute();
+      } catch (_) {}
+      cvSyncBtn();
+    }
+    function cvBuild() {
+      if (cvPlayer || !document.getElementById("cvPlayer") || !(window.YT && window.YT.Player)) return;
+      const vars = { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, controls: 1 };
+      if (/^https?:/.test(location.protocol)) vars.origin = location.origin;
+      cvPlayer = new YT.Player("cvPlayer", {
+        videoId: CV_VIDEO_ID, playerVars: vars,
+        events: {
+          onReady: (e) => {
+            try { e.target.setVolume(CV_VOLUME); e.target.unMute(); e.target.playVideo(); } catch (_) {}
+            setTimeout(() => { // لو المتصفح منع التشغيل بصوت: نشغّله مكتوم والطالب يضغط «تشغيل الصوت»
+              try { if (cvPlayer && cvPlayer.getPlayerState && cvPlayer.getPlayerState() !== 1 && !cvFellBack) { cvFellBack = true; cvPlayer.mute(); cvPlayer.playVideo(); cvSyncBtn(); } } catch (_) {}
+            }, 1800);
+          },
+          onAutoplayBlocked: () => { try { cvFellBack = true; cvPlayer.mute(); cvPlayer.playVideo(); cvSyncBtn(); } catch (_) {} }
+        }
+      });
+      if (!cvPoll) cvPoll = setInterval(cvSyncBtn, 1000);
+    }
+    function cvDestroy() {
+      try { if (cvPlayer && cvPlayer.destroy) cvPlayer.destroy(); } catch (_) {}
+      cvPlayer = null; cvFellBack = false;
+      if (cvPoll) { clearInterval(cvPoll); cvPoll = null; }
+    }
+    function cvPageVisible(on) { // يوقف الصوت لما الطالب يدخل كورس، ويكمّل لما يرجع لصفحة الكورسات
+      try { if (!cvPlayer || !cvPlayer.pauseVideo) return; if (on) cvPlayer.playVideo(); else cvPlayer.pauseVideo(); } catch (_) {}
+    }
+    function renderCoursesVideo() {
+      const box = document.getElementById("coursesVideoBox"); if (!box) return;
+      if (viewGrade() !== CV_GRADE) { if (cvPlayer || box.innerHTML) { cvDestroy(); box.innerHTML = ""; } return; }
+      if (box.firstChild) return; // مبني بالفعل: لا نعيد التحميل
+      box.innerHTML = `<div class="cv-box"><div class="cv-title">🎬 شرح استخدام المنصة</div><div class="cv-frame"><div id="cvPlayer"></div></div><button type="button" class="cv-mute" id="cvMuteBtn" onclick="cvToggleMute()">🔇 كتم الصوت</button></div>`;
+      cvLoadApi(cvBuild);
+    }
     function renderCourses() {
       const g = document.getElementById("coursesGrid"); if (!g) return;
+      try { renderCoursesVideo(); } catch (_) {}
       const gr = viewGrade(), list = COURSES.filter((c) => !c.grades || c.grades.includes(gr));
       g.innerHTML = gradeBarHTML() + (list.length ? "" : `<div class="grade-empty" style="grid-column:1/-1">لا توجد كورسات لهذا الصف حالياً، وستُضاف قريباً إن شاء الله 🌿</div>`) + list.map((c) => {
         const on = c.isActive(currentStudent);
