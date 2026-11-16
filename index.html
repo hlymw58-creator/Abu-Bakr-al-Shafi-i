@@ -7630,10 +7630,10 @@ function chatAllowed() {
       .catch(function (e) { loading = null; throw e; });
     return loading;
   }
-  function courses() { try { return studentCourseIds(); } catch (_) { return []; } }
+  function courses() { try { return currentStudent ? studentCourseIds() : []; } catch (_) { return []; } }
   async function sync(force) {
-    if (busy || !currentStudent || Notification.permission !== "granted") return;
-    var sig = currentStudent.phone + "|" + courses().join(",") + "|" + (currentStudent.isAdmin ? "a" : "") + "|" + Math.floor(Date.now() / (5 * 864e5));
+    if (busy || Notification.permission !== "granted") return;
+    var st = currentStudent, sig = (st ? st.phone : "guest") + "|" + courses().join(",") + "|" + (st && st.isAdmin ? "a" : "") + "|" + Math.floor(Date.now() / (5 * 864e5));
     if (!force && ls("push_sig") === sig) return;
     busy = true;
     try {
@@ -7642,7 +7642,7 @@ function chatAllowed() {
       await navigator.serviceWorker.ready;
       var token = await messaging.getToken({ vapidKey: C.vapidKey, serviceWorkerRegistration: reg });
       if (!token) return;
-      var r = await callScript(C.scriptUrl, { action: "registerToken", token: token, phone: currentStudent.phone, courses: courses(), all: currentStudent.isAdmin === true });
+      var r = await callScript(C.scriptUrl, { action: "registerToken", token: token, phone: st ? st.phone : "", courses: courses(), all: !!(st && st.isAdmin === true) });
       if (r.type === "ok") ls("push_sig", sig);
     } catch (_) {} finally { busy = false; }
   }
@@ -7663,9 +7663,9 @@ function chatAllowed() {
     e.classList.add("show");
   }
   setInterval(function () {
-    if (!currentStudent || document.hidden) return;
+    if (document.hidden) return;
     if (Notification.permission === "granted") sync(false);
-    else if (Notification.permission === "default" && !shown && Date.now() - Number(ls("push_snooze") || 0) > SNOOZE_MS) setTimeout(function () { if (Notification.permission === "default" && currentStudent) showAsk(); }, 2500);
+    else if (Notification.permission === "default" && !shown && Date.now() - Number(ls("push_snooze") || 0) > SNOOZE_MS) setTimeout(function () { if (Notification.permission === "default") showAsk(); }, 2500);
   }, 5000);
 })();
 </script>
