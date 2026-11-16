@@ -30,7 +30,7 @@
       var last = Number(sessionStorage.getItem("__upd_at") || 0);
       if (Date.now() - last < 30000) return;
       // 3) نمسح أي كاش قديم (service worker / Cache Storage) بهدوء
-      try { if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }); } catch (e) {}
+      try { if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { var w = r.active || r.waiting || r.installing; if (w && /firebase-messaging-sw/.test(w.scriptURL || "")) return; r.unregister(); }); }); } catch (e) {}
       try { if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }); } catch (e) {}
       // 4) نقارن النسخة اللي شغالة (من الكاش) بآخر نسخة على السيرفر
       function h(s) { var x = 5381, i = s.length; while (i) x = (x * 33) ^ s.charCodeAt(--i); return (x >>> 0) + ":" + s.length; }
@@ -7599,6 +7599,74 @@ function chatAllowed() {
     if (!ok && chatOpen) closeChat();
   }
   setInterval(sync, 1200); sync();
+})();
+</script>
+<style id="pushCss">
+#pushAsk{position:fixed;z-index:1095;left:50%;bottom:18px;transform:translateX(-50%);width:min(420px,92vw);background:#fff;color:#222;border:2px solid var(--primary-color,#1b5e20);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.3);padding:14px 16px;display:none;direction:rtl;font-size:14px;line-height:1.7}
+#pushAsk.show{display:block}
+#pushAsk b{display:block;font-size:15px;margin-bottom:4px}
+#pushAsk .pa-row{display:flex;gap:8px;margin-top:10px}
+#pushAsk button{flex:1;border:none;border-radius:10px;padding:10px;font-size:14px;font-weight:bold;cursor:pointer}
+#pushAsk .pa-yes{background:var(--primary-color,#1b5e20);color:#fff}
+#pushAsk .pa-no{background:#eee;color:#444}
+[data-theme="dark"] #pushAsk{background:#16241b;color:#eee}
+[data-theme="dark"] #pushAsk .pa-no{background:#2b3f32;color:#ddd}
+</style>
+<script src="push-config.js"></script>
+<script id="pushJs">
+// إشعارات جوجل (Firebase Cloud Messaging): تظهر في شريط إشعارات الموبايل حتى لو المنصة مقفولة
+(function () {
+  var C = window.PUSH_CONFIG;
+  var bad = function (v) { return !v || /^PASTE/.test(String(v)); };
+  if (!C || !C.firebase || bad(C.firebase.apiKey) || bad(C.vapidKey) || bad(C.scriptUrl)) return;
+  if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  var SDK = "https://www.gstatic.com/firebasejs/10.12.2/", SNOOZE_MS = 3 * 864e5;
+  var loading = null, busy = false, messaging = null, shown = false;
+  function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) {} return null; }
+  function load(src) { return new Promise(function (ok, no) { var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+  function sdk() {
+    if (!loading) loading = load(SDK + "firebase-app-compat.js").then(function () { return load(SDK + "firebase-messaging-compat.js"); })
+      .then(function () { if (!firebase.apps.length) firebase.initializeApp(C.firebase); messaging = firebase.messaging(); })
+      .catch(function (e) { loading = null; throw e; });
+    return loading;
+  }
+  function courses() { try { return studentCourseIds(); } catch (_) { return []; } }
+  async function sync(force) {
+    if (busy || !currentStudent || Notification.permission !== "granted") return;
+    var sig = currentStudent.phone + "|" + courses().join(",") + "|" + (currentStudent.isAdmin ? "a" : "") + "|" + Math.floor(Date.now() / (5 * 864e5));
+    if (!force && ls("push_sig") === sig) return;
+    busy = true;
+    try {
+      await sdk();
+      var reg = await navigator.serviceWorker.register("firebase-messaging-sw.js", { scope: "./" });
+      await navigator.serviceWorker.ready;
+      var token = await messaging.getToken({ vapidKey: C.vapidKey, serviceWorkerRegistration: reg });
+      if (!token) return;
+      var r = await callScript(C.scriptUrl, { action: "registerToken", token: token, phone: currentStudent.phone, courses: courses(), all: currentStudent.isAdmin === true });
+      if (r.type === "ok") ls("push_sig", sig);
+    } catch (_) {} finally { busy = false; }
+  }
+  function hideAsk() { var e = document.getElementById("pushAsk"); if (e) e.classList.remove("show"); }
+  function showAsk() {
+    shown = true;
+    var e = document.getElementById("pushAsk");
+    if (!e) {
+      e = document.createElement("div"); e.id = "pushAsk"; e.setAttribute("role", "dialog");
+      e.innerHTML = '<b>🔔 فعّل إشعارات المنصة</b>هيوصلك إشعار على موبايلك أول ما تنزل محاضرة جديدة، حتى لو المنصة مقفولة.<div class="pa-row"><button type="button" class="pa-yes">تفعيل الإشعارات</button><button type="button" class="pa-no">مش دلوقتي</button></div>';
+      e.querySelector(".pa-yes").onclick = function () {
+        hideAsk();
+        try { Notification.requestPermission().then(function (p) { if (p === "granted") sync(true); }); } catch (_) {}
+      };
+      e.querySelector(".pa-no").onclick = function () { ls("push_snooze", String(Date.now())); hideAsk(); };
+      document.body.appendChild(e);
+    }
+    e.classList.add("show");
+  }
+  setInterval(function () {
+    if (!currentStudent || document.hidden) return;
+    if (Notification.permission === "granted") sync(false);
+    else if (Notification.permission === "default" && !shown && Date.now() - Number(ls("push_snooze") || 0) > SNOOZE_MS) setTimeout(function () { if (Notification.permission === "default" && currentStudent) showAsk(); }, 2500);
+  }, 5000);
 })();
 </script>
 <script src="adhkar-data.js?v=6"></script>
