@@ -1485,6 +1485,15 @@
     .guest-login-btn{display:none}
     .is-guest .guest-login-btn{display:inline-block}
     .is-guest .profile-btn,.is-guest #profileMenu,.is-guest #notifMenu,.is-guest .hdr-actions .icon-btn[onclick*="notifMenu"]{display:none!important}
+
+/* ===== عين إظهار كلمة السر + رابط نسيت كلمة السر ===== */
+.pw-wrap{position:relative;display:block;width:100%}
+.pw-wrap>input{width:100%;box-sizing:border-box;padding-left:46px!important}
+.pw-eye{position:absolute;left:6px;top:50%;transform:translateY(-50%);background:none!important;border:0!important;box-shadow:none!important;padding:6px!important;margin:0!important;width:auto!important;cursor:pointer;color:#6b6b6b;display:flex;align-items:center;line-height:0}
+.pw-eye:hover,.pw-eye:active{transform:translateY(-50%)!important;color:#1b5e20}
+[data-theme="dark"] .pw-eye{color:#a5d6a7}
+.forgot-link{color:#c62828;font-weight:700;cursor:pointer;text-decoration:underline;font-size:14px}
+.fg-ok{font-size:54px;line-height:1.2}
 </style>
 <base target="_blank">
 <base target="_blank">
@@ -1871,6 +1880,7 @@
         <button type="submit" class="btn-submit" id="authSubmitBtn">دخول المنصة</button>
         <div class="error-msg" id="authError"></div>
  
+        <div id="forgotWrap" style="display:none;text-align:center;margin:10px 0 2px"><span class="forgot-link" onclick="openForgot()">نسيت كلمة السر؟</span></div>
         <div class="auth-toggle">
           <span id="toggleText" onclick="toggleAuthMode()">ليس لديك حساب؟ إنشاء حساب جديد</span>
           &nbsp;·&nbsp; <span onclick="openAuthChoice()">رجوع</span>
@@ -1893,6 +1903,36 @@
         <button class="btn-submit" type="button" style="background:#757575;margin-top:8px" onclick="closePass()">إلغاء</button>
         <div class="error-msg" id="pcErr"></div>
       </form>
+    </div>
+  </div>
+
+  <!-- نافذة استرجاع كلمة السر -->
+  <div class="modal-overlay" id="fgModal" style="display:none;">
+    <div class="modal-content">
+      <h3 class="modal-title">استرجاع كلمة السر</h3>
+      <form id="fgStep1" onsubmit="fgVerify(event)">
+        <p style="font-size:14px;line-height:1.9;margin:0 0 10px;color:#666">اكتب بياناتك كما سجّلتها في حسابك، وبعد التأكد منها ستتمكن من إنشاء كلمة سر جديدة.</p>
+        <div class="form-group"><label>رقم هاتف الطالب:</label><input type="tel" id="fgPhone" required inputmode="numeric" maxlength="14" placeholder="01xxxxxxxxx"></div>
+        <div class="form-group"><label>رقم هاتف ولي الأمر:</label><input type="tel" id="fgParent" required inputmode="numeric" maxlength="14" placeholder="01xxxxxxxxx"></div>
+        <div class="form-group"><label>المحافظة:</label><select id="fgGov" required></select></div>
+        <div class="form-group"><label>الصف الدراسي:</label><select id="fgGrade" required></select></div>
+        <button class="btn-submit" type="submit" id="fgBtn1">تحقق من البيانات</button>
+        <button class="btn-submit" type="button" style="background:#757575;margin-top:8px" onclick="closeForgot()">إلغاء</button>
+        <div class="error-msg" id="fgErr1"></div>
+      </form>
+      <form id="fgStep2" style="display:none;" onsubmit="fgReset(event)">
+        <p style="font-size:14px;line-height:1.9;margin:0 0 10px;color:#2e7d32;font-weight:700">✔ تم التأكد من بياناتك. اختر كلمة السر الجديدة:</p>
+        <div class="form-group"><label>كلمة السر الجديدة:</label><input type="password" id="fgNew" required minlength="6" autocomplete="new-password" placeholder="6 أحرف على الأقل"></div>
+        <div class="form-group"><label>تأكيد كلمة السر الجديدة:</label><input type="password" id="fgNew2" required minlength="6" autocomplete="new-password" placeholder="أعد كتابة كلمة السر"></div>
+        <button class="btn-submit" type="submit" id="fgBtn2">حفظ كلمة السر الجديدة</button>
+        <button class="btn-submit" type="button" style="background:#757575;margin-top:8px" onclick="closeForgot()">إلغاء</button>
+        <div class="error-msg" id="fgErr2"></div>
+      </form>
+      <div id="fgStep3" style="display:none;text-align:center;">
+        <div class="fg-ok">✅</div>
+        <p style="line-height:2;font-weight:700">تم تغيير كلمة السر بنجاح.<br>سجّل دخولك الآن بكلمة السر الجديدة.</p>
+        <button class="btn-submit" type="button" onclick="fgDone()">تسجيل الدخول</button>
+      </div>
     </div>
   </div>
 
@@ -3000,6 +3040,7 @@
       const errorDiv = document.getElementById("authError");
  
       errorDiv.style.display = "none";
+      try { document.getElementById("forgotWrap").style.display = "none"; } catch (_) {}
       ["regFirst","regSecond","regThird","regParentPhone","regGovernorate","regGrade","confirmPassword"].forEach((i) => { document.getElementById(i).required = isRegisterMode; });
  
       if (isRegisterMode) {
@@ -3095,7 +3136,7 @@
           if (!isRegisterMode) pushNotif(`${greetWord()} يا ${firstName()}، سعدنا بعودتك إلى منصة الشافعي الصغير`);
           showWelcome(runPendingAfterAuth);
         } else if (result.type === "fail") {
-          showError(safeMsg(result.message, "بيانات الدخول غير صحيحة."));
+          showError(safeMsg(result.message, "بيانات الدخول غير صحيحة.")); if (!isRegisterMode && !(result.data && /^(DEVICE_LIMIT|BANNED|DELETED|LOCKED)$/.test(result.data.code))) { const fw = document.getElementById("forgotWrap"); if (fw) fw.style.display = "block"; }
         } else {
           showError(GENERIC_ERROR);
         }
@@ -3633,7 +3674,7 @@
     // يوتيوب نفسه بيرسم شاشة "فيديوهات مقترحة/المزيد" فوق الفيديو في حالتين: عند نهاية الفيديو وعند الإيقاف المؤقت،
     // حتى لو الفيديو علني وبإعداد rel=0. الحل إننا نغطي الإطار بغطاء خاص (فيه صورة الفيديو مظلّلة + رسالة) في الحالتين.
     // لو عايز الفيديو يفضل ظاهر وقت الإيقاف (عشان الطالب يقرا السبورة) خلّيها false: هيتغطى عند النهاية بس.
-    const PV_HIDE_FRAME_ON_PAUSE = true;
+    const PV_HIDE_FRAME_ON_PAUSE = false; // الفيديو يقف على اللقطة الحالية بدون بلور/صورة غلاف
     let pvYtPauseTimer = null;
     function pvSetupYtShield(videoId, host) {
       const p = pvPlayerInstance; if (!p) return;
@@ -7671,5 +7712,83 @@ function chatAllowed() {
 </script>
 <script src="adhkar-data.js?v=6"></script>
 <script src="adhkar-quran.js?v=6"></script>
+<script>
+/* ===== عين إظهار/إخفاء كلمة السر لكل خانات الباسورد (حتى اللي بتتعمل ديناميكياً) ===== */
+(function () {
+  var EYE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYEOFF = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  function init(root) {
+    (root || document).querySelectorAll("input[type=password]:not([data-eye])").forEach(function (inp) {
+      if (!inp.parentNode) return;
+      inp.setAttribute("data-eye", "1");
+      var w = document.createElement("div"); w.className = "pw-wrap";
+      inp.parentNode.insertBefore(w, inp); w.appendChild(inp);
+      var b = document.createElement("button"); b.type = "button"; b.className = "pw-eye"; b.tabIndex = -1;
+      b.setAttribute("aria-label", "إظهار/إخفاء كلمة السر"); b.innerHTML = EYE;
+      b.onclick = function () { var show = inp.type === "password"; inp.type = show ? "text" : "password"; b.innerHTML = show ? EYEOFF : EYE; };
+      w.appendChild(b);
+    });
+  }
+  init();
+  try { new MutationObserver(function () { init(); }).observe(document.body, { childList: true, subtree: true }); } catch (_) {}
+})();
+
+/* ===== نسيت كلمة السر ===== */
+var fgToken = "", fgBusy = false;
+function fgEl(id) { return document.getElementById(id); }
+function fgErr(id, msg) { var e = fgEl(id); e.innerText = msg; e.style.display = msg ? "block" : "none"; }
+function fgShow(step) { ["fgStep1", "fgStep2", "fgStep3"].forEach(function (s, i) { fgEl(s).style.display = (i + 1 === step) ? (step === 3 ? "block" : "block") : "none"; }); }
+function openForgot() {
+  var g = fgEl("fgGov"), r = fgEl("fgGrade");
+  if (!g.options.length) g.innerHTML = fgEl("regGovernorate").innerHTML;
+  if (!r.options.length) r.innerHTML = fgEl("regGrade").innerHTML;
+  fgEl("fgPhone").value = fgEl("studentPhone").value || "";
+  fgEl("fgParent").value = ""; g.value = ""; r.value = "";
+  fgEl("fgNew").value = ""; fgEl("fgNew2").value = "";
+  fgToken = ""; fgErr("fgErr1", ""); fgErr("fgErr2", ""); fgShow(1);
+  fgEl("fgModal").style.display = "flex";
+}
+function closeForgot() { fgEl("fgModal").style.display = "none"; fgToken = ""; }
+function fgDone() {
+  var ph = fgEl("fgPhone").value;
+  closeForgot();
+  fgEl("studentPhone").value = ph; fgEl("studentPassword").value = "";
+  try { fgEl("forgotWrap").style.display = "none"; fgEl("authError").style.display = "none"; } catch (_) {}
+  try { fgEl("studentPassword").focus(); } catch (_) {}
+}
+async function fgVerify(e) {
+  e.preventDefault(); if (fgBusy) return;
+  var phone = normalizePhone(fgEl("fgPhone").value), parent = normalizePhone(fgEl("fgParent").value);
+  var gov = fgEl("fgGov").value, grade = fgEl("fgGrade").value;
+  if (!PHONE_RE.test(phone)) return fgErr("fgErr1", "رقم هاتف الطالب غير صحيح.");
+  if (!PHONE_RE.test(parent)) return fgErr("fgErr1", "رقم هاتف ولي الأمر غير صحيح.");
+  if (!gov) return fgErr("fgErr1", "يرجى اختيار المحافظة.");
+  if (!grade) return fgErr("fgErr1", "يرجى اختيار الصف الدراسي.");
+  fgErr("fgErr1", ""); fgBusy = true;
+  var btn = fgEl("fgBtn1"); btn.disabled = true; btn.innerText = "جاري التحقق...";
+  try {
+    var r = await callWithRetry(GOOGLE_SCRIPT_URL, { action: "forgotVerify", studentPhone: phone, parentPhone: parent, governorate: gov, grade: grade, deviceId: getDeviceId() }, 3);
+    if (r.type === "ok" && r.data && r.data.resetToken) { fgToken = r.data.resetToken; fgEl("fgPhone").value = phone; fgShow(2); }
+    else if (r.type === "fail") fgErr("fgErr1", safeMsg(r.message, "البيانات غير مطابقة لبيانات الحساب."));
+    else fgErr("fgErr1", GENERIC_ERROR);
+  } catch (_) { fgErr("fgErr1", GENERIC_ERROR); }
+  finally { fgBusy = false; btn.disabled = false; btn.innerText = "تحقق من البيانات"; }
+}
+async function fgReset(e) {
+  e.preventDefault(); if (fgBusy) return;
+  var p1 = fgEl("fgNew").value.trim(), p2 = fgEl("fgNew2").value.trim();
+  if (p1.length < 6) return fgErr("fgErr2", "كلمة السر يجب ألا تقل عن 6 أحرف.");
+  if (p1 !== p2) return fgErr("fgErr2", "كلمتا السر غير متطابقتين!");
+  fgErr("fgErr2", ""); fgBusy = true;
+  var btn = fgEl("fgBtn2"); btn.disabled = true; btn.innerText = "جاري الحفظ...";
+  try {
+    var r = await callWithRetry(GOOGLE_SCRIPT_URL, { action: "forgotReset", studentPhone: normalizePhone(fgEl("fgPhone").value), resetToken: fgToken, newPassword: p1, deviceId: getDeviceId() }, 3);
+    if (r.type === "ok") { fgToken = ""; fgEl("fgNew").value = ""; fgEl("fgNew2").value = ""; fgShow(3); }
+    else if (r.type === "fail") fgErr("fgErr2", safeMsg(r.message, "تعذر حفظ كلمة السر، ابدأ من جديد."));
+    else fgErr("fgErr2", GENERIC_ERROR);
+  } catch (_) { fgErr("fgErr2", GENERIC_ERROR); }
+  finally { fgBusy = false; btn.disabled = false; btn.innerText = "حفظ كلمة السر الجديدة"; }
+}
+</script>
 </body>
 </html>
