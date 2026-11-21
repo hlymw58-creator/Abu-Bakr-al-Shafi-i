@@ -1091,6 +1091,13 @@
       color:#f4e285; font-weight:700; font-size:clamp(13px,3.2vw,18px); line-height:1.9; pointer-events:none;
       background:linear-gradient(rgba(5,26,12,.93),rgba(5,26,12,.93)), var(--pv-thumb) center/cover #000; }
     .pv-yt-cover.show { display:flex; animation:fadeUp .25s ease both; }
+    .pv-zoom-btn { display: none !important; }
+    .pv-video-container .plyr__video-wrapper { transform: none !important; }
+    /* أغطية تخفي شريط عنوان/اسم القناة (فوق) وشعار يوتيوب (تحت) — بتظهر وقت التحميل والإيقاف بس */
+    .pv-yt-mask { position:absolute; left:0; right:0; z-index:3; opacity:0; pointer-events:none; transition:opacity .25s ease; background:#000; }
+    .pv-yt-mask.show { opacity:1; }
+    .pv-yt-mask.top { top:0; height:clamp(44px,13%,72px); }
+    .pv-yt-mask.bot { bottom:0; height:clamp(46px,13%,64px); }
     .pv-drive-frame { position:absolute; inset:0; width:100%; height:100%; border:0; background:#000; z-index:1; }
     .pv-drive-shield { position:absolute; top:0; right:0; left:0; width:auto; height:clamp(44px,9%,64px); z-index:3; background:transparent; }
     .sub-timer { width:100%; text-align:center; font-weight:700; font-size:.9rem; color:#2e7d32; direction:rtl; }
@@ -1686,6 +1693,46 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
 .adm-item-row .adm-btn{flex-shrink:0}
 #quizOverlay{z-index:2300}
 .lecture-card{cursor:pointer}
+</style>
+<style id="pv-yt-crop">
+/* قص إطار يوتيوب (نفس أسلوب منصة نهج الأزهر): الـ iframe بيتكبّر طولياً ويتزحزح لفوق
+   فشريط العنوان/اسم القناة (فوق) وشعار يوتيوب (تحت) بيقعوا برّه المساحة الظاهرة — بدون أي زوم للفيديو */
+.pv-video-container .plyr__video-wrapper,
+.pv-video-container .plyr__video-embed { overflow: hidden !important; }
+
+/* الوضع العمودي / الصفحة العادية */
+.pv-video-container .plyr--full-ui .plyr__video-embed > .plyr__video-embed__container,
+.pv-video-container.plyr--full-ui .plyr__video-embed > .plyr__video-embed__container {
+  padding-bottom: 240% !important; position: relative !important;
+  transform: translateY(-38.28125%) !important; height: auto !important; width: 100% !important;
+}
+/* احتياطي لو الـ iframe ابن مباشر */
+.pv-video-container .plyr__video-embed > iframe,
+.pv-video-container .plyr__video-wrapper > iframe { top: -50% !important; height: 200% !important; }
+/* لما الحاوية موجودة، الـ iframe يملأ صندوق القص الطويل */
+.pv-video-container .plyr__video-embed__container iframe {
+  top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; position: absolute !important;
+}
+/* العرضي وملء الشاشة: قص أخف عشان أعلى الفيديو ما ينقصش */
+@media (orientation: landscape) {
+  .pv-video-container .plyr--full-ui .plyr__video-embed > .plyr__video-embed__container,
+  .pv-video-container.plyr--full-ui .plyr__video-embed > .plyr__video-embed__container {
+    padding-bottom: 100% !important; transform: translateY(-21.875%) !important;
+  }
+  .pv-video-container .plyr__video-embed > iframe,
+  .pv-video-container .plyr__video-wrapper > iframe { top: -25% !important; height: 150% !important; }
+}
+.pv-overlay.pv-full .pv-video-container .plyr__video-embed > .plyr__video-embed__container,
+.pv-video-container .plyr:fullscreen .plyr__video-embed > .plyr__video-embed__container,
+.pv-video-container .plyr.plyr--fullscreen-active .plyr__video-embed > .plyr__video-embed__container,
+.pv-video-container .plyr.plyr--fullscreen-fallback .plyr__video-embed > .plyr__video-embed__container {
+  padding-bottom: 100% !important; transform: translateY(-21.875%) !important;
+}
+.pv-overlay.pv-full .pv-video-container .plyr__video-embed > iframe,
+.pv-video-container .plyr:fullscreen .plyr__video-embed > iframe,
+.pv-video-container .plyr.plyr--fullscreen-active .plyr__video-embed > iframe,
+.pv-video-container .plyr.plyr--fullscreen-fallback .plyr__video-embed > iframe { top: -25% !important; height: 150% !important; }
+.pv-video-container iframe { pointer-events: none !important; border: none !important; }
 </style>
 </head>
 <body>
@@ -3390,8 +3437,8 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
       return "";
     }
  
-    const PV_ZOOMS = [1, 1.12, 1.25];
-    let pvZoomIdx = (() => { try { const v = localStorage.getItem("pv_zoom"); return v === null ? 1 : Math.min(2, Math.max(0, Number(v) || 0)); } catch (_) { return 1; } })();
+    const PV_ZOOMS = [1]; // التكبير اتلغى نهائياً: الفيديو بحجمه الأصلي
+    let pvZoomIdx = 0;
     function pvApplyZoom() {
       const box = document.getElementById("pvVideoBox"); if (box) box.style.setProperty("--pvz", PV_ZOOMS[pvZoomIdx]);
       const b = document.getElementById("pvZoomBtn"); if (b) { b.title = pvZoomIdx ? "تكبير " + Math.round((PV_ZOOMS[pvZoomIdx] - 1) * 100) + "% (اضغط للتغيير)" : "الحجم الأصلي (اضغط للتكبير)"; b.style.opacity = pvZoomIdx ? "1" : ".7"; }
@@ -3495,7 +3542,7 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
     // بدون ما يقفل نافذة المشغل نفسها
     function pvResetPlayer() {
       clearTimeout(pvYtPauseTimer);
-      document.querySelectorAll(".pv-drive-frame,.pv-drive-shield,.pv-yt-cover,#pv-watermark").forEach((n) => n.remove());
+      document.querySelectorAll(".pv-drive-frame,.pv-drive-shield,.pv-yt-cover,.pv-yt-mask,#pv-watermark").forEach((n) => n.remove());
       if (pvPlayerInstance) {
         try { pvPlayerInstance.pause(); } catch (_) {}
         try { pvPlayerInstance.destroy(); } catch (_) {}
@@ -3725,6 +3772,20 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
       const msg = document.createElement("div"); cover.appendChild(msg);
       // داخل .plyr نفسه (زي العلامة المائية) عشان يفضل شغال في وضع ملء الشاشة بتاع Plyr
       (host.querySelector(".plyr") || host).appendChild(cover);
+      // أغطية إخفاء علامات يوتيوب (اسم القناة/العنوان فوق، وكلمة YouTube تحت)
+      const plyrEl = host.querySelector(".plyr") || host;
+      const mTop = document.createElement("div"); mTop.className = "pv-yt-mask top";
+      const mBot = document.createElement("div"); mBot.className = "pv-yt-mask bot";
+      const PV_YT_MASKS = false; // false = ما فيش أي أغطية فوق الفيديو (صورة كاملة بدون قص). true = أشرطة سودا تخفي علامات يوتيوب وقت الإيقاف
+      if (PV_YT_MASKS) { plyrEl.appendChild(mTop); plyrEl.appendChild(mBot); }
+      const PV_MASK_HOLD_MS = 4000; // يفضل الغطاء كام ملّي ثانية بعد ما الفيديو يشتغل (وقت ما يوتيوب بيخفي الشريط بنفسه)
+      let maskTimer = null;
+      const maskOn = () => { clearTimeout(maskTimer); mTop.classList.add("show"); mBot.classList.add("show"); };
+      const maskOffSoon = () => { clearTimeout(maskTimer); maskTimer = setTimeout(() => { mTop.classList.remove("show"); mBot.classList.remove("show"); }, PV_MASK_HOLD_MS); };
+      maskOn();
+      p.on("playing", maskOffSoon);
+      p.on("pause", maskOn);
+      p.on("ended", maskOn);
       const END_TXT = "✅ انتهت المحاضرة — اضغط في المنتصف لإعادة المشاهدة";
       const PAUSE_TXT = "⏸ الفيديو متوقف مؤقتاً — اضغط في المنتصف للمتابعة";
       const show = (t) => { msg.textContent = t; cover.classList.add("show"); };
