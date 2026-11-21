@@ -1641,6 +1641,52 @@
 [data-theme="dark"] #quran-quiz .qq-bar{background:#2b3b31}
 </style>
 <link rel="stylesheet" href="adhkar-quran.css?v=6">
+<style id="lpStyle">
+/* ===== صفحة المحاضرة (بديل نافذة المشغل) ===== */
+#pvOverlay{--lp-bg:#f3f1ec;--lp-card:#fff;--lp-text:#1d2b24;--lp-sub:#667069;--lp-line:#e6e3dc;--lp-cur:#eef3f0;--lp-accent:#1f6f54;--plyr-color-main:#2f9e6e;
+  background:var(--lp-bg);z-index:2000;align-items:stretch;justify-content:stretch;color:var(--lp-text)}
+html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#e6eee8;--lp-sub:#9db0a3;--lp-line:#25352b;--lp-cur:#1c2d23;--lp-accent:#4caf86}
+#pvOverlay .pv-card{width:100%;max-width:none;height:100%;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:var(--lp-bg);box-shadow:none;gap:0;overflow:hidden;direction:rtl}
+.lp-top{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--lp-card);border-bottom:1px solid var(--lp-line);border-top:3px solid #2b2b2b;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.lp-top-info{min-width:0;flex:1;text-align:right}
+.lp-top-title{font-size:1rem;font-weight:800;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lp-top-prog{font-size:.75rem;color:var(--lp-sub);margin-top:2px}
+.lp-top-prog b{color:var(--lp-text)}
+.lp-back{flex-shrink:0;display:flex;align-items:center;gap:8px;background:none;border:0;color:var(--lp-text);font-family:inherit;font-weight:700;font-size:.85rem;cursor:pointer;padding:8px 4px}
+.lp-back b{font-size:1.2rem;line-height:1}
+.lp-scroll{flex:1 1 0;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+#pvOverlay .pv-video-wrap{flex:none;width:100%;height:auto;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#pvOverlay .pv-video-container{border-radius:0;box-shadow:none;max-height:none}
+#pvOverlay .pv-video-container .plyr__video-wrapper{transform:none!important}
+#pvOverlay .pv-close-btn,#pvOverlay .pv-full-btn,#pvOverlay .pv-zoom-btn,#pvOverlay .pv-hint,#pvOverlay .pv-brand,#pvOverlay .pv-title{display:none!important}
+#pvOverlay .pv-facade-play{width:68px;height:68px;border:0;background:var(--lp-accent);color:#fff;font-size:24px;padding-right:0;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.lp-box{margin:14px auto 0;max-width:1100px;width:calc(100% - 28px);background:var(--lp-card);border:1px solid var(--lp-line);border-radius:14px;overflow:hidden}
+.lp-box-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;font-weight:800;font-size:.95rem}
+.lp-box-h small{font-size:.72rem;color:var(--lp-sub);font-weight:700;flex-shrink:0}
+.lp-box .sub-timer{padding:0 16px 10px;text-align:right;font-size:.8rem;color:var(--lp-accent)}
+.lp-row{position:relative;display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--lp-line);cursor:pointer;color:var(--lp-text);text-decoration:none;background:transparent;width:100%;font-family:inherit;text-align:right;border-left:0;border-right:0;border-bottom:0}
+.lp-row.cur{background:var(--lp-cur)}
+.lp-row.cur::after{content:"";position:absolute;top:0;bottom:0;right:0;width:3px;background:var(--lp-accent)}
+.lp-ico{flex-shrink:0;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.lp-ico.pdf{background:#fde8e8}.lp-ico.vid{background:#dce9fb}.lp-ico.qz{background:#e3f1ea}.lp-ico.hw{background:#fff1d6}
+.lp-t{flex:1;min-width:0;font-weight:700;font-size:.85rem;line-height:1.5}
+.lp-t small{display:block;font-weight:600;font-size:.72rem;color:var(--lp-sub);margin-top:1px}
+.lp-st{flex-shrink:0;font-size:.75rem;font-weight:800;color:var(--lp-text);min-width:34px;text-align:left}
+.lp-st.ok{color:var(--lp-accent)}
+#pvOverlay .pv-cm-row{max-width:1100px;width:calc(100% - 28px);padding:0;margin:12px auto 0}
+#pvOverlay .pv-cm-btn{background:var(--lp-card);color:var(--lp-text);border:1px solid var(--lp-line)}
+#pvOverlay .pv-support-row{max-width:1100px;width:calc(100% - 28px);margin:12px auto 0;padding:0}
+#pvOverlay .pv-support-btn{background:var(--lp-card);color:var(--lp-text)}
+#pvOverlay .pv-support-btn .pv-phone{color:var(--lp-sub)}
+#pvOverlay.hl-grow,#pvOverlay.hl-grow .pv-card{animation:none!important}
+.adm-item-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.adm-item-row input{width:auto!important;min-width:0;margin:0!important}
+.adm-item-row .ai-title{flex:0 0 34%}
+.adm-item-row .ai-url{flex:1}
+.adm-item-row .adm-btn{flex-shrink:0}
+#quizOverlay{z-index:2300}
+.lecture-card{cursor:pointer}
+</style>
 </head>
 <body>
 <div id="hlIntro" aria-hidden="true">
@@ -1964,40 +2010,41 @@
   <!-- نافذة مشغل الفيديو المحمي (يفتح داخل المنصة عند الدخول للمحاضرة) -->
   <div class="pv-overlay" id="pvOverlay">
     <div class="pv-card">
-      <button type="button" class="pv-close-btn" onclick="closeProtectedPlayer()" title="إغلاق">✕</button>
-      <button type="button" class="pv-full-btn" id="pvFullBtn" onclick="pvSetFull(!pvFull)" title="ملء الشاشة">⛶</button>
-      <button type="button" class="pv-zoom-btn" id="pvZoomBtn" onclick="pvCycleZoom()" title="تكبير الفيديو لإخفاء الحواف السوداء">🔍</button>
-      <div class="pv-brand">
-        <div class="pv-brand-title">منصة الشافعي الصغير</div>
-        <div class="pv-brand-sub">إعداد أ. أبو بكر الشافعي</div>
-      </div>
-      <div class="pv-title" id="pvLectureTitle">المحاضرة</div>
-      <div class="pv-video-wrap" id="pvVideoWrap">
-        <div class="pv-video-container" id="pvVideoBox">
-          <div class="pv-facade" id="pvFacade" onclick="pvStartPlayback()">
-            <div class="pv-facade-play">▶</div>
-          </div>
-          <div class="pv-touch-overlay" id="pvTouchOverlay">
-            <div class="pv-touch-zone pv-seek-right" id="pvZoneRight" title="تقديم 10 ثوانٍ">
-              <div class="pv-seek-feedback" id="pvFeedbackRight">+10s</div>
-            </div>
-            <div class="pv-touch-zone pv-play-center" id="pvZoneCenter" title="تشغيل / إيقاف"></div>
-            <div class="pv-touch-zone pv-seek-left" id="pvZoneLeft" title="تأخير 10 ثوانٍ">
-              <div class="pv-seek-feedback" id="pvFeedbackLeft">-10s</div>
-            </div>
-          </div>
-          <div id="pvPlayer"></div>
+      <div class="lp-top">
+        <div class="lp-top-info">
+          <div class="lp-top-title" id="pvLectureTitle">المحاضرة</div>
+          <div class="lp-top-prog" id="lpProg"></div>
         </div>
+        <button type="button" class="lp-back" onclick="lpBack()"><span>العودة إلى المنهج</span><b aria-hidden="true">&rarr;</b></button>
       </div>
-      <div class="pv-cm-row"><button type="button" class="pv-cm-btn" onclick="cmOpen(cmPlayerLec, true)">💬 تعليقات المحاضرة وإعجابات الطلاب</button></div>
-      <div class="pv-hint">💡 لمشاهدة أكبر اضغط زر ⛶ في الأعلى ثم اقلب الجهاز أفقياً</div>
-      <div class="pv-support-row">
-        <a href="https://wa.me/201099442329" target="_blank" class="pv-support-btn tech">
-          🎧 <span>الدعم الفني<span class="pv-phone">01099442329</span></span>
-        </a>
-        <a href="https://wa.me/201101662590" target="_blank" class="pv-support-btn academic">
-          💬 <span>واتساب المستر<span class="pv-phone">01101662590</span></span>
-        </a>
+      <div class="lp-scroll" id="lpScroll">
+        <div class="pv-video-wrap" id="pvVideoWrap">
+          <div class="pv-video-container" id="pvVideoBox">
+            <div class="pv-facade" id="pvFacade" onclick="pvStartPlayback()">
+              <div class="pv-facade-play">&#9654;</div>
+            </div>
+            <div class="pv-touch-overlay" id="pvTouchOverlay">
+              <div class="pv-touch-zone pv-seek-right" id="pvZoneRight" title="تقديم 10 ثوانٍ">
+                <div class="pv-seek-feedback" id="pvFeedbackRight">+10s</div>
+              </div>
+              <div class="pv-touch-zone pv-play-center" id="pvZoneCenter" title="تشغيل / إيقاف"></div>
+              <div class="pv-touch-zone pv-seek-left" id="pvZoneLeft" title="تأخير 10 ثوانٍ">
+                <div class="pv-seek-feedback" id="pvFeedbackLeft">-10s</div>
+              </div>
+            </div>
+            <div id="pvPlayer"></div>
+          </div>
+        </div>
+        <div class="lp-box" id="lpContents"></div>
+        <div class="pv-cm-row"><button type="button" class="pv-cm-btn" onclick="cmOpen(cmPlayerLec, true)">💬 تعليقات المحاضرة وإعجابات الطلاب</button></div>
+        <div class="pv-support-row">
+          <a href="https://wa.me/201099442329" target="_blank" class="pv-support-btn tech">
+            🎧 <span>الدعم الفني<span class="pv-phone">01099442329</span></span>
+          </a>
+          <a href="https://wa.me/201101662590" target="_blank" class="pv-support-btn academic">
+            💬 <span>واتساب المستر<span class="pv-phone">01101662590</span></span>
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -3259,11 +3306,11 @@
           actionButtonHTML = lockedBy
             ? `<div class="qz-note bad">🔒 هذه المحاضرة مغلقة — اجتز اختبار «${escapeHtml(lockedBy.title)}» بنسبة ${quizPass}% أو أكثر لفتحها</div>
                <button type="button" class="btn-open-lecture" style="background-color:#757575;" onclick="qzLockedAlert('${escapeHtml(lockedBy.id)}')">🔒 مغلقة حتى اجتياز الاختبار السابق</button>`
-            : subButtonsHTML(lecture, homeworkLink, isAttended) + qzButtonHTML(lecture);
+            : subButtonsHTML(lecture, homeworkLink, isAttended) + (lpSubActive(lecture.id) ? "" : qzButtonHTML(lecture));
         }
 
         html += `
-          <div class="lecture-card ${(!isCourseActivated || lockMap[lecture.id]) ? 'locked' : ''}" id="card-${lecture.id}">
+          <div class="lecture-card ${(!isCourseActivated || lockMap[lecture.id]) ? 'locked' : ''}" id="card-${lecture.id}" onclick="lpCardTap(event, '${lecture.id}')">
             <div class="lecture-header">
               <h3 class="lecture-title">${escapeHtml(lecture.title)}${isAttended ? ' <span style="color:#2e7d32">✓</span>' : ''}</h3>
               <span class="attendance-badge ${isAttended ? 'attended' : ''}" id="badge-${lecture.id}">
@@ -3367,20 +3414,14 @@
       const box = document.getElementById("pvVideoBox");
       if (!wrap || !box) return;
       const availW = wrap.clientWidth;
-      const availH = wrap.clientHeight;
-      if (availW <= 0 || availH <= 0) return;
- 
-      let w = availW;
-      let h = (w * 9) / 16;
-      if (h > availH) {
-        h = availH;
-        w = (h * 16) / 9;
-      }
+      if (availW <= 0) return;
+      const maxH = Math.max(220, Math.round(window.innerHeight * 0.62));
+      let w = availW, h = (w * 9) / 16;
+      if (h > maxH) { h = maxH; w = (h * 16) / 9; }
       const nw = Math.floor(w) + "px", nh = Math.floor(h) + "px";
       if (box.style.width !== nw) box.style.width = nw;
       if (box.style.height !== nh) box.style.height = nh;
-    }
- 
+    } 
     // نأجّل إعادة الحساب لأول فريم متاح فقط، حتى لو الشاشة بتطلق أحداث resize كتير ورا بعض
     // (زي إخفاء/إظهار شريط عنوان الموبايل)، بدل ما نعيد الحساب في كل مرة وتحصل إعادة رسم مستمرة
     function pvScheduleFit() {
@@ -4039,7 +4080,7 @@
       const hw = homeworkLink && homeworkLink.trim() ? `<a href="${escapeHtml(safeUrl(homeworkLink))}" target="_blank" rel="noopener noreferrer" class="btn-homework" onclick="markHomeworkDone('${id}')">📝 الواجب${done("hw_" + id) ? " ✓" : ""}</a>` : "";
       const pdf = lecture.pdfLink ? `<a href="${escapeHtml(safeUrl(lecture.pdfLink))}" target="_blank" rel="noopener noreferrer" class="btn-open-lecture" style="background:#6a1b9a" onclick="markHomeworkDone('pdf_${id}')">📄 ملف PDF${done("pdf_" + id) ? " ✓" : ""}</a>` : "";
       return `<div class="sub-timer" data-exp="${S.until}">⏳ ${fmtDhms(S.left)}</div>
-        <button type="button" class="btn-open-lecture" onclick="openLectureById('${id}')">🔗 دخول المحاضرة${done(id) ? " ✓" : ""}</button>${hw}${pdf}`;
+        <button type="button" class="btn-open-lecture" onclick="openLectureById('${id}')">▶ دخول المحاضرة${done(id) ? " ✓" : ""}</button>`;
     }
     function updateSubTimers() {
       const now = nowMs(); let crossed = false;
@@ -4079,22 +4120,27 @@
     function doSubscribe(id) { try { sfxClick(); } catch (_) {} subCall(document.getElementById("sub-btn-" + id), "جاري الاشتراك...", { action: "subscribe", lectureId: id }, () => openLectureById(id)); }
     function doExtend(id) { subCall(document.getElementById("ext-btn-" + id), "جاري المد...", { action: "extend", lectureId: id }, () => openLectureById(id)); }
 
-    async function openLectureById(id) {
+    async function openLectureById(id, vidIdx) {
       const l = lectureIndex[id]; if (!l) return;
       if (!requireActivated()) return; // غير مشترك: عرض العناوين فقط ومنع التشغيل
       const lockedBy = qzLockedFor(l); if (lockedBy) { qzLockedAlert(lockedBy.id); renderAll(); return; }
       if (SUBS_ON() && subState(id).st !== "active") { renderAll(); return; }
       try { sfxClick(); } catch (_) {}
-      markAttendance(id, l.title, true);
-      let link = l.link;
+      if (vidIdx == null || !attendanceRecords[id]) markAttendance(id, l.title, true);
+      let link = l.link || lpLinkCache[id] || "";
       if (!link && SUBS_REMOTE()) { // الرابط لا يُرسل للمتصفح إلا عند فتح المحاضرة وبعد تحقق الخادم من الاشتراك
         const r = await callWithRetry(SUBS_SCRIPT_URL, { action: "getLink", phone: currentStudent.phone, lectureId: id }, 3);
-        if (r.type === "ok" && r.data.link) link = r.data.link;
+        if (r.type === "ok" && r.data.link) { link = r.data.link; lpLinkCache[id] = link; }
         else { alert(r.type === "fail" ? safeMsg(r.message, GENERIC_ERROR) : GENERIC_ERROR); return; }
       }
       if (!link) { alert("لم يتم إدراج رابط المحاضرة حتى الآن"); return; }
-      cmPlayerLec = id;
-      openProtectedPlayer(link, l.title);
+      lpLinkCache[id] = link;
+      const vids = lpParseItems(link);
+      if (!vids.length) { alert("لم يتم إدراج رابط المحاضرة حتى الآن"); return; }
+      const vi = Math.min(Math.max(0, vidIdx | 0), vids.length - 1);
+      cmPlayerLec = id; lpOpen(id, vids, vi);
+      openProtectedPlayer(vids[vi].url, l.title);
+      if (vidIdx != null) setTimeout(() => { try { pvStartPlayback(); } catch (_) {} }, 0);
     }
  
     // ======================= تعليقات المحاضرات + الإعجابات =======================
@@ -4813,7 +4859,7 @@
     function admNew(course, kind, subject) {
       admPreset = { courses: [course], kind: kind, subject: subject || admSection || "" };
       renderAdminForm();
-      setTimeout(() => { const f = document.getElementById(kind === "pdf" ? "admPdf" : kind === "hw" ? "admHw" : "admYt"); if (f) f.focus(); }, 60);
+      setTimeout(() => { const f = document.querySelector("#admBox_" + (kind === "pdf" ? "pdf" : kind === "hw" ? "hw" : "yt") + " .ai-url"); if (f) f.focus(); }, 60);
     }
  
     function toLocalInput(t) {
@@ -4839,11 +4885,11 @@
           <div class="form-group"><label>اسم المحاضرة:</label><input id="admTitle" maxlength="150" required value="${escapeHtml(l.title || "")}"></div>
           <div class="form-group"><label>القسم / المادة:</label><select id="admSubject" required><option value="">اختر القسم</option>${opts}</select></div>
           <div class="form-group"><label>الكورس المستهدف (الكورس اللي إنت فيه محدد تلقائياً، وتقدر تضيف نفس المحتوى لكورس تاني من نفس الصف):</label><div class="chk-row">${courseBoxes}</div></div>
-          <div class="form-group"><label>رابط يوتيوب:</label><input id="admYt" type="url" ${admYtReq()} dir="ltr" value="${escapeHtml(l.youtubeUrl || "")}"></div>
+          ${admItemsBox("yt", l.youtubeUrl)}
           <div class="form-group"><label>موعد نزول المحاضرة (اليوم والتاريخ والساعة):</label><input id="admAt" type="datetime-local" required value="${l.releaseAt ? toLocalInput(timeOf(l)) : ""}"></div>
-          <div class="form-group"><label>رابط الواجب (اختياري):</label><input id="admHw" type="url" dir="ltr" value="${escapeHtml(l.homeworkLink || "")}"></div>
-          <div class="form-group"><label>رابط ملف PDF (اختياري):</label><input id="admPdf" type="url" dir="ltr" placeholder="https://...pdf" value="${escapeHtml(l.pdfLink || "")}"></div>
-          <div class="form-group"><label>أو ارفع ملف PDF مباشرة (اختياري، حتى 8 ميجا):</label><input id="admPdfFile" type="file" accept="application/pdf,.pdf"><small id="admPdfStatus" style="color:#666"></small></div>
+          ${admItemsBox("hw", l.homeworkLink)}
+          ${admItemsBox("pdf", l.pdfLink)}
+          <div class="form-group"><label>أو ارفع ملفات PDF مباشرة (تقدر تختار أكتر من ملف، كل ملف حتى 8 ميجا):</label><input id="admPdfFile" type="file" accept="application/pdf,.pdf" multiple><small id="admPdfStatus" style="color:#666"></small></div>
           <fieldset class="adm-quiz"><legend>📝 إضافة اختبار يدوي (اختياري)</legend>
             <small style="display:block;color:#555;margin-bottom:6px">الاختبار يظهر للطلاب تلقائياً في نفس تاريخ وساعة نزول المحاضرة تماماً. الإجابات الصحيحة لا تصل للطلاب أبداً.</small>
             <div id="admQuizList"></div>
@@ -4866,17 +4912,20 @@
       const at = new Date(document.getElementById("admAt").value);
       if (isNaN(at)) { showErr("موعد النزول غير صحيح."); return; }
       btn.disabled = true; btn.innerText = "جاري الحفظ...";
-      let pdfLink = document.getElementById("admPdf").value;
-      const pdfFile = document.getElementById("admPdfFile") && document.getElementById("admPdfFile").files[0];
-      if (pdfFile) {
+      const ytItems = admItemsCollect("yt"), hwItems = admItemsCollect("hw"), pdfItems = admItemsCollect("pdf");
+      const stop = (msg) => { if (msg) showErr(msg); btn.disabled = false; btn.innerText = "حفظ"; };
+      if (admYtReq() && !ytItems.length) { stop("أضف رابط فيديو واحد على الأقل."); return; }
+      const pdfFiles = Array.from((document.getElementById("admPdfFile") || {}).files || []);
+      for (const pf of pdfFiles) {
         btn.innerText = "جاري رفع الـ PDF...";
-        const up = await adminUploadPdf(pdfFile);
-        if (!up.ok) { if (up.msg) showErr(up.msg); btn.disabled = false; btn.innerText = "حفظ"; return; }
-        pdfLink = up.url;
+        const up = await adminUploadPdf(pf);
+        if (!up.ok) { stop(up.msg); return; }
+        pdfItems.push({ title: pf.name.replace(/\.pdf$/i, ""), url: up.url });
       }
+      const pdfLink = lpSerialize(pdfItems);
       const r = await adminCall({ action: "save", lecture: {
         id: id, title: document.getElementById("admTitle").value, subject: document.getElementById("admSubject").value,
-        youtubeUrl: document.getElementById("admYt").value, releaseAt: at.toISOString(), homeworkLink: document.getElementById("admHw").value, pdfLink: pdfLink, courses: courses, course: courses.join(","), quiz: quizPayload
+        youtubeUrl: lpSerialize(ytItems.length === 1 ? [{ url: ytItems[0].url }] : ytItems), releaseAt: at.toISOString(), homeworkLink: lpSerialize(hwItems), pdfLink: pdfLink, courses: courses, course: courses.join(","), quiz: quizPayload
       } });
       if (!r) return;
       if (r.type === "ok") { admQDraftClear(id); await loadAdminList(); fetchLectures(); return; }
@@ -5434,7 +5483,7 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else setView("courses");
     }
-    window.addEventListener("popstate", () => { if (revOpen) { closeReviewSubject(); return; } if (currentSubjectTab) showSubjectGrid(); });
+    window.addEventListener("popstate", () => { if (window.lpPopGuard && window.lpPopGuard()) return; if (revOpen) { closeReviewSubject(); return; } if (currentSubjectTab) showSubjectGrid(); });
 
     // ---------- 2) مركز الإشعارات: تنبيه منبثق + جرس + رسائل تحفيزية + تنبيهات التقدّم ----------
     let notifChimeAt = 0, toastTimer = null;
@@ -7789,6 +7838,142 @@ async function fgReset(e) {
   } catch (_) { fgErr("fgErr2", GENERIC_ERROR); }
   finally { fgBusy = false; btn.disabled = false; btn.innerText = "حفظ كلمة السر الجديدة"; }
 }
+</script>
+<script>
+/* ===== صفحة المحاضرة: المحتويات تحت الفيديو ===== */
+var lpCurId = null, lpPushed = false, lpIgnorePop = false;
+function lpSubActive(id) { try { return !SUBS_ON() || subState(id).st === "active"; } catch (_) { return true; } }
+function lpCardTap(ev, id) {
+  if (ev && ev.target && ev.target.closest && ev.target.closest("button,a,input,select,textarea")) return;
+  var card = document.getElementById("card-" + id); if (!card) return;
+  var list = card.querySelectorAll(".btn-open-lecture,.btn-subscribe");
+  for (var i = 0; i < list.length; i++) {
+    var b = list[i];
+    if (b.disabled || /00838f/i.test(b.getAttribute("style") || "")) continue;
+    b.click(); return;
+  }
+}
+function lpProgress(id) {
+  var el = document.getElementById("lpProg"); if (!el) return;
+  try {
+    var l = lectureIndex[id], s = SUBJECTS.find(function (x) { return x.name === l.subject; });
+    var list = s ? visibleFor(s) : [], total = list.length;
+    var idx = list.findIndex(function (x) { return x.id === id; }) + 1;
+    var done = list.filter(function (x) { return attendanceRecords[x.id]; }).length;
+    var pct = total ? Math.round(done / total * 100) : 0;
+    el.innerHTML = total ? (idx + " / " + total + " &nbsp;|&nbsp; <b>" + pct + "%</b> مكتمل") : "";
+  } catch (_) { el.innerHTML = ""; }
+}
+var lpState = null, lpLinkCache = {};
+/* الصيغة المخزّنة: كل سطر = رابط، أو «عنوان :: رابط» — سطر لكل عنصر (فيديو/ملف/واجب) */
+function lpParseItems(raw) {
+  var out = [];
+  String(raw || "").split(/\r?\n/).forEach(function (line) {
+    line = line.trim(); if (!line) return;
+    var m = /^(.*?)\s*::\s*(https?:\/\/\S+)\s*$/.exec(line);
+    if (m) out.push({ title: m[1].trim(), url: m[2] });
+    else if (/https?:\/\//i.test(line)) out.push({ title: "", url: line });
+  });
+  return out;
+}
+function lpSerialize(items) {
+  return items.filter(function (i) { return i && i.url; }).map(function (i) { return i.title ? i.title.replace(/\s*::\s*/g, " ") + " :: " + i.url : i.url; }).join("\n");
+}
+function admItemRow(kind, it) {
+  var ph = kind === "yt" ? "عنوان الفيديو (اختياري)" : kind === "pdf" ? "اسم الملف (اختياري)" : "اسم الواجب (اختياري)";
+  return '<div class="adm-item-row"><input class="ai-title" maxlength="120" placeholder="' + ph + '" value="' + escapeHtml(it.title || "") + '">' +
+    '<input class="ai-url" type="url" dir="ltr" placeholder="https://..." value="' + escapeHtml(it.url || "") + '">' +
+    '<button type="button" class="adm-btn adm-del" onclick="this.parentNode.remove()" title="حذف">✕</button></div>';
+}
+function admItemsBox(kind, raw) {
+  var items = lpParseItems(raw); if (!items.length) items = [{}];
+  var label = kind === "yt" ? "🎬 الفيديوهات (يوتيوب أو درايف) — تقدر تضيف أكتر من فيديو:" : kind === "pdf" ? "📄 الملفات (روابط PDF) — تقدر تضيف أكتر من ملف:" : "📝 الواجبات (اختياري) — تقدر تضيف أكتر من واجب:";
+  var add = kind === "yt" ? "➕ إضافة فيديو" : kind === "pdf" ? "➕ إضافة ملف" : "➕ إضافة واجب";
+  return '<div class="form-group" id="admBox_' + kind + '"><label>' + label + '</label><div class="adm-items-list">' + items.map(function (i) { return admItemRow(kind, i); }).join("") +
+    '</div><button type="button" class="adm-btn" style="background:#00838f" onclick="admItemAdd(\'' + kind + '\')">' + add + '</button></div>';
+}
+function admItemAdd(kind) {
+  var l = document.querySelector("#admBox_" + kind + " .adm-items-list"); if (!l) return;
+  l.insertAdjacentHTML("beforeend", admItemRow(kind, {}));
+  var r = l.lastElementChild && l.lastElementChild.querySelector(".ai-url"); if (r) r.focus();
+}
+function admItemsCollect(kind) {
+  var out = [];
+  document.querySelectorAll("#admBox_" + kind + " .adm-item-row").forEach(function (row) {
+    var u = row.querySelector(".ai-url").value.trim(); if (!u) return;
+    out.push({ title: row.querySelector(".ai-title").value.trim(), url: u });
+  });
+  return out;
+}
+function lpRender(id) {
+  var box = document.getElementById("lpContents"), l = lectureIndex[id];
+  if (!box || !l) return;
+  var done = function (k) { return !!attendanceRecords[k]; };
+  var rows = [], doneN = 0;
+  var add = function (html, ok) { rows.push(html); if (ok) doneN++; };
+  var rowTag = function (cls, ico, icoCls, title, sub, status, ok, attrs, tag) {
+    return '<' + tag + ' class="lp-row ' + cls + '" ' + attrs + '><span class="lp-ico ' + icoCls + '">' + ico + '</span>' +
+      '<span class="lp-t">' + title + (sub ? '<small>' + sub + '</small>' : '') + '</span>' +
+      '<span class="lp-st ' + (ok ? 'ok' : '') + '">' + status + '</span></' + tag + '>';
+  };
+  var eid = escapeHtml(id);
+  var files = lpParseItems(l.pdfLink);
+  files.forEach(function (f, i) {
+    var key = i ? "hw_pdf_" + id + "_" + i : "hw_pdf_" + id, ok = done(key);
+    add(rowTag("", "📄", "pdf", escapeHtml(f.title || (files.length > 1 ? "ملف " + (i + 1) : "ملف المحاضرة")), "", ok ? "تم" : "", ok,
+      'href="' + escapeHtml(safeUrl(f.url)) + '" target="_blank" rel="noopener noreferrer" onclick="markItemDone(\'' + escapeHtml(key) + '\')"', "a"), ok);
+  });
+  var vids = (lpState && lpState.id === id) ? lpState.vids : [], cur = lpState ? lpState.idx : 0;
+  vids.forEach(function (v, i) {
+    var ok = i === cur || (i === 0 ? done(id) : done("vid_" + id + "_" + i));
+    var t = v.title || (vids.length > 1 ? "الفيديو " + (i + 1) : l.title);
+    add(rowTag(i === cur ? "cur" : "", "🎬", "vid", escapeHtml(t), "", ok ? "تم" : "", ok, i === cur ? 'onclick="lpToTop()"' : 'onclick="lpPlayVideo(' + i + ')"', "div"), ok);
+  });
+  var hws = lpParseItems(l.homeworkLink);
+  hws.forEach(function (h, i) {
+    var arg = i ? id + "_" + i : id, ok = done("hw_" + arg);
+    add(rowTag("", "📝", "hw", escapeHtml(h.title || (hws.length > 1 ? "الواجب " + (i + 1) : "الواجب")), "", ok ? "تم" : "", ok,
+      'href="' + escapeHtml(safeUrl(h.url)) + '" target="_blank" rel="noopener noreferrer" onclick="markHomeworkDone(\'' + escapeHtml(arg) + '\')"', "a"), ok);
+  });
+  if (qzHasQuiz(l) && !isAdminUser()) {
+    var r = quizResults[id], okQ = qzPassed(id), n = l.quiz.questions.length;
+    var sub = r ? (okQ ? "" : "أعد الاختبار وحقّق " + quizPass + "% أو أكثر") : "اجتز الاختبار (" + quizPass + "% أو أكثر) لفتح المحاضرة التالية";
+    add(rowTag("", "✅", "qz", "اختبار المحاضرة (" + n + " سؤال)", sub, okQ ? "تم" : (r ? Number(r.firstPercent) + "%" : ""), okQ,
+      'onclick="openQuiz(\'' + eid + '\')"', "div"), okQ);
+  }
+  var timer = "";
+  try { var S = subState(id); if (SUBS_ON() && S.st === "active") timer = '<div class="sub-timer" data-exp="' + S.until + '">⏳ ' + fmtDhms(S.left) + '</div>'; } catch (_) {}
+  box.innerHTML = '<div class="lp-box-h"><span>محتويات المحاضرة — ' + escapeHtml(l.title) + '</span><small>' + doneN + ' / ' + rows.length + '</small></div>' + timer + rows.join("");
+}
+function lpPlayVideo(i) { if (lpState) openLectureById(lpState.id, i); }
+function lpToTop() { var s = document.getElementById("lpScroll"); if (s) s.scrollTo({ top: 0, behavior: "smooth" }); }
+function lpPush() { try { if (!lpPushed) { history.pushState({ lp: 1 }, "", location.href); lpPushed = true; } } catch (_) {} }
+function lpOpen(id, vids, vi) {
+  lpCurId = id; lpState = { id: id, vids: vids || [], idx: vi || 0 }; lpRender(id); lpProgress(id);
+  if (vi > 0) { try { markItemDone("vid_" + id + "_" + vi); } catch (_) {} }
+  var s = document.getElementById("lpScroll"); if (s) s.scrollTop = 0;
+  lpPush();
+}
+function lpBack() { if (lpPushed) { try { history.back(); return; } catch (_) {} } closeProtectedPlayer(); }
+window.lpPopGuard = function () {
+  if (lpIgnorePop) { lpIgnorePop = false; return true; }
+  if (lpPushed) { lpPushed = false; if (document.getElementById("pvOverlay").classList.contains("active")) closeProtectedPlayer(); return true; }
+  return false;
+};
+(function () {
+  var _cpp = window.closeProtectedPlayer;
+  window.closeProtectedPlayer = function () {
+    _cpp.apply(this, arguments);
+    lpCurId = null; lpState = null;
+    if (lpPushed) { lpPushed = false; lpIgnorePop = true; try { history.back(); } catch (_) { lpIgnorePop = false; } }
+  };
+  var _ra = window.renderAll;
+  window.renderAll = function () {
+    var r = _ra.apply(this, arguments);
+    try { if (lpCurId && document.getElementById("pvOverlay").classList.contains("active")) { lpRender(lpCurId); lpProgress(lpCurId); } } catch (_) {}
+    return r;
+  };
+})();
 </script>
 </body>
 </html>
