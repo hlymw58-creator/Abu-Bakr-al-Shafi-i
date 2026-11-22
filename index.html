@@ -2083,7 +2083,6 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
           </div>
         </div>
         <div class="lp-box" id="lpContents"></div>
-        <div class="pv-cm-row"><button type="button" class="pv-cm-btn" onclick="cmOpen(cmPlayerLec, true)">💬 تعليقات المحاضرة وإعجابات الطلاب</button></div>
         <div class="pv-support-row">
           <a href="https://wa.me/201099442329" target="_blank" class="pv-support-btn tech">
             🎧 <span>الدعم الفني<span class="pv-phone">01099442329</span></span>
@@ -3708,7 +3707,7 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
       pvPlayerInstance.on("ready", () => {
         attachWatermark();
         pvFitLayout();
-        if (!isDrive) { pvApplyQuality(pvQuality, true); setTimeout(pvEnsureQualityMenu, 1200); }
+        if (!isDrive) { pvApplyQuality(pvQuality, true); setTimeout(pvEnsureQualityMenu, 1200); pvEnforceSavedQuality(); }
         if (isDrive) { try { const pr = pvPlayerInstance.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (_) {} }
       });
 
@@ -5285,20 +5284,76 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
 
     // ---------- (2) جودة الفيديو داخل قائمة إعدادات المشغل ----------
     // ملاحظة مهمة: يوتيوب أوقف رسمياً دعم setPlaybackQuality في الـ IFrame API (صارت لا تؤثر)، لذلك الاختيار
-    // يُرسَل لمشغل يوتيوب بأفضل جهد ويُحفظ كتفضيل للطالب، لكن يوتيوب قد يتجاهله ويختار الجودة تلقائياً.
+    // لذلك نطبّق الجودة بإعادة تحميل الفيديو من نفس الثانية مع suggestedQuality (الطريقة اللي يوتيوب لسه بيحترمها)، وتُحفظ كتفضيل للطالب.
     const PV_QUALITIES = [0, 1080, 720, 480, 360]; // 0 = Auto
     const PV_YT_Q = { 0: "default", 1080: "hd1080", 720: "hd720", 480: "large", 360: "medium" };
     // الافتراضي: أعلى جودة (1080) لأول مرة، وبعدها يتذكر اختيار الطالب
     let pvQuality = (() => { try { const raw = localStorage.getItem("pv_quality"); if (raw === null) return 1080; const v = Number(raw); return PV_QUALITIES.includes(v) ? v : 1080; } catch (_) { return 1080; } })();
+    const PV_YT_ORDER = ["highres", "hd2880", "hd2160", "hd1440", "hd1080", "hd720", "large", "medium", "small", "tiny"];
+    // يختار أقرب جودة متاحة فعلاً للفيديو (لو 1080 مش موجودة ياخد اللي بعدها)
+    function pvPickLevel(emb, name) {
+      if (name === "default") return name;
+      let avail = []; try { avail = emb.getAvailableQualityLevels() || []; } catch (_) {}
+      if (!avail.length || avail.includes(name)) return name;
+      for (let i = PV_YT_ORDER.indexOf(name); i >= 0 && i < PV_YT_ORDER.length; i++) if (avail.includes(PV_YT_ORDER[i])) return PV_YT_ORDER[i];
+      return name;
+    }
+    // الطريقة الوحيدة اللي يوتيوب لسه بيحترمها: إعادة تحميل نفس الفيديو من نفس الثانية مع suggestedQuality
+    function pvReloadWithQuality(emb, name) {
+      if (typeof emb.loadVideoById !== "function") {
+        try { emb.setPlaybackQualityRange(name, name); } catch (_) {}
+        try { emb.setPlaybackQuality(name); } catch (_) {}
+        return;
+      }
+      let t = 0, st = 1, vid = "";
+      try { t = emb.getCurrentTime() || 0; } catch (_) {}
+      try { st = emb.getPlayerState(); } catch (_) {}
+      try { vid = (emb.getVideoData() || {}).video_id || ""; } catch (_) {}
+      vid = vid || pvPendingVideoId; if (!vid) return;
+      const wasPlaying = st === 1 || st === 3;
+      try { emb.loadVideoById({ videoId: vid, startSeconds: t, suggestedQuality: name }); } catch (_) { return; }
+      if (name !== "default") { try { emb.setPlaybackQualityRange(name, name); } catch (_) {} }
+      if (!wasPlaying) { // كان واقف مؤقتاً: نوقفه تاني أول ما يشتغل
+        const onS = (e) => { if (e && e.data === 1) { try { emb.removeEventListener("onStateChange", onS); } catch (_) {} setTimeout(() => { try { emb.pauseVideo(); } catch (_) {} }, 50); } };
+        try { emb.addEventListener("onStateChange", onS); } catch (_) {}
+      }
+    }
+    let pvQLast = 0;
     function pvApplyQuality(q, silent) {
       q = Number(q); if (!PV_QUALITIES.includes(q)) q = 0;
       pvQuality = q;
       if (!silent) { try { localStorage.setItem("pv_quality", String(q)); } catch (_) {} }
-      const emb = pvPlayerInstance && pvPlayerInstance.embed, name = PV_YT_Q[q];
-      if (!emb) return;
-      try { if (typeof emb.setPlaybackQualityRange === "function") emb.setPlaybackQualityRange(name, name); } catch (_) {}
-      try { if (typeof emb.setPlaybackQuality === "function") emb.setPlaybackQuality(name); } catch (_) {}
       document.querySelectorAll("#pvVideoBox .pv-q-menu button").forEach((b) => b.classList.toggle("on", Number(b.dataset.q) === q));
+      const emb = pvPlayerInstance && pvPlayerInstance.embed;
+      if (!emb) return;
+      const name = pvPickLevel(emb, PV_YT_Q[q]);
+      if (silent) { // عند فتح المحاضرة: محاولة هادئة بدون إعادة تحميل
+        try { if (name !== "default" && typeof emb.setPlaybackQualityRange === "function") emb.setPlaybackQualityRange(name, name); } catch (_) {}
+        try { if (typeof emb.setPlaybackQuality === "function") emb.setPlaybackQuality(name); } catch (_) {}
+        return;
+      }
+      const now = Date.now(); if (now - pvQLast < 1500) return; pvQLast = now; // يمنع التنفيذ المزدوج
+      pvReloadWithQuality(emb, name);
+    }
+    // لو الطالب كان مختار جودة قبل كده: بعد ما الفيديو يشتغل نتأكد إنها اتطبّقت، ولو لأ نطبّقها مرة واحدة
+    function pvEnforceSavedQuality() {
+      let saved = null; try { saved = localStorage.getItem("pv_quality"); } catch (_) {}
+      if (saved === null || pvQuality === 0) return;
+      const emb = pvPlayerInstance && pvPlayerInstance.embed; if (!emb) return;
+      let tries = 0;
+      const iv = setInterval(() => {
+        if (++tries > 30 || !pvPlayerInstance || pvPlayerInstance.embed !== emb) { clearInterval(iv); return; }
+        let st = -1; try { st = emb.getPlayerState(); } catch (_) { clearInterval(iv); return; }
+        if (st !== 1) return;
+        clearInterval(iv);
+        setTimeout(() => {
+          try {
+            if (!pvPlayerInstance || pvPlayerInstance.embed !== emb) return;
+            const want = pvPickLevel(emb, PV_YT_Q[pvQuality]);
+            if (want !== "default" && emb.getPlaybackQuality() !== want) pvReloadWithQuality(emb, want);
+          } catch (_) {}
+        }, 2500);
+      }, 500);
     }
     // لو Plyr لم يرسم عنصر "الجودة" داخل قائمة الإعدادات (يختلف حسب النسخة/المزوّد) نضيف زر جودة بجوار الترس كاحتياطي
     function pvEnsureQualityMenu() {
