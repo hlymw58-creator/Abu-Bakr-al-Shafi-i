@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="preload" href="fonts/ArefRuqaa-Regular.woff" as="font" type="font/woff" crossorigin>
-  <link rel="preload" href="fonts/ArefRuqaa-Bold.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="fonts/Cairo.woff" as="font" type="font/woff" crossorigin>
   <!-- كود إثبات ملكية جوجل الخاص بك -->
   <meta name="google-site-verification" content="P6w0eE5r-E6qtThUBP6ESmQifa7jndXKVhY5QRpQVNU" />
 
@@ -72,11 +71,7 @@
       --success-bg: #e8f5e9;
     }
  
-    /* خط Aref Ruqaa (مستضاف محلياً) - الخط الأساسي لكل المنصة */
-    @font-face { font-family: 'Aref Ruqaa'; src: url('fonts/ArefRuqaa-Regular.woff') format('woff'); font-weight: 400; font-style: normal; font-display: swap; }
-    @font-face { font-family: 'Aref Ruqaa'; src: url('fonts/ArefRuqaa-Bold.woff') format('woff'); font-weight: 700; font-style: normal; font-display: swap; }
- 
-    /* خط Cairo - احتياطي للرموز اللي مش موجودة في Aref Ruqaa */
+    /* خط Cairo (مستضاف محلياً - مجموعة جزئية عربي + لاتيني) */
     @font-face {
       font-family: 'Cairo';
       src: url('fonts/Cairo.woff') format('woff');
@@ -87,29 +82,10 @@
  
     * {
       box-sizing: border-box;
-      font-family: 'Aref Ruqaa', 'Cairo', 'Amiri', 'Traditional Arabic', serif;
+      font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
     }
- 
-    /* ===== فرض الخط على كل العناصر (يغلب Plyr والملفات الخارجية) ===== */
-    *, *::before, *::after,
-    input, button, select, textarea, option, optgroup,
-    table, th, td, span, div, p, a, label, li, h1, h2, h3, h4, h5, h6, small, b, strong, i, em, code, pre,
-    .plyr, .plyr * {
-      font-family: 'Aref Ruqaa', 'Cairo', 'Amiri', 'Traditional Arabic', serif !important;
-    }
-    body {
-      font-kerning: normal;
-      font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
-      font-variant-numeric: normal;
-      text-rendering: optimizeLegibility;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      line-height: 1.7;
-    }
-    input, textarea, select, button { line-height: 1.5; }
-    progress, [role='progressbar'], .progress, [class*='progress'] { line-height: 1.5; }
  
     body {
       position: relative;
@@ -1401,7 +1377,7 @@
       body>*:not(#printArea){display:none!important;}
       body::before{display:none!important;}
       #printArea{display:block!important;direction:rtl;color:#000;background:#fff;
-        font-family:'Aref Ruqaa','Cairo',serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+        font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
       .pr-head{display:flex;align-items:center;gap:10px;font-size:20pt;
         border-bottom:3px solid #1b5e20;padding-bottom:8px;margin-bottom:14px;}
       .pr-head img{height:1.3em;width:1.3em;object-fit:cover;border-radius:50%;border:2px solid #d4af37;}
@@ -1634,13 +1610,13 @@
 .hl-write{animation:hlInkH 1.8s cubic-bezier(.45,.05,.25,1) both}
 @media (prefers-reduced-motion:reduce){.hl-write{animation:none!important;-webkit-mask-image:none;mask-image:none}}
 </style>
-<!-- خط Aref Ruqaa بقى محلي (fonts/) -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* ===== كويز حفظ سورة آل عمران ===== */
 /* كل التنسيقات محصورة داخل #quran-quiz كي لا تتعارض مع المنصة */
 #quran-quiz{--g:#1f6f5c;--gd:#14493d;--gold:#c9a24b;--bg:#fffdf7;--tx:#23332e;--ok:#2e8b57;--bad:#c0392b;
   max-width:720px;margin:0 auto;padding:16px;background:var(--bg);color:var(--tx);border:1px solid #e3dcc6;
-  border-radius:16px;font-family:"Aref Ruqaa","Cairo",serif;line-height:1.8;box-sizing:border-box}
+  border-radius:16px;font-family:"Cairo","Segoe UI",Tahoma,Arial,sans-serif;line-height:1.8;box-sizing:border-box}
 #quran-quiz *{box-sizing:border-box}
 #quran-quiz .qq-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;color:var(--gd)}
 #quran-quiz .qq-bar{height:8px;background:#eee6cc;border-radius:8px;margin:8px 0 14px;overflow:hidden}
