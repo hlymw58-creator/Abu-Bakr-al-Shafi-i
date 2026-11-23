@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="preload" href="fonts/Cairo.woff" as="font" type="font/woff" crossorigin>
   <!-- كود إثبات ملكية جوجل الخاص بك -->
   <meta name="google-site-verification" content="P6w0eE5r-E6qtThUBP6ESmQifa7jndXKVhY5QRpQVNU" />
 
@@ -70,9 +71,18 @@
       --success-bg: #e8f5e9;
     }
  
+    /* خط Cairo (مستضاف محلياً - مجموعة جزئية عربي + لاتيني) */
+    @font-face {
+      font-family: 'Cairo';
+      src: url('fonts/Cairo.woff') format('woff');
+      font-weight: 200 1000;
+      font-style: normal;
+      font-display: swap;
+    }
+ 
     * {
       box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
     }
@@ -1367,7 +1377,7 @@
       body>*:not(#printArea){display:none!important;}
       body::before{display:none!important;}
       #printArea{display:block!important;direction:rtl;color:#000;background:#fff;
-        font-family:'Segoe UI',Tahoma,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+        font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
       .pr-head{display:flex;align-items:center;gap:10px;font-size:20pt;
         border-bottom:3px solid #1b5e20;padding-bottom:8px;margin-bottom:14px;}
       .pr-head img{height:1.3em;width:1.3em;object-fit:cover;border-radius:50%;border:2px solid #d4af37;}
@@ -1606,7 +1616,7 @@
 /* كل التنسيقات محصورة داخل #quran-quiz كي لا تتعارض مع المنصة */
 #quran-quiz{--g:#1f6f5c;--gd:#14493d;--gold:#c9a24b;--bg:#fffdf7;--tx:#23332e;--ok:#2e8b57;--bad:#c0392b;
   max-width:720px;margin:0 auto;padding:16px;background:var(--bg);color:var(--tx);border:1px solid #e3dcc6;
-  border-radius:16px;font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.8;box-sizing:border-box}
+  border-radius:16px;font-family:"Cairo","Segoe UI",Tahoma,Arial,sans-serif;line-height:1.8;box-sizing:border-box}
 #quran-quiz *{box-sizing:border-box}
 #quran-quiz .qq-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;color:var(--gd)}
 #quran-quiz .qq-bar{height:8px;background:#eee6cc;border-radius:8px;margin:8px 0 14px;overflow:hidden}
