@@ -4275,6 +4275,50 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
     function doSubscribe(id) { try { sfxClick(); } catch (_) {} subCall(document.getElementById("sub-btn-" + id), "جاري الاشتراك...", { action: "subscribe", lectureId: id }, () => openLectureById(id)); }
     function doExtend(id) { subCall(document.getElementById("ext-btn-" + id), "جاري المد...", { action: "extend", lectureId: id }, () => openLectureById(id)); }
 
+    // ===== فيديوهات يوتيوب العلنية: تتفتح على يوتيوب بزرار، وغير المدرجة تفضل جوه المنصة =====
+    // الصق هنا رابط سكريبت YtStatus.gs بعد نشره (لو فاضي: كل الفيديوهات بتشتغل جوه المنصة زي ما هي)
+    const YT_STATUS_URL = "https://script.google.com/macros/s/AKfycbwCLTSqZPXg_blhh_0oPvBGRbxX38GjrVKenk51zONgKxAO4aAy4x7ZgFOgabtjI-71Yw/exec";
+    const ytStatusCache = {}; // id -> { pub: bool, t: وقت }
+    async function ytMarkPublic(vids) {
+      if (!/^https:\/\/script\.google\.com\//.test(YT_STATUS_URL)) return;
+      const now = Date.now(), need = [];
+      vids.forEach(function (v) {
+        const yid = extractYouTubeId(v.url); v.yid = yid || "";
+        if (!yid) return;
+        const c = ytStatusCache[yid];
+        if (c && now - c.t < 300000) v.pub = c.pub; else if (need.indexOf(yid) < 0) need.push(yid);
+      });
+      if (!need.length) return;
+      try {
+        const r = await callWithRetry(YT_STATUS_URL, { action: "status", ids: need }, 2);
+        if (r.type === "ok" && r.data && r.data.map) {
+          vids.forEach(function (v) {
+            if (!v.yid || !(v.yid in r.data.map)) return;
+            const pub = r.data.map[v.yid] === "public";
+            ytStatusCache[v.yid] = { pub: pub, t: Date.now() }; v.pub = pub;
+          });
+        }
+      } catch (_) {}
+    }
+    function ytOpenModal(v, title) {
+      let m = document.getElementById("ytPubModal");
+      if (!m) {
+        m = document.createElement("div"); m.id = "ytPubModal";
+        m.style.cssText = "position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;";
+        m.innerHTML = '<div style="background:#fff;color:#1b2a20;border-radius:16px;padding:22px 18px;max-width:380px;width:100%;text-align:center;direction:rtl;font-family:inherit;box-shadow:0 10px 30px rgba(0,0,0,.3)">' +
+          '<div id="ytPubT" style="font-weight:800;font-size:17px;margin-bottom:6px"></div>' +
+          '<div style="font-size:14px;opacity:.8;margin-bottom:16px">الفيديو ده متاح على يوتيوب</div>' +
+          '<a id="ytPubA" target="_blank" rel="noopener noreferrer" style="display:block;background:#d32f2f;color:#fff;text-decoration:none;border-radius:12px;padding:13px;font-weight:800;font-size:16px;margin-bottom:10px">▶ افتح الفيديو على يوتيوب</a>' +
+          '<button type="button" id="ytPubX" style="background:none;border:0;color:#555;font-size:14px;cursor:pointer;padding:6px">إغلاق</button></div>';
+        document.body.appendChild(m);
+        m.addEventListener("click", function (e) { if (e.target === m || e.target.id === "ytPubX") m.style.display = "none"; });
+      }
+      m.querySelector("#ytPubT").textContent = (v && v.title) || title || "";
+      const a = m.querySelector("#ytPubA"); a.href = "https://www.youtube.com/watch?v=" + encodeURIComponent(v.yid);
+      a.onclick = function () { setTimeout(function () { m.style.display = "none"; }, 300); };
+      m.style.display = "flex";
+    }
+
     async function openLectureById(id, vidIdx) {
       const l = lectureIndex[id]; if (!l) return;
       if (!requireActivated()) return; // غير مشترك: عرض العناوين فقط ومنع التشغيل
@@ -4292,8 +4336,12 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
       lpLinkCache[id] = link;
       const vids = lpParseItems(link);
       if (!vids.length) { alert("لم يتم إدراج رابط المحاضرة حتى الآن"); return; }
-      const vi = Math.min(Math.max(0, vidIdx | 0), vids.length - 1);
-      cmPlayerLec = id; lpOpen(id, vids, vi);
+      let vi = Math.min(Math.max(0, vidIdx | 0), vids.length - 1);
+      await ytMarkPublic(vids);
+      if (vidIdx == null && vids[vi].pub) { const k = vids.findIndex(function (v) { return !v.pub; }); if (k >= 0) vi = k; }
+      cmPlayerLec = id;
+      if (vids[vi].pub) { ytOpenModal(vids[vi], l.title); return; } // علني على يوتيوب: زرار فتح بدل التشغيل جوه المنصة
+      lpOpen(id, vids, vi);
       openProtectedPlayer(vids[vi].url, l.title);
       if (vidIdx != null) setTimeout(() => { try { pvStartPlayback(); } catch (_) {} }, 0);
     }
@@ -8138,7 +8186,7 @@ function lpRender(id) {
   vids.forEach(function (v, i) {
     var ok = i === cur || (i === 0 ? done(id) : done("vid_" + id + "_" + i));
     var t = v.title || (vids.length > 1 ? "الفيديو " + (i + 1) : l.title);
-    add(rowTag(i === cur ? "cur" : "", "🎬", "vid", escapeHtml(t), "", ok ? "تم" : "", ok, i === cur ? 'onclick="lpToTop()"' : 'onclick="lpPlayVideo(' + i + ')"', "div"), ok);
+    add(rowTag(i === cur ? "cur" : "", "🎬", "vid", escapeHtml(t), "", v.pub ? "يوتيوب ↗" : (ok ? "تم" : ""), ok, i === cur ? 'onclick="lpToTop()"' : 'onclick="lpPlayVideo(' + i + ')"', "div"), ok);
   });
   var hws = lpParseItems(l.homeworkLink);
   hws.forEach(function (h, i) {
