@@ -4279,26 +4279,45 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
     // الصق هنا رابط سكريبت YtStatus.gs بعد نشره (لو فاضي: كل الفيديوهات بتشتغل جوه المنصة زي ما هي)
     const YT_STATUS_URL = "https://script.google.com/macros/s/AKfycbwCLTSqZPXg_blhh_0oPvBGRbxX38GjrVKenk51zONgKxAO4aAy4x7ZgFOgabtjI-71Yw/exec";
     const ytStatusCache = {}; // id -> { pub: bool, t: وقت }
+    async function ytFetchStatuses(ids) {
+      if (!ids.length || !/^https:\/\/script\.google\.com\//.test(YT_STATUS_URL)) return;
+      for (let i = 0; i < ids.length; i += 40) {
+        const part = ids.slice(i, i + 40);
+        const r = await callScript(YT_STATUS_URL, { action: "status", ids: part });
+        if (r.type === "ok" && r.data && r.data.map) {
+          part.forEach(function (id) { if (id in r.data.map) ytStatusCache[id] = { pub: r.data.map[id] === "public", t: Date.now() }; });
+        }
+      }
+    }
+    // تحميل مسبق في الخلفية لحالة كل الفيديوهات، عشان فتح المحاضرة يبقى فوري
+    let ytPrefetching = false;
+    async function ytPrefetch() {
+      if (ytPrefetching) return; ytPrefetching = true;
+      try {
+        const need = [], now = Date.now();
+        Object.keys(lectureIndex || {}).forEach(function (k) {
+          lpParseItems((lectureIndex[k] || {}).link).forEach(function (v) {
+            const y = extractYouTubeId(v.url), c = y && ytStatusCache[y];
+            if (y && (!c || now - c.t > 240000) && need.indexOf(y) < 0) need.push(y);
+          });
+        });
+        await ytFetchStatuses(need);
+      } catch (_) {} finally { ytPrefetching = false; }
+    }
+    setTimeout(ytPrefetch, 3000); setInterval(function () { if (!document.hidden) ytPrefetch(); }, 240000);
     async function ytMarkPublic(vids) {
       if (!/^https:\/\/script\.google\.com\//.test(YT_STATUS_URL)) return;
       const now = Date.now(), need = [];
+      const apply = function () {
+        vids.forEach(function (v) { const c = v.yid && ytStatusCache[v.yid]; if (c) v.pub = c.pub; });
+      };
       vids.forEach(function (v) {
-        const yid = extractYouTubeId(v.url); v.yid = yid || "";
-        if (!yid) return;
-        const c = ytStatusCache[yid];
-        if (c && now - c.t < 300000) v.pub = c.pub; else if (need.indexOf(yid) < 0) need.push(yid);
+        v.yid = extractYouTubeId(v.url) || "";
+        const c = ytStatusCache[v.yid];
+        if (v.yid && (!c || now - c.t > 300000) && need.indexOf(v.yid) < 0) need.push(v.yid);
       });
-      if (!need.length) return;
-      try {
-        const r = await callWithRetry(YT_STATUS_URL, { action: "status", ids: need }, 2);
-        if (r.type === "ok" && r.data && r.data.map) {
-          vids.forEach(function (v) {
-            if (!v.yid || !(v.yid in r.data.map)) return;
-            const pub = r.data.map[v.yid] === "public";
-            ytStatusCache[v.yid] = { pub: pub, t: Date.now() }; v.pub = pub;
-          });
-        }
-      } catch (_) {}
+      if (need.length) { try { await Promise.race([ytFetchStatuses(need), sleep(4000)]); } catch (_) {} }
+      apply();
     }
     function ytOpenModal(v, title) {
       let m = document.getElementById("ytPubModal");
@@ -6280,7 +6299,7 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
   .trk-head { position: absolute; top: 0; bottom: 0; width: 3px; background: #fff; box-shadow: 0 0 4px #000; }
   .trk-resume { margin-top: 4px; font-size: 12px; color: #c8e6c9; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .trk-resume button { border: 1px solid #d4af37; background: transparent; color: #f4e285; border-radius: 999px; padding: 2px 10px; cursor: pointer; font-size: 12px; }
-  .trk-q { position: absolute; top: 8px; left: 8px; z-index: 98; }
+  .trk-q { display: none !important; position: absolute; top: 8px; left: 8px; z-index: 98; }
   .trk-q-btn { background: rgba(0,0,0,.6); color: #fff; border: 1px solid #d4af37; border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 12px; cursor: pointer; }
   .trk-q-menu { position: absolute; top: 100%; left: 0; margin-top: 4px; background: rgba(20,20,20,.96); border-radius: 10px; padding: 4px; min-width: 96px; }
   .trk-q-menu[hidden] { display: none; }
@@ -6582,6 +6601,7 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
     try { const q = pvPlayerInstance.embed.getPlaybackQuality(); return QNAME[q] || "تلقائي"; } catch (_) { return "تلقائي"; }
   }
   function injectQuality() {
+    return; // تم إلغاء زر الجودة العلوي (التلقائي) — الجودة من إعدادات المشغّل
     const pl = document.querySelector("#pvVideoBox .plyr"); if (!pl || pl.querySelector(".trk-q")) return;
     const drive = !!pvPendingDriveId, box = document.createElement("div"); box.className = "trk-q";
     box.innerHTML = `<button type="button" class="trk-q-btn" aria-haspopup="true" aria-label="جودة الفيديو">⚙ <span class="trk-q-lbl">…</span></button>` +
