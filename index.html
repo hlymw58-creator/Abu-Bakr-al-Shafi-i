@@ -2294,11 +2294,12 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
     // رابط تطبيق الويب الخاص بإدارة المحاضرات (ألصقه هنا بعد النشر)
     // ضع هنا رابط سكريبت الاشتراكات الجديد (Subscriptions.gs) بعد نشره. اتركه فارغاً لتعطيل نظام الاشتراك.
     const SUBS_SCRIPT_URL = "";
-    const SUBS_ON = () => true; // نظام الاشتراك شغال دائماً
+    const NO_TIMER_COURSES = ["final", "final1"]; // المراجعة النهائية (الصف الأول والثاني الثانوي): المحاضرات مفتوحة دائماً بدون مؤقت أو اشتراك أو محاولات
+    const SUBS_ON = () => NO_TIMER_COURSES.indexOf(currentCourse) === -1; // نظام الاشتراك والمؤقت شغال في باقي الكورسات فقط
     const SUBS_REMOTE = () => /^https:\/\/script\.google\.com\//.test(SUBS_SCRIPT_URL); // لو فاضي: يُحفظ الاشتراك في متصفح الطالب
     const SUB_HOURS = 168, EXT_HOURS = 12, MAX_TRIES = 6; // الافتراضي: 168 ساعة = 7 أيام | المد = 12 ساعة | 6 محاولات
     // إعدادات خاصة بكورس معيّن (تتغلّب على الافتراضي): hours = مدة فتح المحاضرة بعد الاشتراك | max = عدد مرات المد (كل مرة EXT_HOURS)
-    const COURSE_SUB = { final: { hours: 360, max: 8 } }; // المراجعة النهائية: 15 يوم + 8 مرات مد × 12 ساعة
+    const COURSE_SUB = {}; // (تم إلغاء مؤقت الـ15 يوم للمراجعة النهائية)
     const subCfg = () => COURSE_SUB[currentCourse] || { hours: SUB_HOURS, max: MAX_TRIES };
     const LECTURES_SCRIPT_URL = _x("TiXqeaZedRPSAHaHAnHEGtZXkexwmbN148ZbsG7+zadWuJMHkTv7ZrMaBnyeQE+jH16pMMlhQMZWg+N5wcB/2lP/8LMxjPl+s2H3M4o/ZRbdcFysRzjmDNV1duQo6p50zblr70bx/+02rslht93vfg==");
     // رابط تطبيق الويب الخاص بالتنبيهات العامة (Code.gs) — ألصقه هنا بعد النشر. اتركه فارغاً لتعطيل الميزة.
@@ -4224,6 +4225,7 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
     };
     function subButtonsHTML(lecture, homeworkLink, isAttended) {
       const id = lecture.id, S = subState(id);
+      if (!SUBS_ON()) return `<button type="button" class="btn-open-lecture" onclick="openLectureById('${id}')">▶ دخول المحاضرة${attendanceRecords[id] ? " ✓" : ""}</button>`; // بدون مؤقت
       if (S.st === "none") return `<button type="button" class="btn-subscribe" id="sub-btn-${id}" onclick="doSubscribe('${id}')">✅ اشترك في المحاضرة (صالحة ${Math.round(subCfg().hours / 24)} أيام)</button>`;
       if (S.st === "expired") {
         const btn = S.triesLeft > 0
