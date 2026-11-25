@@ -1,0 +1,328 @@
+<!-- ========== المساعد حليم (قطرة الماء التفاعلية) ========== -->
+<div id="halimAssistant" dir="rtl">
+  <div class="hlm-drop" id="hlmDrop" title="المساعد حليم" role="button" tabindex="0">
+    <div class="hlm-face"><div class="hlm-eyes"><span></span><span></span></div><div class="hlm-mouth"></div></div>
+    <div class="hlm-shine"></div>
+  </div>
+  <div id="hlmBubble">
+    <div class="hlm-head"><span>💧 المساعد حليم</span><span class="hlm-close" id="hlmClose">✖</span></div>
+    <div id="hlmWave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <button type="button" id="hlmReplay" title="🔊" aria-label="🔊">🔊</button>
+    <div id="hlmForm">
+      <input type="text" id="hlmName" placeholder="اسمك الكريم إيه؟" autocomplete="name">
+      <input type="tel" id="hlmPhone" placeholder="رقم تليفونك للواتساب..." inputmode="numeric" maxlength="14" autocomplete="tel">
+      <button type="button" id="hlmSave">ابدأ المحادثة 🚀</button>
+    </div>
+    <div id="hlmOptions"></div>
+    <button type="button" id="hlmBack">↩️ القائمة الرئيسية</button>
+  </div>
+</div>
+
+<style>
+#halimAssistant{position:fixed;top:20px;right:20px;z-index:1200;display:flex;flex-direction:row-reverse;align-items:flex-start;gap:10px;font-family:inherit}
+#halimAssistant .hlm-drop{width:60px;height:60px;flex:none;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  background:radial-gradient(circle at 35% 35%,rgba(160,230,255,.95),rgba(0,150,255,.8));
+  border-radius:50% 50% 50% 50%/55% 55% 45% 45%;box-shadow:0 8px 20px rgba(0,140,255,.4);animation:hlmFloat 3s ease-in-out infinite;transition:transform .2s}
+#halimAssistant .hlm-drop:hover{transform:scale(1.08)}
+@keyframes hlmFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.hlm-shine{position:absolute;top:12%;left:20%;width:12px;height:8px;background:rgba(255,255,255,.9);border-radius:50%;transform:rotate(-30deg)}
+.hlm-face{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:5px}
+.hlm-eyes{display:flex;gap:8px}
+.hlm-eyes span{width:5px;height:7px;background:#0c3559;border-radius:50%;animation:hlmBlink 5s infinite}
+@keyframes hlmBlink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.hlm-mouth{width:12px;height:6px;border-bottom:2.5px solid #0c3559;border-radius:0 0 8px 8px}
+.hlm-drop.talking{box-shadow:0 0 0 6px rgba(0,136,230,.18),0 8px 20px rgba(0,140,255,.5)}
+.hlm-drop.talking .hlm-mouth{border:2.5px solid #0c3559;border-radius:50%;background:#0c3559;animation:hlmTalk .28s ease-in-out infinite alternate}
+@keyframes hlmTalk{from{height:3px;width:9px}to{height:9px;width:11px}}
+#hlmBubble{display:none;flex-direction:column;gap:10px;width:295px;max-width:calc(100vw - 110px);background:#fff;color:#2c3e50;padding:14px;border-radius:16px;border:2px solid #80d4ff;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.hlm-head{display:flex;justify-content:space-between;font-weight:bold;color:#0077cc;border-bottom:1px solid #eee;padding-bottom:5px}
+.hlm-close{cursor:pointer;color:#888}.hlm-close:hover{color:#e53935}
+#hlmWave{display:flex;align-items:center;justify-content:center;gap:5px;height:56px;background:#f4fafc;border-radius:10px}
+#hlmWave span{width:6px;height:8px;border-radius:4px;background:#0088e6;opacity:.35;transition:opacity .2s}
+#hlmWave.on span{opacity:1;animation:hlmBar .7s ease-in-out infinite alternate}
+#hlmWave.on span:nth-child(2){animation-delay:.1s}#hlmWave.on span:nth-child(3){animation-delay:.2s}#hlmWave.on span:nth-child(4){animation-delay:.3s}#hlmWave.on span:nth-child(5){animation-delay:.15s}#hlmWave.on span:nth-child(6){animation-delay:.25s}#hlmWave.on span:nth-child(7){animation-delay:.05s}
+@keyframes hlmBar{from{height:8px}to{height:40px}}
+#hlmReplay{align-self:center;background:#eef9ff;border:1px solid #b3e3ff;border-radius:50%;width:38px;height:38px;font-size:17px;cursor:pointer;line-height:1;padding:0}
+#hlmReplay:hover{background:#0088e6}
+#hlmForm{display:none;flex-direction:column;gap:6px}
+#hlmForm input{padding:8px 10px;border:1px solid #b3e3ff;border-radius:8px;font-size:13px;font-family:inherit;outline:none}
+#hlmForm button{background:#0088e6;color:#fff;border:0;padding:8px;border-radius:8px;font-weight:bold;cursor:pointer;font-family:inherit}
+#hlmOptions{display:none;flex-direction:column;gap:6px;max-height:170px;overflow-y:auto}
+#hlmOptions button,#hlmOptions a{background:#eef9ff;color:#0066b2;border:1px solid #b3e3ff;padding:7px 10px;border-radius:8px;font-size:12.5px;cursor:pointer;text-align:right;font-weight:600;font-family:inherit;text-decoration:none;transition:.2s}
+#hlmOptions button:hover,#hlmOptions a:hover{background:#0088e6;color:#fff}
+#hlmBack{display:none;background:transparent;color:#666;border:0;font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit}
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ===== إعدادات قابلة للتعديل ===== */
+  var CFG = {
+    techWa: "201099442329",      // الدعم الفني
+    sciWa:  "201101662590",      // الدعم العلمي
+    audioDir: "audio/",          // فولدر ملفات الصوت بجانب index.html
+    autoOpenMs: 0,               // الصوت لا يشتغل قبل أول لمسة من الطالب، فالفتح بيتم بالضغط على القطرة
+    reminderMs: 30 * 60 * 1000   // تذكير الصلاة على النبي
+  };
+
+  /* ===== بيانات الطالب ===== */
+  function lsGet(k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  var me = { name: lsGet("halim_student_name"), phone: lsGet("halim_student_phone") };
+
+  function syncFromPlatform() {            // لو الطالب مسجّل دخول في المنصة نستخدم بياناته
+    try {
+      if (typeof currentStudent !== "undefined" && currentStudent && currentStudent.name) {
+        me.name = String(currentStudent.name).trim().split(/\s+/)[0];
+        me.phone = currentStudent.phone || me.phone;
+      }
+    } catch (e) {}
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+  /* ===== شجرة القرار ===== */
+  var actions = {
+    support: function () { if (typeof toggleSupportMenu === "function") toggleSupportMenu(); },
+    code:    function () { if (typeof openCodeModal === "function") openCodeModal(); },
+    supportActivation: function () {
+      var w = document.getElementById("supportWidget"); if (w) w.classList.add("active");
+      if (typeof showActivationSubMenu === "function") showActivationSubMenu();
+    }
+  };
+  var TREE = {
+    main: {
+      speech: function (n) { return "منور المنصة! قول لي حابب أساعدك في إيه النهاردة؟"; },
+      html: function (n) { return "منور المنصة يا <b>" + esc(n) + "</b>! 💧<br>اختر اللي محتاجه وأنا معاك خطوة بخطوة:"; },
+      options: [
+        { t: "🛒 عايز أشترك في الكورسات", next: "subs" },
+        { t: "💰 أسعار الباقات والعروض", next: "pricing" },
+        { t: "📌 المتاح وغير المتاح حالياً", next: "avail" },
+        { t: "⚠️ عندي مشكلة محتاج أحلها", next: "problems" },
+        { t: "🔑 كود الشحن وتفعيل الحساب", next: "activation" },
+        { t: "⏱️ شرح العداد والأدوات", next: "features" }
+      ]
+    },
+    problems: {
+      speech: function () { return "ولا يهمك يا " + "باشا، كلّم الدعم الفني على طول. إضغط على الرقم اللي تحت وهيفتحلك الواتساب."; },
+      html: function () { return "⚠️ <b>عندك مشكلة؟</b><br>كلّم <b>الدعم الفني</b> وهيحلّوها لك، إضغط على الرقم يفتح لك الواتساب:"; },
+      options: [{ t: "🎧 الدعم الفني: 0" + CFG.techWa.slice(2), href: function () { return "https://wa.me/" + CFG.techWa; } }]
+    },
+    subs: {
+      speech: function () { return "عظيم! تحب تشترك في المراجعة النهائية ولا كورس الترم؟"; },
+      html: function () { return "🛒 <b>الاشتراكات المتاحة:</b>"; },
+      options: [
+        { t: "🎯 المراجعة النهائية", next: "review" },
+        { t: "📚 كورس الترم", next: "term" }
+      ]
+    },
+    review: {
+      speech: function () { return "عشان تشترك في المراجعة النهائية، افتح تبويب المراجعة، اختار الباقة اللي تناسبك، وإضغط اشترك وكمّل الخطوات، وهتبقى جاهز."; },
+      html: function () { return "🎯 <b>المراجعة النهائية:</b><br>افتح تبويب المراجعة، اختار الباقة واضغط <b>اشترك</b> واستكمل الخطوات."; },
+      leaf: true
+    },
+    term: {
+      speech: function () { return "كورس الترم هتلاقيه في الصفحة الرئيسية، إختار الكورس واشترك، أو فعّله على طول بكود الشحن."; },
+      html: function () { return "📚 <b>كورس الترم:</b><br>موجود في الصفحة الرئيسية، اشترك أو فعّل المواد بكود الشحن."; },
+      leaf: true
+    },
+    pricing: {
+      speech: function () { return "بالنسبة للأسعار والعروض، روح على علامة السماعة اللي تحت، وإختار تفعيل الأكواد، وإسألهم على الاشتراك والأسعار."; },
+      html: function () { return "💰 <b>الأسعار والعروض:</b><br>روح على علامة السماعة 🎧 اللي تحت، واختار <b>تفعيل الأكواد</b>، واسألهم على الاشتراك والأسعار."; },
+      options: [{ t: "🎧 افتح لي قائمة التفعيل", act: "supportActivation" }]
+    },
+    avail: {
+      speech: function () { return "الكورسات المتاحة دلوقتي هتلاقيها في الصفحة الرئيسية، وأي حاجة جديدة بنعلنها أول بأول."; },
+      html: function () { return "📌 <b>المتاح الآن:</b><br>الكورسات المعروضة في الصفحة الرئيسية متاحة للاشتراك والتفعيل.<br>⏳ <i>أي محتوى جديد بيتعلن أول بأول.</i>"; },
+      leaf: true
+    },
+    activation: {
+      speech: function () { return "عشان تجيب كود الشحن وتفعّل حسابك، كلّم واحدة من المساعدات على الواتساب. إضغط على الرقم اللي تحت."; },
+      html: function () { return "🔑 <b>كود الشحن والتفعيل:</b><br>كلّم إحدى المساعدات على الواتساب، وبعد ما تاخد الكود إضغط <b>تفعيل كود</b> واكتبه:"; },
+      options: function () {
+        var out = [];
+        document.querySelectorAll("#activationSupportView a.support-item").forEach(function (a) {
+          var spans = a.querySelectorAll(".info span");
+          var name = spans[0] ? spans[0].textContent.trim() : "المساعدة";
+          var ph = spans[1] ? spans[1].textContent.trim() : "";
+          out.push({ t: "📱 " + name + (ph ? ": " + ph : ""), href: (function (h) { return function () { return h; }; })(a.getAttribute("href")) });
+        });
+        out.push({ t: "🔑 تفعيل كود الآن", act: "code" });
+        return out;
+      }
+    },
+    features: {
+      speech: function () { return "العداد اللي فوق الفيديو بيحسب وقت المشاهدة، وأول ما يخلص بيفتحلك المرفقات وإختبار الدرس على طول."; },
+      html: function () { return "⏱️ <b>الأدوات:</b><br>العداد فوق الفيديو بينظم مشاهدتك، وفور انتهائه بيفتح لك <b>المرفقات والامتحان</b>."; },
+      leaf: true
+    }
+  };
+
+  /* ===== عناصر الواجهة ===== */
+  var $ = function (id) { return document.getElementById(id); };
+  var bubble, text, form, opts, back, current = "main";
+
+  /* ===== الصوت: اختيار صوت عربي صريح (مصري لو موجود) + بديل أونلاين ===== */
+  var voice = null, talkTimer = null, fallbackAudio = null, speakSeq = 0;
+
+  function pickVoice() {
+    if (!("speechSynthesis" in window)) return;
+    var vs = window.speechSynthesis.getVoices() || [];
+    var male = /shakir|naayf|hamed|maged|tarik|male|رجل/i, female = /hoda|salma|zariyah|laila|female/i;
+    var ar = vs.filter(function (v) { return /^ar/i.test(v.lang); });
+    voice = ar.filter(function (v) { return /^ar[-_]EG/i.test(v.lang) && male.test(v.name); })[0]
+         || ar.filter(function (v) { return male.test(v.name); })[0]
+         || ar.filter(function (v) { return /^ar[-_]EG/i.test(v.lang) && !female.test(v.name); })[0]
+         || ar.filter(function (v) { return !female.test(v.name); })[0]
+         || vs.filter(function (v) { return /^ar[-_]EG/i.test(v.lang); })[0]
+         || ar[0]
+         || vs.filter(function (v) { return /arab|عرب|hoda|naayf|salma|shakir/i.test(v.name); })[0]
+         || null;
+  }
+  if ("speechSynthesis" in window) {
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;   // الأصوات بتتحمّل متأخر في كروم
+  }
+
+  function setTalking(on) {
+    var d = $("hlmDrop"); if (d) d.classList.toggle("talking", !!on);
+    var w = $("hlmWave"); if (w) w.classList.toggle("on", !!on);
+  }
+  function stopSpeech() {
+    speakSeq++;
+    clearTimeout(talkTimer); setTalking(false);
+    if (fallbackAudio) { try { fallbackAudio.pause(); } catch (e) {} fallbackAudio = null; }
+    if ("speechSynthesis" in window) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+  }
+
+  /* بديل لو الجهاز مفيهوش صوت عربي: صوت جوجل العربي (غير رسمي، فصحى مبسّطة) */
+  function speakOnline(s, seq) {
+    var parts = s.match(/[^.!؟?،,]+[.!؟?،,]?/g) || [s], chunks = [], cur = "";
+    parts.forEach(function (p) {
+      if ((cur + p).length > 170) { if (cur) chunks.push(cur); cur = p; } else cur += p;
+    });
+    if (cur) chunks.push(cur);
+    var i = 0;
+    (function next() {
+      if (seq !== speakSeq || i >= chunks.length) { if (seq === speakSeq) setTalking(false); return; }
+      var a = new Audio("https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=ar&q=" + encodeURIComponent(chunks[i++].trim()));
+      fallbackAudio = a;
+      a.onplay = function () { if (seq === speakSeq) setTalking(true); };
+      a.onended = next; a.onerror = function () { if (seq === speakSeq) setTalking(false); };
+      a.play().catch(function () { if (seq === speakSeq) setTalking(false); });
+    })();
+  }
+
+  var lastSpeech = "", lastKey = "";
+  function speak(s, key) {
+    lastSpeech = s; lastKey = key || "";
+    stopSpeech();
+    var seq = speakSeq;
+    if (key) {                                   /* ملف صوت مسجّل: audio/<key>.mp3 */
+      var a = new Audio(CFG.audioDir + key + ".mp3");
+      fallbackAudio = a;
+      a.onplay = function () { if (seq === speakSeq) setTalking(true); };
+      a.onended = function () { if (seq === speakSeq) setTalking(false); };
+      a.onerror = function () { if (seq === speakSeq) speakTTS(s, seq); };
+      var pr = a.play();
+      if (pr && pr.catch) pr.catch(function () { if (seq === speakSeq) speakTTS(s, seq); });
+      return;
+    }
+    speakTTS(s, seq);
+  }
+  function speakTTS(s, seq) {
+    if ("speechSynthesis" in window && voice) {
+      talkTimer = setTimeout(function () {          // مهلة صغيرة بعد cancel علشان كروم ميبلعش الكلام
+        if (seq !== speakSeq) return;
+        try {
+          var u = new SpeechSynthesisUtterance(s);
+          u.voice = voice; u.lang = voice.lang || "ar-EG"; u.rate = 0.9; u.pitch = 0.8;   /* نبرة أعمق */
+          u.onstart = function () { if (seq === speakSeq) setTalking(true); };
+          u.onend = u.onerror = function () { if (seq === speakSeq) setTalking(false); };
+          window.speechSynthesis.speak(u);
+        } catch (e) { setTalking(false); }
+      }, 120);
+    } else {
+      speakOnline(s, seq);
+    }
+  }
+
+  function render(key) {
+    var st = TREE[key]; if (!st) return;
+    current = key;
+    text.innerHTML = st.html(me.name);
+    speak(st.speech(me.name), key);
+    opts.innerHTML = "";
+    var list = typeof st.options === "function" ? st.options() : (st.options || []);
+    list.forEach(function (o) {
+      var el;
+      if (o.href) { el = document.createElement("a"); el.href = o.href(); el.target = "_blank"; el.rel = "noopener"; }
+      else {
+        el = document.createElement("button"); el.type = "button";
+        el.addEventListener("click", function () {
+          if (o.next) render(o.next);
+          else if (o.act && actions[o.act]) { closeBubble(); actions[o.act](); }
+        });
+      }
+      el.textContent = o.t; opts.appendChild(el);
+    });
+    form.style.display = "none";
+    opts.style.display = list.length ? "flex" : "none";
+    back.style.display = key === "main" ? "none" : "block";
+  }
+
+  function showForm() {
+    form.style.display = "flex"; opts.style.display = "none"; back.style.display = "none";
+    text.innerHTML = "👋 أهلاً بك في المنصة!<br>أنا المساعد <b>حليم</b> 💧<br>من فضلك اكتب اسمك ورقم تليفونك لنبدأ:";
+    speak("أهلاً بك في المنصة! أنا المساعد حليم. اكتب اسمك ورقم تليفونك علشان أبدأ أساعدك!", "form");
+  }
+
+  function openBubble() {
+    syncFromPlatform();
+    bubble.style.display = "flex";
+    if (me.name) render("main"); else showForm();
+  }
+  function closeBubble() {
+    bubble.style.display = "none";
+    stopSpeech();
+  }
+  function toggle() { bubble.style.display === "flex" ? closeBubble() : openBubble(); }
+
+  function save() {
+    var n = $("hlmName").value.trim(), p = $("hlmPhone").value.trim();
+    if (!n || !/^[0-9+]{10,14}$/.test(p.replace(/\s/g, ""))) {
+      speak("اكتب اسمك ورقم تليفونك صح علشان نبدأ يا باشا.", "formerr");
+      return;
+    }
+    me.name = n; me.phone = p;
+    lsSet("halim_student_name", n); lsSet("halim_student_phone", p);
+    render("main");
+  }
+
+  function init() {
+    bubble = $("hlmBubble"); text = {}; /* صوت فقط - لا نص مكتوب */ form = $("hlmForm"); opts = $("hlmOptions"); back = $("hlmBack");
+    var root = $("halimAssistant");
+    $("hlmDrop").addEventListener("click", function (e) { e.stopPropagation(); toggle(); });
+    $("hlmDrop").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+    $("hlmClose").addEventListener("click", function (e) { e.stopPropagation(); closeBubble(); });
+    $("hlmSave").addEventListener("click", save);
+    $("hlmReplay").addEventListener("click", function () { if (lastSpeech) speak(lastSpeech, lastKey); });
+    back.addEventListener("click", function () { render("main"); });
+    bubble.addEventListener("click", function (e) { e.stopPropagation(); });
+    document.addEventListener("click", function (e) { if (!root.contains(e.target)) closeBubble(); });
+
+    if (CFG.autoOpenMs > 0) setTimeout(function () { if (bubble.style.display !== "flex") openBubble(); }, CFG.autoOpenMs);
+
+    /* تذكير دوري: لا يقاطع المحادثة لو الطالب فاتح الفقاعة */
+    setInterval(function () {
+      syncFromPlatform();
+      if (!me.name || bubble.style.display === "flex") return;
+      bubble.style.display = "flex"; form.style.display = "none"; opts.style.display = "none"; back.style.display = "none";
+            speak("طمني عليك؟ ما تنساش بقى تصلي على النبي وتكمل مذاكرتك بعزيمة!", "reminder");
+    }, CFG.reminderMs);
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+</script>
+<!-- ========== نهاية المساعد حليم ========== -->
