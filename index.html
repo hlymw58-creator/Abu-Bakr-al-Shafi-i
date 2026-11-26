@@ -2979,11 +2979,11 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
     // grades في كل كورس: الصفوف اللي يظهر لها الكورس (مثال لكورس الصف الثالث: grades: ["3"] — ولكورس للصفين: grades: ["2","3"])
     const STRICT_COURSES = ["final", "final1"];
     const COURSES = [
-      { id: "term1", grades: ["2"], icon: "📖", title: "كورس الترم الأول", sub: "منصة الشافعي الصغير", desc: "التوحيد • التفسير • الفقه • الحديث • المراجعات • المنتدى",
+      { id: "term1", price: "200 جنيه", grades: ["2"], icon: "📖", title: "كورس الترم الأول", sub: "منصة الشافعي الصغير", desc: "التوحيد • التفسير • الفقه • الحديث • المراجعات • المنتدى",
         isActive: (u) => !!u && isActivatedValue(u.code) },
-      { id: "final", grades: ["2"], icon: "🎯", title: "المراجعة النهائية", sub: "كورس مجاني للجميع", desc: "مراجعة التوحيد • التفسير • الحديث • الفقه الشافعي • التاريخ — ومعاك جدولك ونظام المتابعة", free: true,
+      { id: "final", price: "0 جنيه", grades: ["2"], icon: "🎯", title: "المراجعة النهائية", sub: "كورس مجاني للجميع", desc: "مراجعة التوحيد • التفسير • الحديث • الفقه الشافعي • التاريخ — ومعاك جدولك ونظام المتابعة", free: true,
         isActive: (u) => !!u && (isEnrolled("final") || !!u.isAdmin) },
-      { id: "final1", grades: ["1"], icon: "🎯", title: "كورس المراجعة النهائية", sub: "كورس مجاني — الصف الأول الثانوي", desc: "مراجعة نهائية شاملة لمنهج الصف الأول الثانوي: محاضرات فيديو • ملفات PDF • واجبات إلكترونية", free: true,
+      { id: "final1", price: "0 جنيه", grades: ["1"], icon: "🎯", title: "كورس المراجعة النهائية", sub: "كورس مجاني — الصف الأول الثانوي", desc: "مراجعة نهائية شاملة لمنهج الصف الأول الثانوي: محاضرات فيديو • ملفات PDF • واجبات إلكترونية", free: true,
         isActive: (u) => !!u && (isEnrolled("final1") || !!u.isAdmin) }
     ];
     COURSES.forEach((c) => { Object.defineProperty(c, "cover", { get: () => coverUrl(COURSE_COVERS[c.id]) }); });
@@ -3010,7 +3010,7 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
         const on = c.isActive(currentStudent);
         const cov = c.cover ? `style="background:linear-gradient(rgba(0,0,0,.22),rgba(0,0,0,.5)),url('${escapeHtml(c.cover).replace(/'/g, "%27")}') center/cover;min-height:170px"` : "";
         return `<div class="course-card"><div class="course-cover" ${cov}>${c.cover ? "" : c.icon}<span class="badge ${on ? "on" : ""}">${on ? (c.free ? "مجاني • مُشترك" : "مُشترك") : (c.free ? "مجاني — اشترك الآن" : "غير مشترك")}</span></div>
-          <div class="course-body"><h3>${escapeHtml(c.title)}</h3><b style="font-size:14px">${escapeHtml(c.sub)}</b><p>${escapeHtml(c.desc)}</p>
+          <div class="course-body">${c.price ? `<div class="course-price" style="display:inline-block;margin:0 0 8px;padding:4px 16px;border-radius:999px;font-weight:800;font-size:16px;${c.free ? "background:#e8f5e9;color:#1b5e20;border:1px solid #81c784" : "background:#fff3e0;color:#e65100;border:1px solid #ffb74d"}">${c.free ? "🎁 مجاناً • " : "💰 "}${escapeHtml(c.price)}</div>` : ""}<h3>${escapeHtml(c.title)}</h3><b style="font-size:14px">${escapeHtml(c.sub)}</b><p>${escapeHtml(c.desc)}</p>
           ${c.free && !on ? "" : `<button class="btn-submit" onclick="enterCourse('${c.id}')">📖 عرض التفاصيل</button>`}
           ${on ? "" : c.free ? `<button class="btn-submit" style="background:#2e7d32" onclick="openFreeSub('${c.id}')">🎁 اشترك مجاناً</button>` : `<button class="btn-submit" style="background:#ef6c00" onclick="activatingCourse='${c.id}';openCodeModal()">🔑 اشترك الآن</button>`}</div></div>`;
       }).join("");
@@ -8268,8 +8268,7 @@ window.lpPopGuard = function () {
   </div>
   <div id="hlmBubble">
     <div class="hlm-head"><span>💧 المساعد حليم</span><span class="hlm-close" id="hlmClose">✖</span></div>
-    <div id="hlmWave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-    <button type="button" id="hlmReplay" title="🔊" aria-label="🔊">🔊</button>
+    <div id="hlmText">جاري التحميل...</div>
     <div id="hlmForm">
       <input type="text" id="hlmName" placeholder="اسمك الكريم إيه؟" autocomplete="name">
       <input type="tel" id="hlmPhone" placeholder="رقم تليفونك للواتساب..." inputmode="numeric" maxlength="14" autocomplete="tel">
@@ -8299,13 +8298,8 @@ window.lpPopGuard = function () {
 #hlmBubble{display:none;flex-direction:column;gap:10px;width:295px;max-width:calc(100vw - 110px);background:#fff;color:#2c3e50;padding:14px;border-radius:16px;border:2px solid #80d4ff;box-shadow:0 10px 30px rgba(0,0,0,.2)}
 .hlm-head{display:flex;justify-content:space-between;font-weight:bold;color:#0077cc;border-bottom:1px solid #eee;padding-bottom:5px}
 .hlm-close{cursor:pointer;color:#888}.hlm-close:hover{color:#e53935}
-#hlmWave{display:flex;align-items:center;justify-content:center;gap:5px;height:56px;background:#f4fafc;border-radius:10px}
-#hlmWave span{width:6px;height:8px;border-radius:4px;background:#0088e6;opacity:.35;transition:opacity .2s}
-#hlmWave.on span{opacity:1;animation:hlmBar .7s ease-in-out infinite alternate}
-#hlmWave.on span:nth-child(2){animation-delay:.1s}#hlmWave.on span:nth-child(3){animation-delay:.2s}#hlmWave.on span:nth-child(4){animation-delay:.3s}#hlmWave.on span:nth-child(5){animation-delay:.15s}#hlmWave.on span:nth-child(6){animation-delay:.25s}#hlmWave.on span:nth-child(7){animation-delay:.05s}
-@keyframes hlmBar{from{height:8px}to{height:40px}}
-#hlmReplay{align-self:center;background:#eef9ff;border:1px solid #b3e3ff;border-radius:50%;width:38px;height:38px;font-size:17px;cursor:pointer;line-height:1;padding:0}
-#hlmReplay:hover{background:#0088e6}
+#hlmText{font-size:13.5px;line-height:1.8;max-height:210px;overflow-y:auto;background:#f4fafc;padding:10px;border-radius:8px;color:#1a252f}
+#halimAssistant,#halimAssistant *{font-family:"Cairo","Segoe UI",Tahoma,Arial,sans-serif !important}
 #hlmForm{display:none;flex-direction:column;gap:6px}
 #hlmForm input{padding:8px 10px;border:1px solid #b3e3ff;border-radius:8px;font-size:13px;font-family:inherit;outline:none}
 #hlmForm button{background:#0088e6;color:#fff;border:0;padding:8px;border-radius:8px;font-weight:bold;cursor:pointer;font-family:inherit}
@@ -8323,6 +8317,7 @@ window.lpPopGuard = function () {
   var CFG = {
     techWa: "201099442329",      // الدعم الفني
     sciWa:  "201101662590",      // الدعم العلمي
+    voice: false,                // الصوت متوقف: الإجابات مكتوبة. true لتشغيل الصوت
     audioDir: "audio/",          // فولدر ملفات الصوت بجانب index.html
     autoOpenMs: 0,               // الصوت لا يشتغل قبل أول لمسة من الطالب، فالفتح بيتم بالضغط على القطرة
     reminderMs: 30 * 60 * 1000   // تذكير الصلاة على النبي
@@ -8346,6 +8341,9 @@ window.lpPopGuard = function () {
   /* ===== شجرة القرار ===== */
   var actions = {
     support: function () { if (typeof toggleSupportMenu === "function") toggleSupportMenu(); },
+    home:    function () { if (typeof goHome === "function") goHome(); },
+    auth:    function () { if (typeof openAuth === "function") openAuth(); },
+    account: function () { if (typeof openAccount === "function") openAccount(); },
     code:    function () { if (typeof openCodeModal === "function") openCodeModal(); },
     supportActivation: function () {
       var w = document.getElementById("supportWidget"); if (w) w.classList.add("active");
@@ -8354,55 +8352,69 @@ window.lpPopGuard = function () {
   };
   var TREE = {
     main: {
-      speech: function (n) { return "منور المنصة! قول لي حابب أساعدك في إيه النهاردة؟"; },
       html: function (n) { return "منور المنصة يا <b>" + esc(n) + "</b>! 💧<br>اختر اللي محتاجه وأنا معاك خطوة بخطوة:"; },
       options: [
-        { t: "🛒 عايز أشترك في الكورسات", next: "subs" },
-        { t: "💰 أسعار الباقات والعروض", next: "pricing" },
-        { t: "📌 المتاح وغير المتاح حالياً", next: "avail" },
-        { t: "⚠️ عندي مشكلة محتاج أحلها", next: "problems" },
-        { t: "🔑 كود الشحن وتفعيل الحساب", next: "activation" },
-        { t: "⏱️ شرح العداد والأدوات", next: "features" }
+        { t: "🏫 عن المنصة والمدرس", next: "about" },
+        { t: "📚 المراحل والمواد", next: "subjects" },
+        { t: "🛒 الاشتراك والأسعار والتفعيل", next: "subs" },
+        { t: "👤 الحساب وكلمة السر", next: "account" },
+        { t: "🎧 الدعم وأرقام التواصل", next: "contacts" },
+        { t: "⏱️ مميزات المنصة والأدوات", next: "features" },
+        { t: "📝 الواجبات والدرجات والحضور", next: "study" },
+        { t: "💬 المنتدى والتواصل العلمي", next: "forum" },
+        { t: "⚠️ مشكلة تقنية", next: "tech" }
       ]
     },
-    problems: {
-      speech: function () { return "ولا يهمك يا " + "باشا، كلّم الدعم الفني على طول. إضغط على الرقم اللي تحت وهيفتحلك الواتساب."; },
-      html: function () { return "⚠️ <b>عندك مشكلة؟</b><br>كلّم <b>الدعم الفني</b> وهيحلّوها لك، إضغط على الرقم يفتح لك الواتساب:"; },
-      options: [{ t: "🎧 الدعم الفني: 0" + CFG.techWa.slice(2), href: function () { return "https://wa.me/" + CFG.techWa; } }]
+
+    /* ===== 1) التعريف ===== */
+    about: {
+      html: function () { return "🏫 <b>منصة «الشافعي الصغير»</b><br>منصة تعليمية إلكترونية متخصصة للأزهر الشريف، بيقدم فيها <b>مستر أبو بكر الشافعي</b> شرح المواد الشرعية بأسلوب مبسط وشامل.<br><br>👨‍💻 <b>مين عمل المنصة؟</b><br>اتطورت واتبنت بالكامل بواسطة <b>عبد الحليم الفخراني</b> (Abdelhalim Elfakhraney)."; },
+      leaf: true,
+      options: [{ t: "🏠 الصفحة الرئيسية للمنصة", act: "home" }]
     },
+
+    /* ===== 2) المراحل والمواد ===== */
+    subjects: {
+      html: function () { return "📚 <b>المراحل الدراسية:</b> المرحلة الثانوية الأزهرية (الصف الأول والثاني والثالث الثانوي).<br><br><b>المواد اللي بنشرحها:</b><br>• <b>الفقه الشافعي:</b> شرح الأحكام خطوة بخطوة مع الواجبات والتمارين<br>• <b>التوحيد:</b> محاضرات العقيدة بأسلوب مبسط<br>• <b>التفسير:</b> فهم معاني الآيات ومقاصدها<br>• <b>الحديث:</b> شرح الأحاديث النبوية وفوائدها<br>• <b>المراجعات النهائية والامتحانات</b>"; },
+      leaf: true,
+      options: [{ t: "🏠 شوف الكورسات في الصفحة الرئيسية", act: "home" }]
+    },
+
+    /* ===== 3) الاشتراك والأسعار والتفعيل ===== */
     subs: {
-      speech: function () { return "عظيم! تحب تشترك في المراجعة النهائية ولا كورس الترم؟"; },
-      html: function () { return "🛒 <b>الاشتراكات المتاحة:</b>"; },
+      html: function () { return "🛒 <b>الاشتراك والتفعيل:</b><br>اختار اللي عايز تعرفه:"; },
       options: [
-        { t: "🎯 المراجعة النهائية", next: "review" },
-        { t: "📚 كورس الترم", next: "term" }
+        { t: "🔑 أشترك وأفعّل الكورس إزاي؟", next: "subHow" },
+        { t: "💰 الأسعار", next: "pricing" },
+        { t: "🆓 في محتوى مجاني؟", next: "free" },
+        { t: "📞 أجيب كود التفعيل منين؟", next: "activation" },
+        { t: "🚫 دخلت الكود وظهرت مشكلة", next: "codeProblem" }
       ]
     },
-    review: {
-      speech: function () { return "عشان تشترك في المراجعة النهائية، افتح تبويب المراجعة، اختار الباقة اللي تناسبك، وإضغط اشترك وكمّل الخطوات، وهتبقى جاهز."; },
-      html: function () { return "🎯 <b>المراجعة النهائية:</b><br>افتح تبويب المراجعة، اختار الباقة واضغط <b>اشترك</b> واستكمل الخطوات."; },
-      leaf: true
-    },
-    term: {
-      speech: function () { return "كورس الترم هتلاقيه في الصفحة الرئيسية، إختار الكورس واشترك، أو فعّله على طول بكود الشحن."; },
-      html: function () { return "📚 <b>كورس الترم:</b><br>موجود في الصفحة الرئيسية، اشترك أو فعّل المواد بكود الشحن."; },
-      leaf: true
+    subHow: {
+      html: function () { return "🔑 <b>طريقة الاشتراك:</b><br>تصفّح عناوين المحاضرات <b>مجاناً</b>، لكن فتح الفيديوهات والملفات والواجبات بيحتاج <b>كود تفعيل</b>.<br><br>1️⃣ اضغط <b>«🔑 تفعيل كود»</b> من القائمة أو من صفحة الكورس<br>2️⃣ اكتب كود التفعيل<br>3️⃣ اضغط <b>«تفعيل الكورس الآن»</b>"; },
+      leaf: true,
+      options: [
+        { t: "🔑 افتح لي نافذة تفعيل الكود", act: "code" },
+        { t: "📞 مش معايا كود؟ اعرف تجيبه منين", next: "activation" }
+      ]
     },
     pricing: {
-      speech: function () { return "بالنسبة للأسعار والعروض، روح على علامة السماعة اللي تحت، وإختار تفعيل الأكواد، وإسألهم على الاشتراك والأسعار."; },
-      html: function () { return "💰 <b>الأسعار والعروض:</b><br>روح على علامة السماعة 🎧 اللي تحت، واختار <b>تفعيل الأكواد</b>، واسألهم على الاشتراك والأسعار."; },
-      options: [{ t: "🎧 افتح لي قائمة التفعيل", act: "supportActivation" }]
+      html: function () { return "💰 <b>الأسعار:</b><br>• 📖 <b>كورس الترم الأول:</b> 200 جنيه<br>• 🎯 <b>المراجعة النهائية</b> (الصف الأول والثاني الثانوي): <b>مجاناً • 0 جنيه</b><br><br>وأي استفسار عن عروض أو تفاصيل تانية كلّم الدعم الفني."; },
+      options: [
+        { t: "🏠 الكورسات في الصفحة الرئيسية", act: "home" },
+        { t: "🎧 الدعم الفني: 0" + CFG.techWa.slice(2), href: function () { return "https://wa.me/" + CFG.techWa; } }
+      ]
     },
-    avail: {
-      speech: function () { return "الكورسات المتاحة دلوقتي هتلاقيها في الصفحة الرئيسية، وأي حاجة جديدة بنعلنها أول بأول."; },
-      html: function () { return "📌 <b>المتاح الآن:</b><br>الكورسات المعروضة في الصفحة الرئيسية متاحة للاشتراك والتفعيل.<br>⏳ <i>أي محتوى جديد بيتعلن أول بأول.</i>"; },
-      leaf: true
+    free: {
+      html: function () { return "🆓 <b>المحتوى المجاني:</b><br>• <b>كورس المراجعة النهائية</b> مجاني لكل الطلاب (الصف الأول والثاني الثانوي)<br>• أقسام الخدمة الإيمانية (الأذكار والمصحف)<br>• أدوات الدراسة المجانية"; },
+      leaf: true,
+      options: [{ t: "🏠 الصفحة الرئيسية", act: "home" }]
     },
     activation: {
-      speech: function () { return "عشان تجيب كود الشحن وتفعّل حسابك، كلّم واحدة من المساعدات على الواتساب. إضغط على الرقم اللي تحت."; },
-      html: function () { return "🔑 <b>كود الشحن والتفعيل:</b><br>كلّم إحدى المساعدات على الواتساب، وبعد ما تاخد الكود إضغط <b>تفعيل كود</b> واكتبه:"; },
+      html: function () { return "📞 <b>كود التفعيل:</b><br>كلّم الدعم الفني أو واحدة من مساعدات الفريق على الواتساب، وبعد ما تاخد الكود اضغط <b>تفعيل كود</b> واكتبه:"; },
       options: function () {
-        var out = [];
+        var out = [{ t: "🎧 الدعم الفني وتفعيل الأكواد: 0" + CFG.techWa.slice(2), href: function () { return "https://wa.me/" + CFG.techWa; } }];
         document.querySelectorAll("#activationSupportView a.support-item").forEach(function (a) {
           var spans = a.querySelectorAll(".info span");
           var name = spans[0] ? spans[0].textContent.trim() : "المساعدة";
@@ -8413,9 +8425,120 @@ window.lpPopGuard = function () {
         return out;
       }
     },
+    codeProblem: {
+      html: function () { return "🚫 <b>الكود ظهرت معاه مشكلة؟</b><br>كلّم الدعم الفني على الرقم <b>01099442329</b> وهيساعدوك فوراً تفعّل الكورس على حسابك."; },
+      options: [{ t: "🎧 كلّم الدعم الفني: 0" + CFG.techWa.slice(2), href: function () { return "https://wa.me/" + CFG.techWa; } }]
+    },
+
+    /* ===== 4) الحساب ===== */
+    account: {
+      html: function () { return "👤 <b>الحساب وتسجيل الدخول:</b>"; },
+      options: [
+        { t: "🆕 أعمل حساب جديد إزاي؟", next: "newAccount" },
+        { t: "🔐 نسيت كلمة السر", next: "forgot" },
+        { t: "👀 أستخدم المنصة من غير حساب؟", next: "guest" },
+        { t: "📱 أدخل من أكتر من جهاز؟", next: "device" }
+      ]
+    },
+    newAccount: {
+      html: function () { return "🆕 <b>إنشاء حساب جديد:</b><br>اضغط <b>«دخول / حساب جديد»</b> ثم اختار <b>«حساب جديد»</b> واكتب:<br>• الاسم (ثلاثي)<br>• رقم تليفون الطالب + كلمة السر وتأكيدها<br>• رقم ولي الأمر<br>• المحافظة، وهل إنت جوه مصر ولا برّه<br>• الصف الدراسي (أول / ثاني / ثالث ثانوي)"; },
+      leaf: true,
+      options: [{ t: "🔐 افتح لي صفحة الدخول / حساب جديد", act: "auth" }]
+    },
+    forgot: {
+      html: function () { return "🔐 <b>نسيت كلمة السر؟</b><br>من صفحة الدخول اضغط <b>«نسيت كلمة السر؟»</b> وادخل بيانات حسابك زي ما سجلتها:<br>• رقم الطالب<br>• رقم ولي الأمر<br>• المحافظة<br>• الصف الدراسي<br><br>وبعد التحقق هتقدر تعيّن كلمة سر جديدة فوراً."; },
+      leaf: true,
+      options: [{ t: "🔐 افتح لي صفحة الدخول", act: "auth" }]
+    },
+    guest: {
+      html: function () { return "👀 <b>التصفح كزائر:</b><br>تقدر تتصفح عناوين الكورسات والمحاضرات من غير حساب، لكن عشان تستفيد من الفيديوهات والأذكار والاختبارات ومتابعة تقدمك لازم <b>تسجّل دخول</b> بحسابك."; },
+      leaf: true,
+      options: [{ t: "🔐 تسجيل الدخول / حساب جديد", act: "auth" }]
+    },
+    device: {
+      html: function () { return "📱 <b>أكتر من جهاز:</b><br>الأفضل تستخدم جهازك الشخصي الثابت (موبايل أو لاب توب) عشان ما يحصلش تعارض في تفعيل الكود أو مزامنة تقدمك الدراسي."; },
+      leaf: true
+    },
+
+    /* ===== 5) الدعم وأرقام التواصل ===== */
+    contacts: {
+      html: function () { return "🎧 <b>الدعم وأرقام التواصل:</b><br>• 🎧 <b>الدعم الفني وتفعيل الأكواد:</b> 01099442329<br>• 💬 <b>واتساب المستر / الدعم العلمي:</b> 01101662590<br>• 💬 <b>مساعدات الفريق (مس رحمة / مس ملاك):</b> 01093619854 / 01157948016<br>• 💧 <b>المساعد حليم:</b> للرد المباشر والاستفسارات السريعة<br><br>تقدر كمان تستخدم قائمة <b>الدعم العائم</b>. اضغط على الرقم اللي عايزه يفتح لك الواتساب:"; },
+      options: [
+        { t: "🎧 الدعم الفني: 01099442329", href: function () { return "https://wa.me/201099442329"; } },
+        { t: "💬 الدعم العلمي / المستر: 01101662590", href: function () { return "https://wa.me/201101662590"; } },
+        { t: "💬 مساعدة الفريق: 01093619854", href: function () { return "https://wa.me/201093619854"; } },
+        { t: "💬 مساعدة الفريق: 01157948016", href: function () { return "https://wa.me/201157948016"; } },
+        { t: "🎧 افتح قائمة الدعم العائم", act: "support" }
+      ]
+    },
+
+    /* ===== 6) مميزات المنصة ===== */
     features: {
-      speech: function () { return "العداد اللي فوق الفيديو بيحسب وقت المشاهدة، وأول ما يخلص بيفتحلك المرفقات وإختبار الدرس على طول."; },
-      html: function () { return "⏱️ <b>الأدوات:</b><br>العداد فوق الفيديو بينظم مشاهدتك، وفور انتهائه بيفتح لك <b>المرفقات والامتحان</b>."; },
+      html: function () { return "⏱️ <b>مميزات المنصة والأدوات:</b>"; },
+      options: [
+        { t: "🎬 إيه اللي بيحصل وأنا بشاهد المحاضرة؟", next: "videoFeatures" },
+        { t: "🧰 الأدوات والخدمات الإضافية", next: "tools" },
+        { t: "⏳ شرح العداد", next: "counter" }
+      ]
+    },
+    videoFeatures: {
+      html: function () { return "🎬 <b>أثناء مشاهدة الفيديو:</b><br>• <b>اختبارات التركيز المفاجئة:</b> بيظهر سؤال مفاجئ وما تقدرش تكمل إلا لما تجاوب صح<br>• <b>تنبيهات الصلاة:</b> لما يحين وقت الصلاة بيطلب منك تقوم تصلي وترجع تذاكر<br>• <b>متابعة الانقطاع:</b> تقدمك بيتحفظ تلقائياً وبيتزامن أول ما النت يرجع"; },
+      leaf: true
+    },
+    tools: {
+      html: function () { return "🧰 <b>الأدوات الإضافية:</b><br>• <b>جدولي الأسبوعي:</b> لتنظيم المذاكرة والمواعيد<br>• <b>اختبارات حفظ القرآن:</b> اختبار تفاعلي بصوت الشيخ المنشاوي (زي اختبار سورة آل عمران)<br>• <b>الأذكار والمصحف الشريف:</b> مصحف إلكتروني تفاعلي وأذكار بعدّاد تحفيزي<br>• <b>منتدى الطلاب والأستاذ:</b> للتفاعل وطرح الأسئلة، ولوحة التقييم والشهادات"; },
+      leaf: true
+    },
+    counter: {
+      html: function () { return "⏳ <b>العداد:</b><br>العداد فوق الفيديو بينظم مشاهدتك، وأول ما يخلص بيفتحلك <b>المرفقات واختبار الدرس</b> على طول."; },
+      leaf: true
+    },
+
+    /* ===== 7) الواجبات والدرجات والحضور ===== */
+    study: {
+      html: function () { return "📝 <b>الواجبات والدرجات والحضور:</b>"; },
+      options: [
+        { t: "✏️ أحل الواجبات والاختبارات إزاي؟", next: "homework" },
+        { t: "🏆 أعرف درجتي وتقييمي منين؟", next: "grades" },
+        { t: "✅ إزاي بتتابعوا حضوري ومستواي؟", next: "attendance" }
+      ]
+    },
+    homework: {
+      html: function () { return "✏️ <b>الواجبات والاختبارات:</b><br>بعد ما تشاهد المحاضرة الأساسية (وبتفتح بكود التفعيل) بتظهر لك أسئلة الواجب والتمارين التفاعلية الخاصة بالمادة، عشان تطبّق اللي اتشرح."; },
+      leaf: true,
+      options: [{ t: "🔑 تفعيل كود", act: "code" }]
+    },
+    grades: {
+      html: function () { return "🏆 <b>درجاتك وتقييمك:</b><br>المنصة فيها قسم <b>«🏆 شهاداتي»</b> وقسم <b>«🚦 حالة الطالب»</b> عشان تعرف نسبة تقدمك ودرجاتك في الاختبارات والمراجعات."; },
+      leaf: true,
+      options: [{ t: "👤 افتح حسابي", act: "account" }]
+    },
+    attendance: {
+      html: function () { return "✅ <b>متابعة الحضور:</b><br>حضور المحاضرات بيتسجل تلقائياً جوه النظام (<b>تم الحضور / لم يتم الحضور</b>)، والمنصة بتطلب رقم ولي الأمر وقت التسجيل عشان تبعتله إشعارات وتنبيهات تراكم الدروس أو الغياب."; },
+      leaf: true
+    },
+
+    /* ===== 8) المنتدى ===== */
+    forum: {
+      html: function () { return "💬 <b>منتدى الطلاب والأستاذ:</b><br>مساحة تفاعلية بتجمع طلاب المنصة مع مستر أبو بكر الشافعي والفريق العلمي، تقدر تسأل فيها الأسئلة الصعبة في الفقه أو العقيدة وتتفاعل مع زمايلك.<br><br>🎓 <b>عايز تكلّم المستر أو المشرفين مباشرة؟</b><br>اضغط <b>«💬 كلّم الشيخ / الدعم»</b> أو كلّم واتساب الدعم العلمي <b>01101662590</b> أو مساعدات الفريق (مس رحمة / مس ملاك)."; },
+      options: [
+        { t: "💬 واتساب الدعم العلمي: 01101662590", href: function () { return "https://wa.me/201101662590"; } },
+        { t: "🎧 افتح قائمة الدعم العائم", act: "support" }
+      ]
+    },
+
+    /* ===== 9) مشاكل تقنية ===== */
+    tech: {
+      html: function () { return "⚠️ <b>مشكلة تقنية؟</b> اختار:"; },
+      options: [
+        { t: "📶 ظهرت رسالة «انقطع الاتصال بالإنترنت»", next: "offline" },
+        { t: "🚫 دخلت كود التفعيل وظهرت مشكلة", next: "codeProblem" },
+        { t: "🔐 نسيت كلمة السر", next: "forgot" },
+        { t: "📱 مش عارف أدخل من جهاز تاني", next: "device" }
+      ]
+    },
+    offline: {
+      html: function () { return "📶 <b>انقطع الاتصال؟</b><br>ولا تقلق، تقدمك ومكانك في الفيديو محفوظين تلقائياً جوه المنصة، وأول ما النت يرجع المزامنة بتكتمل لوحدها."; },
       leaf: true
     }
   };
@@ -8477,6 +8600,7 @@ window.lpPopGuard = function () {
 
   var lastSpeech = "", lastKey = "";
   function speak(s, key) {
+    if (!CFG.voice) return;
     lastSpeech = s; lastKey = key || "";
     stopSpeech();
     var seq = speakSeq;
@@ -8513,7 +8637,7 @@ window.lpPopGuard = function () {
     var st = TREE[key]; if (!st) return;
     current = key;
     text.innerHTML = st.html(me.name);
-    speak(st.speech(me.name), key);
+    if (st.speech) speak(st.speech(me.name), key);
     opts.innerHTML = "";
     var list = typeof st.options === "function" ? st.options() : (st.options || []);
     list.forEach(function (o) {
@@ -8553,7 +8677,7 @@ window.lpPopGuard = function () {
   function save() {
     var n = $("hlmName").value.trim(), p = $("hlmPhone").value.trim();
     if (!n || !/^[0-9+]{10,14}$/.test(p.replace(/\s/g, ""))) {
-      speak("اكتب اسمك ورقم تليفونك صح علشان نبدأ يا باشا.", "formerr");
+      text.innerHTML = "⚠️ اكتب اسمك ورقم تليفون صحيح علشان نبدأ.";
       return;
     }
     me.name = n; me.phone = p;
@@ -8562,13 +8686,12 @@ window.lpPopGuard = function () {
   }
 
   function init() {
-    bubble = $("hlmBubble"); text = {}; /* صوت فقط - لا نص مكتوب */ form = $("hlmForm"); opts = $("hlmOptions"); back = $("hlmBack");
+    bubble = $("hlmBubble"); text = $("hlmText"); form = $("hlmForm"); opts = $("hlmOptions"); back = $("hlmBack");
     var root = $("halimAssistant");
     $("hlmDrop").addEventListener("click", function (e) { e.stopPropagation(); toggle(); });
     $("hlmDrop").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
     $("hlmClose").addEventListener("click", function (e) { e.stopPropagation(); closeBubble(); });
     $("hlmSave").addEventListener("click", save);
-    $("hlmReplay").addEventListener("click", function () { if (lastSpeech) speak(lastSpeech, lastKey); });
     back.addEventListener("click", function () { render("main"); });
     bubble.addEventListener("click", function (e) { e.stopPropagation(); });
     document.addEventListener("click", function (e) { if (!root.contains(e.target)) closeBubble(); });
@@ -8580,6 +8703,7 @@ window.lpPopGuard = function () {
       syncFromPlatform();
       if (!me.name || bubble.style.display === "flex") return;
       bubble.style.display = "flex"; form.style.display = "none"; opts.style.display = "none"; back.style.display = "none";
+      text.innerHTML = "👋 طمني عليك؟<br>✨ <b>ما تنساش تصلي على النبي 💖</b> واستعين بالله وكمل مذاكرتك!";
             speak("طمني عليك؟ ما تنساش بقى تصلي على النبي وتكمل مذاكرتك بعزيمة!", "reminder");
     }, CFG.reminderMs);
   }
