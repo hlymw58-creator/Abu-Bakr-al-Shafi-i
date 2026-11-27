@@ -3756,7 +3756,7 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
         speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
         i18n: { quality: "Video Quality" }
       };
-      if (!isDrive) plyrOptions.quality = { default: pvQuality, options: PV_QUALITIES, forced: true, onChange: (q) => pvApplyQuality(q) };
+      if (!isDrive) plyrOptions.quality = { default: pvQuality, options: PV_QUALITIES, forced: true, onChange: () => {} };
 
       if (isDrive) {
         // فيديو الدرايف: نشغّله في عنصر <video> عادي عشان يظهر بنفس تحكمات Plyr بتاعة يوتيوب
@@ -5484,12 +5484,9 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
       try { vid = (emb.getVideoData() || {}).video_id || ""; } catch (_) {}
       vid = vid || pvPendingVideoId; if (!vid) return;
       const wasPlaying = st === 1 || st === 3;
-      try { emb.loadVideoById({ videoId: vid, startSeconds: t, suggestedQuality: name }); } catch (_) { return; }
+      const opts = { videoId: vid, startSeconds: t, suggestedQuality: name };
+      try { if (wasPlaying) emb.loadVideoById(opts); else if (typeof emb.cueVideoById === "function") emb.cueVideoById(opts); else emb.loadVideoById(opts); } catch (_) { return; }
       if (name !== "default") { try { emb.setPlaybackQualityRange(name, name); } catch (_) {} }
-      if (!wasPlaying) { // كان واقف مؤقتاً: نوقفه تاني أول ما يشتغل
-        const onS = (e) => { if (e && e.data === 1) { try { emb.removeEventListener("onStateChange", onS); } catch (_) {} setTimeout(() => { try { emb.pauseVideo(); } catch (_) {} }, 50); } };
-        try { emb.addEventListener("onStateChange", onS); } catch (_) {}
-      }
     }
     let pvQLast = 0;
     function pvApplyQuality(q, silent) {
@@ -5510,6 +5507,7 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
     }
     // لو الطالب كان مختار جودة قبل كده: بعد ما الفيديو يشتغل نتأكد إنها اتطبّقت، ولو لأ نطبّقها مرة واحدة
     function pvEnforceSavedQuality() {
+      return; // تم الإلغاء: إعادة التحميل التلقائية كانت بتوقف الفيديو بعد ثانيتين. الجودة بتتطبق بهدوء عند الفتح، وبإعادة تحميل فقط لما الطالب يختارها بنفسه
       let saved = null; try { saved = localStorage.getItem("pv_quality"); } catch (_) {}
       if (saved === null || pvQuality === 0) return;
       const emb = pvPlayerInstance && pvPlayerInstance.embed; if (!emb) return;
