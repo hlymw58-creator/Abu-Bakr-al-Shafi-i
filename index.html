@@ -3157,7 +3157,6 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
       revOpen = id; renderReviewCards();
       document.getElementById("courseTitle").innerText = c.title;
       document.getElementById("courseBackBtn").innerText = "← المراجعات";
-      try { history.pushState({ subject: "reviewTab", rev: id }, ""); } catch (_) {}
       window.scrollTo({ top: 0, behavior: "smooth" });
       setTimeout(pinFooter, 50);
     }
@@ -5753,7 +5752,6 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
       if (tab === "reviewTab") { revOpen = null; try { renderReviewCards(); } catch (_) {} }
       document.getElementById("courseTitle").innerText = c.title;
       document.getElementById("courseBackBtn").innerText = "← المواد";
-      try { history.pushState({ subject: tab }, ""); } catch (_) {}
       window.scrollTo({ top: 0, behavior: "smooth" });
       setTimeout(pinFooter, 50);
     }
@@ -5773,7 +5771,7 @@ html[data-theme="dark"] #pvOverlay{--lp-bg:#0f1713;--lp-card:#16221b;--lp-text:#
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else setView("courses");
     }
-    window.addEventListener("popstate", () => { if (window.lpPopGuard && window.lpPopGuard()) return; if (revOpen) { closeReviewSubject(); return; } if (currentSubjectTab) showSubjectGrid(); });
+    // التنقل بزر الرجوع بيتعامل معاه نظام الروابط (Hash Router) في آخر الملف
 
     // ---------- 2) مركز الإشعارات: تنبيه منبثق + جرس + رسائل تحفيزية + تنبيهات التقدّم ----------
     let notifChimeAt = 0, toastTimer = null;
@@ -8730,6 +8728,133 @@ window.lpPopGuard = function () {
 })();
 </script>
 <!-- ========== نهاية المساعد حليم ========== -->
+
+<script>
+/* ===== نظام الروابط (Hash Router): كل صفحة ليها رابط خاص بيها ويشتغل مع زر الرجوع والريفريش ومشاركة الرابط =====
+   #/login  •  #/account  •  #/course/<id>  •  #/course/<id>/<tab>  •  #/course/<id>/reviewTab/<rev>
+   (الصفحة الرئيسية بدون hash، ورابط المحاضرة القديم #lec=ID لسه شغال) */
+(function () {
+  var BASE = "منصة الشافعي الصغير", busy = false, ready = false, idx = 0, trail = [""], replaceNext = false;
+  var $ = function (id) { return document.getElementById(id); };
+  function authOpen() { var m = $("authModal"); return !!m && m.style.display !== "none" && m.style.display !== ""; }
+  function path() {
+    try {
+      if (authOpen() && !currentStudent) return "/login";
+      if (view === "account") return "/account";
+      if (view === "course") {
+        var p = "/course/" + encodeURIComponent(currentCourse);
+        if (currentSubjectTab) { p += "/" + encodeURIComponent(currentSubjectTab); if (currentSubjectTab === "reviewTab" && revOpen) p += "/" + encodeURIComponent(revOpen); }
+        return p;
+      }
+    } catch (_) {}
+    return "";
+  }
+  function hashOf(p) { return p ? "#" + p : ""; }
+  function normHash() { var h = location.hash; return h === "#/" || h === "#" ? "" : h; }
+  function setTitle(p) {
+    var t = BASE, s = p.split("/").filter(Boolean).map(decodeURIComponent);
+    try {
+      if (s[0] === "login") t = "تسجيل الدخول | " + BASE;
+      else if (s[0] === "account") t = "حسابي | " + BASE;
+      else if (s[0] === "course") {
+        var c = COURSES.find(function (x) { return x.id === s[1]; }), parts = [];
+        if (s[2]) { var sc = SUBJECT_CARDS.find(function (x) { return x.tab === s[2]; }); if (sc) parts.push(sc.title); }
+        if (c) parts.push(c.title);
+        parts.push(BASE); t = parts.join(" | ");
+      }
+    } catch (_) {}
+    document.title = t;
+  }
+  function stamp(i) { return { r: 1, i: i }; }
+  function sync() {
+    if (busy || !ready) return;
+    var p = path(), want = hashOf(p), url = location.pathname + location.search;
+    setTitle(p);
+    if (normHash() === want) return;
+    var fromLogin = /^#\/login/.test(location.hash), legacy = /lec=/.test(location.hash);
+    try {
+      if (replaceNext || fromLogin || legacy) history.replaceState(stamp(idx), "", url + want);
+      else { idx++; trail = trail.slice(0, idx); trail[idx] = p; history.pushState(stamp(idx), "", url + want); }
+      if (replaceNext || fromLogin || legacy) trail[idx] = p;
+    } catch (_) {}
+  }
+  function apply() {
+    var h = location.hash;
+    if (/lec=/.test(h)) return;
+    var p = h.replace(/^#/, "");
+    if (p && p.charAt(0) !== "/") return; // أي anchor تاني نسيبه
+    var s = p.split("/").filter(Boolean).map(function (x) { try { return decodeURIComponent(x); } catch (_) { return x; } });
+    busy = true;
+    try {
+      var r = s[0] || "";
+      if (r === "login") {
+        if (currentStudent) { if (view !== "courses") setView("courses"); }
+        else if (!authOpen()) openAuth();
+      } else if (r === "account") {
+        if (!currentStudent) { if (view !== "courses") setView("courses"); openAuth(function () { openAccount(); }); }
+        else if (view !== "account") openAccount();
+      } else if (r === "course" && COURSES.some(function (c) { return c.id === s[1]; })) {
+        if (authOpen() && !currentStudent) closeAuth();
+        if (view === "account") closeAccountIfAny();
+        if (view !== "course" || currentCourse !== s[1]) enterCourse(s[1]);
+        if (view === "course" && currentCourse === s[1]) {
+          if (s[2]) {
+            if (currentSubjectTab !== s[2]) openSubject(s[2]);
+            if (currentSubjectTab === "reviewTab") {
+              if (s[3] && revOpen !== s[3]) pickReview(s[3]);
+              else if (!s[3] && revOpen) closeReviewSubject();
+            }
+          } else if (currentSubjectTab) showSubjectGrid();
+        }
+      } else {
+        if (authOpen() && !currentStudent) closeAuth();
+        if (view !== "courses") { closeAccountIfAny(); setView("courses"); }
+      }
+    } catch (e) { console.error("router", e); }
+    busy = false;
+    // نثبّت الرابط على الحالة الفعلية (مثلاً لو الكورس المجاني طلب تأكيد اشتراك)
+    var real = path();
+    if (normHash() !== hashOf(real)) { try { history.replaceState(stamp(idx), "", location.pathname + location.search + hashOf(real)); trail[idx] = real; } catch (_) {} }
+    setTitle(real);
+  }
+  function onPop(e) {
+    if (e && e.type === "popstate") {
+      if (window.lpPopGuard && window.lpPopGuard()) return; // مشغّل المحاضرات له زر رجوع خاص
+      idx = (history.state && typeof history.state.i === "number") ? history.state.i : 0;
+    }
+    apply();
+  }
+  // زر "رجوع" داخل الصفحة: لو الصفحة اللي قبلها هي الأب نرجع بالـ history، وإلا نستبدل الرابط
+  window.courseBack = function () {
+    var parent = revOpen && currentSubjectTab ? "/course/" + encodeURIComponent(currentCourse) + "/" + encodeURIComponent(currentSubjectTab)
+      : currentSubjectTab ? "/course/" + encodeURIComponent(currentCourse) : "";
+    if (idx > 0 && trail[idx - 1] === parent) { history.back(); }
+    else {
+      replaceNext = true;
+      try {
+        if (currentSubjectTab) { if (revOpen) closeReviewSubject(); else showSubjectGrid(); }
+        else setView("courses");
+      } finally { replaceNext = false; }
+      sync();
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  ["setView", "openSubject", "showSubjectGrid", "pickReview", "closeReviewSubject"].forEach(function (n) {
+    var f = window[n]; if (typeof f !== "function") return;
+    window[n] = function () { var r = f.apply(this, arguments); try { sync(); } catch (_) {} return r; };
+  });
+  window.addEventListener("popstate", onPop);
+  window.addEventListener("hashchange", onPop);
+  try { new MutationObserver(function () { sync(); }).observe($("authModal"), { attributes: true, attributeFilter: ["style"] }); } catch (_) {}
+  function init() {
+    ready = true;
+    try { history.replaceState(stamp(0), "", location.href); } catch (_) {}
+    if (normHash() && !/lec=/.test(location.hash)) apply(); else setTitle(path());
+  }
+  if (document.readyState === "complete") setTimeout(init, 0);
+  else window.addEventListener("load", function () { setTimeout(init, 0); });
+})();
+</script>
 
 </body>
 </html>
